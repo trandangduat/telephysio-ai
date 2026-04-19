@@ -1,0 +1,3 @@
+- vao `telephysio-ai-mobile/docs/SETUP_GUIDE.md` de xem chi tiet cach setup ung dung
+- folder `.agents` la cac skills cho AI Agents
+-

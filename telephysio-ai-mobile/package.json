@@ -1,0 +1,45 @@
+{
+  "name": "telephysio-ai-mobile",
+  "version": "1.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~55.0.9",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
+    "expo": "^55.0.15",
+    "expo-camera": "~55.0.15",
+    "expo-gl": "~55.0.13",
+    "expo-status-bar": "~55.0.5",
+    "firebase": "^10.14.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0",
+    "react-native-web": "^0.21.0",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/node": "^25.6.0",
+    "@types/react": "~19.2.10",
+    "typescript": "^5.1.3"
+  },
+  "private": true,
+  "description": "TelePhysioAI là hệ thống hỗ trợ phục hồi vận động từ xa tích hợp trí tuệ nhân tạo (AI Pose Tracking) nhằm tối ưu hóa quá trình luyện tập và theo dõi người bị chậm phát triển vận động hoặc khuyết tật vận động.",
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
