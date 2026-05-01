@@ -1,5 +1,5 @@
 1. `telephysio-ai-mobile/docs/SETUP_GUIDE.md`
-   - Hướng dẫn cài dependency, chạy app, clear cache, và lưu ý quan trọng khi dùng Expo Go với WSL2 trên Windows.
+   - Hướng dẫn khởi động ứng dụng bằng Docker, cách làm việc với dependency bên trong container, clear cache, và lưu ý khi dùng Expo Go với WSL2 trên Windows.
 
 2. `.agents/`
    - Chứa các skill phục vụ AI agent. Hiện có skill nâng cấp Expo, setup Tailwind, native data fetching, Expo module, API routes, và các kỹ năng khác.
@@ -31,16 +31,16 @@ Các quy tắc đơn giản khi làm việc nhóm bằng Git trong dự án này
    - Chỉ commit `.env.example` khi thêm hoặc đổi env key.
 
 6. Trước khi push, chạy kiểm tra tối thiểu trong `telephysio-ai-mobile/`
-   - `npm install` nếu vừa đổi dependency
-   - `npx expo-doctor`
-   - `npx tsc --noEmit`
+   - `docker compose run --rm expo npm install` nếu vừa đổi dependency và cần cập nhật lockfile
+   - `docker compose run --rm expo npx expo-doctor`
+   - `docker compose run --rm expo npx tsc --noEmit`
 
 7. PR nên mô tả ngắn gọn
    - Đã đổi gì
    - Ảnh hưởng màn hình/chức năng nào
    - Cách kiểm tra lại
 
-8. Nếu thay dependency Expo, dùng `npx expo install`
+8. Nếu thay dependency Expo, dùng `docker compose run --rm expo npx expo install <ten-package>`
    - Không tự ý nâng package Expo bằng `npm install` vì dễ lệch version SDK.
 
 9. Nếu sửa docs/setup/config, cập nhật tài liệu liên quan ngay trong cùng PR

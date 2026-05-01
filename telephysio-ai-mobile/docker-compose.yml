@@ -1,0 +1,25 @@
+services:
+  expo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telephysio-ai-mobile-expo
+    working_dir: /app
+    environment:
+      EXPO_DEVTOOLS_LISTEN_ADDRESS: 0.0.0.0
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    volumes:
+      - .:/app
+      - expo_node_modules:/app/node_modules
+    stdin_open: true
+    tty: true
+    command: npm run docker:start
+
+volumes:
+  expo_node_modules:

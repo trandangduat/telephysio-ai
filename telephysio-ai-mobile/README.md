@@ -18,3 +18,31 @@ TelePhysioAI là hệ thống hỗ trợ phục hồi vận động từ xa tíc
 Vui lòng tham khảo tài liệu chi tiết trong thư mục `docs/`:
 1. [Hướng dẫn cài đặt & Thiết lập dự án](docs/SETUP_GUIDE.md)
 2. [Cấu hình Firebase](docs/FIREBASE_CONFIG.md)
+
+## Chạy ứng dụng bằng Docker
+
+Workflow mặc định của dự án hiện là Docker để mọi thành viên dùng cùng một môi trường Node/Expo và không phải tự cài dependency của app lên máy host.
+
+```bash
+docker compose up --build
+```
+
+Lệnh này sẽ:
+
+- build image từ `Dockerfile`
+- cài dependency bằng `npm ci` trong image
+- mount source code hiện tại để vẫn hỗ trợ hot reload
+- chạy Expo dev server trong container bằng `npm run docker:start`
+
+Khi cần dừng môi trường:
+
+```bash
+docker compose down
+```
+
+Nếu bạn vừa thay đổi dependency, rebuild image mà vẫn thấy container dùng package cũ, hãy xóa luôn volume `node_modules` của Docker rồi chạy lại:
+
+```bash
+docker compose down -v
+docker compose up --build
+```

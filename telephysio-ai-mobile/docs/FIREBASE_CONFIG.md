@@ -72,9 +72,10 @@ export const storage = getStorage(app);
 ### 6. Ẩn API Key (Bảo mật)
 Không nên hardcode `firebaseConfig` vào mã nguồn trực tiếp khi push lên GitHub.
 Hãy sử dụng biến môi trường:
-1. Tạo file `.env` ở thư mục gốc của dự án.
+1. Tạo file `.env` ở thư mục `telephysio-ai-mobile/` từ `.env.example`.
 2. Thêm các biến `EXPO_PUBLIC_FIREBASE_API_KEY`, v.v.
-3. Trong code `config.ts`, truy xuất thông qua `process.env.EXPO_PUBLIC_FIREBASE_API_KEY`.
+3. Khi chạy bằng Docker, file `.env` này sẽ được Expo đọc trực tiếp từ source code đang mount vào container.
+4. Trong code `config.ts`, truy xuất thông qua `process.env.EXPO_PUBLIC_FIREBASE_API_KEY`.
 
 Ví dụ:
 
@@ -92,5 +93,5 @@ const firebaseConfig = {
 ## Ghi chú tương thích sau nâng cấp
 
 - Ứng dụng hiện chạy trên `expo@^55.0.15`, `react@19.2.0` và `react-native@0.83.4`.
-- Nếu cài thêm package liên quan đến Firebase hoặc native capability, ưu tiên dùng `npx expo install` cho package Expo và kiểm tra lại bằng `npx expo-doctor`.
-- Sau khi đổi biến môi trường hoặc cấu hình Firebase, có thể cần khởi động lại bundler bằng `npx expo start --clear` để tránh cache cũ.
+- Nếu cài thêm package liên quan đến Firebase hoặc native capability, ưu tiên dùng `docker compose run --rm expo npx expo install` cho package Expo và kiểm tra lại bằng `docker compose run --rm expo npx expo-doctor`.
+- Sau khi đổi biến môi trường hoặc cấu hình Firebase, có thể cần khởi động lại bundler bằng `docker compose run --rm expo npm run docker:start:clear` để tránh cache cũ.
