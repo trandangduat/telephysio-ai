@@ -1,122 +1,500 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  Alert,
+  Modal,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
+import { useAuthStore } from '../../store/authStore';
+import { saveSession } from '../../services/firestore';
+import { colors, typography, spacing, radius } from '../../theme';
 
-type RootStackParamList = {
+type PatientStackParamList = {
   Home: undefined;
-  Session: undefined;
+  Session: { exerciseId: string; exerciseName: string; targetReps: number; sets: number };
 };
 
-type SessionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Session'>;
-
 interface Props {
-  navigation: SessionScreenNavigationProp;
+  navigation: NativeStackNavigationProp<PatientStackParamList, 'Session'>;
+  route: RouteProp<PatientStackParamList, 'Session'>;
 }
 
-export const SessionScreen: React.FC<Props> = ({ navigation }) => {
-  const [reps, setReps] = useState(0);
+type SessionPhase = 'active' | 'resting' | 'completed';
 
-  // Mocking real-time pose updates
+export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { exerciseId, exerciseName, targetReps, sets } = route.params;
+  const { user } = useAuthStore();
+
+  const [phase, setPhase] = useState<SessionPhase>('active');
+  const [currentSet, setCurrentSet] = useState(1);
+  const [reps, setReps] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
+  const [restTime, setRestTime] = useState(30);
+  const [paused, setPaused] = useState(false);
+  const [score, setScore] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState('Bắt đầu! Thực hiện đúng kỹ thuật nào 💪');
+
+  const repAnim = useRef(new Animated.Value(1)).current;
+  const scoreAnim = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const restTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const FEEDBACK_MESSAGES = [
+    'Tuyệt vời! Tiếp tục nào! 🔥',
+    'Giữ thẳng lưng nhé! 📏',
+    'Nhịp thở đều đặn! 🌬️',
+    'Xuất sắc! Bạn đang làm rất tốt! ⭐',
+    'Chậm và chuẩn hơn nhé! 🎯',
+    'Sắp xong rồi! Cố lên! 💪',
+  ];
+
+  // Main timer
   useEffect(() => {
-    const timer = setInterval(() => {
-      setReps(prev => {
-        if (prev >= 10) {
-          clearInterval(timer);
-          return prev;
-        }
-        return prev + 1;
+    if (phase === 'active' && !paused) {
+      timerRef.current = setInterval(() => setTotalTime((t) => t + 1), 1000);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [phase, paused]);
+
+  // Rest timer
+  useEffect(() => {
+    if (phase === 'resting') {
+      setRestTime(30);
+      restTimerRef.current = setInterval(() => {
+        setRestTime((t) => {
+          if (t <= 1) {
+            clearInterval(restTimerRef.current!);
+            if (currentSet < sets) {
+              setCurrentSet((s) => s + 1);
+              setReps(0);
+              setPhase('active');
+              setFeedback('Hiệp mới! Bắt đầu nào! 🔥');
+            } else {
+              setPhase('completed');
+            }
+            return 0;
+          }
+          return t - 1;
+        });
+      }, 1000);
+    }
+    return () => { if (restTimerRef.current) clearInterval(restTimerRef.current!); };
+  }, [phase]);
+
+  // Mock rep counting (simulate AI detection)
+  const addRep = useCallback(() => {
+    if (phase !== 'active' || paused) return;
+
+    const newReps = reps + 1;
+    setReps(newReps);
+
+    // Animate rep counter
+    Animated.sequence([
+      Animated.timing(repAnim, { toValue: 1.2, duration: 120, useNativeDriver: true }),
+      Animated.timing(repAnim, { toValue: 1, duration: 120, useNativeDriver: true }),
+    ]).start();
+
+    // Random feedback
+    if (newReps % 3 === 0) {
+      setFeedback(FEEDBACK_MESSAGES[Math.floor(Math.random() * FEEDBACK_MESSAGES.length)]);
+    }
+
+    if (newReps >= targetReps) {
+      const repScore = Math.floor(70 + Math.random() * 30);
+      setScore((s) => Math.round((s + repScore) / (currentSet)));
+      if (currentSet < sets) {
+        setPhase('resting');
+        setFeedback(`Hiệp ${currentSet} hoàn thành! Nghỉ 30 giây 👏`);
+      } else {
+        setPhase('completed');
+      }
+    }
+  }, [phase, paused, reps, targetReps, currentSet, sets]);
+
+  const handleStop = () => {
+    Alert.alert('Dừng buổi tập', 'Bạn có muốn lưu kết quả đã tập không?', [
+      { text: 'Bỏ qua', style: 'destructive', onPress: () => navigation.navigate('Home') },
+      { text: 'Lưu & Thoát', onPress: () => saveResult('incomplete') },
+    ]);
+  };
+
+  const saveResult = async (status: 'completed' | 'incomplete') => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const finalScore = status === 'completed' ? Math.max(60, score) : Math.round(score * 0.7);
+      await saveSession({
+        userId: user.uid,
+        exerciseId,
+        exerciseName,
+        completedReps: reps + (currentSet - 1) * targetReps,
+        targetReps: targetReps * sets,
+        completedSets: currentSet,
+        targetSets: sets,
+        score: finalScore,
+        duration: totalTime,
+        status,
       });
-    }, 2000);
-    return () => clearInterval(timer);
-  }, []);
+      navigation.navigate('Home');
+    } catch (e) {
+      console.error('Save session error:', e);
+      Alert.alert('Lỗi', 'Không thể lưu kết quả. Vui lòng thử lại.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+
+  // Completion screen
+  if (phase === 'completed') {
+    const finalScore = Math.max(60, score || Math.floor(70 + Math.random() * 25));
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.completedScreen}>
+          <Text style={styles.completedEmoji}>🎉</Text>
+          <Text style={styles.completedTitle}>Xuất sắc!</Text>
+          <Text style={styles.completedSub}>Bạn đã hoàn thành buổi tập</Text>
+
+          <View style={styles.scoreCircle}>
+            <Text style={styles.scoreValue}>{finalScore}</Text>
+            <Text style={styles.scoreLabel}>Điểm</Text>
+          </View>
+
+          <View style={styles.completedStats}>
+            {[
+              { label: 'Số hiệp', value: `${sets}/${sets}` },
+              { label: 'Số lần lặp', value: `${targetReps * sets}` },
+              { label: 'Thời gian', value: formatTime(totalTime) },
+            ].map((stat) => (
+              <View key={stat.label} style={styles.completedStat}>
+                <Text style={styles.completedStatValue}>{stat.value}</Text>
+                <Text style={styles.completedStatLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={styles.saveBtn}
+            onPress={() => saveResult('completed')}
+            disabled={saving}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.saveBtnText}>{saving ? 'Đang lưu...' : '💾 Lưu kết quả'}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bài tập gập khuỷu tay</Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>Dừng tập</Text>
+    <SafeAreaView style={styles.safe}>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={handleStop} style={styles.stopBtn}>
+          <Text style={styles.stopBtnText}>✕ Dừng</Text>
         </TouchableOpacity>
+        <Text style={styles.exerciseTitleTop}>{exerciseName}</Text>
+        <View style={styles.timerBadge}>
+          <Text style={styles.timerText}>{formatTime(totalTime)}</Text>
+        </View>
       </View>
 
-      <View style={styles.cameraPreview}>
-        {/* Real-time PoseNet Skeleton goes here */}
-        <Text style={styles.counterText}>{reps} / 10</Text>
-        <Text style={styles.feedbackText}>
-          {reps === 10 ? "Xuất sắc! Đã hoàn thành mục tiêu." : "Tiếp tục! Giữ thẳng lưng."}
-        </Text>
+      {/* Camera area (mock with body skeleton) */}
+      <View style={styles.cameraArea}>
+        {/* Human silhouette placeholder */}
+        <View style={styles.silhouettePlaceholder}>
+          <Text style={styles.silhouetteIcon}>🧍</Text>
+        </View>
+
+        {/* Rep counter overlay */}
+        <View style={styles.repOverlay}>
+          <Text style={styles.repLabel}>LẶP LẠI</Text>
+          <Animated.Text
+            style={[styles.repCount, { transform: [{ scale: repAnim }] }]}
+          >
+            {reps}
+          </Animated.Text>
+          <Text style={styles.repTotal}>/ {targetReps}</Text>
+        </View>
+
+        {/* Feedback banner */}
+        <View style={styles.feedbackBanner}>
+          <Text style={styles.feedbackText} numberOfLines={1}>{feedback}</Text>
+        </View>
+
+        {/* Set indicator top right */}
+        <View style={styles.setBadge}>
+          <Text style={styles.setBadgeText}>Hiệp {currentSet}/{sets}</Text>
+        </View>
       </View>
 
-      {reps === 10 && (
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.buttonText}>Lưu kết quả</Text>
-        </TouchableOpacity>
+      {/* Rest overlay */}
+      {phase === 'resting' && (
+        <View style={styles.restOverlay}>
+          <Text style={styles.restTitle}>Nghỉ giải lao</Text>
+          <Text style={styles.restTimer}>{restTime}s</Text>
+          <Text style={styles.restSub}>Hiệp tiếp theo: {currentSet + 1}/{sets}</Text>
+          <TouchableOpacity
+            style={styles.skipRestBtn}
+            onPress={() => {
+              clearInterval(restTimerRef.current!);
+              setCurrentSet((s) => s + 1);
+              setReps(0);
+              setPhase('active');
+            }}
+          >
+            <Text style={styles.skipRestText}>Bỏ qua nghỉ →</Text>
+          </TouchableOpacity>
+        </View>
       )}
-    </View>
+
+      {/* Controls */}
+      <View style={styles.controls}>
+        {/* Progress bar */}
+        <View style={styles.progressInfo}>
+          <Text style={styles.progressLabel}>
+            Tiến độ hiệp {currentSet}: {reps}/{targetReps}
+          </Text>
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${Math.min((reps / targetReps) * 100, 100)}%` },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Tap to count + pause */}
+        <View style={styles.btnRow}>
+          <TouchableOpacity
+            style={styles.pauseBtn}
+            onPress={() => setPaused((p) => !p)}
+          >
+            <Text style={styles.pauseBtnIcon}>{paused ? '▶' : '⏸'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.repBtn}
+            onPress={addRep}
+            disabled={phase !== 'active' || paused}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.repBtnText}>
+              {paused ? '⏸ Tạm dừng' : '👆 Đếm lần lặp'}
+            </Text>
+            <Text style={styles.repBtnSub}>Nhấn sau mỗi lần thực hiện</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  header: {
+  safe: { flex: 1, backgroundColor: '#0a1520' },
+  topBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    paddingTop: 48,
-    backgroundColor: '#FFF',
+    paddingHorizontal: spacing.gutter,
+    paddingVertical: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  stopBtn: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(186,26,26,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(186,26,26,0.5)',
   },
-  backBtn: {
-    padding: 8,
+  stopBtnText: { color: '#ff8a80', ...typography.labelMd },
+  exerciseTitleTop: { ...typography.bodyMd, color: 'rgba(255,255,255,0.8)', flex: 1, textAlign: 'center' },
+  timerBadge: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
   },
-  backText: {
-    color: '#E74C3C',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  cameraPreview: {
+  timerText: { ...typography.labelMd, color: colors.inverseOnSurface, fontVariant: ['tabular-nums'] },
+
+  cameraArea: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0a1520',
+    position: 'relative',
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  silhouettePlaceholder: {
+    width: 160,
+    height: 320,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.xxl,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  counterText: {
-    fontSize: 80,
-    fontWeight: 'bold',
-    color: '#F1C40F',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
-  },
-  feedbackText: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: 'bold',
+  silhouetteIcon: { fontSize: 80 },
+  repOverlay: {
     position: 'absolute',
-    bottom: 40,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  primaryButton: {
-    backgroundColor: '#3498DB',
-    paddingVertical: 20,
+    right: spacing.gutter,
+    top: '20%',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: 'bold',
+  repLabel: { ...typography.labelSm, color: 'rgba(255,255,255,0.6)', letterSpacing: 1 },
+  repCount: {
+    fontSize: 52,
+    fontWeight: '700',
+    color: colors.primaryFixedDim,
+    fontVariant: ['tabular-nums'],
+    lineHeight: 60,
   },
+  repTotal: { ...typography.bodyMd, color: 'rgba(255,255,255,0.5)' },
+  feedbackBanner: {
+    position: 'absolute',
+    bottom: spacing.lg,
+    left: spacing.gutter,
+    right: spacing.gutter,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  feedbackText: { ...typography.bodyMd, color: colors.inverseOnSurface, textAlign: 'center' },
+  setBadge: {
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.gutter,
+    backgroundColor: colors.primaryContainer,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+  },
+  setBadgeText: { ...typography.labelSm, color: colors.onPrimaryContainer },
+
+  restOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(10,21,32,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    zIndex: 10,
+  },
+  restTitle: { ...typography.headlineLg, color: colors.inverseOnSurface },
+  restTimer: { fontSize: 72, fontWeight: '700', color: colors.primaryFixedDim, fontVariant: ['tabular-nums'] },
+  restSub: { ...typography.bodyMd, color: 'rgba(255,255,255,0.6)' },
+  skipRestBtn: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  skipRestText: { ...typography.labelMd, color: colors.inverseOnSurface },
+
+  controls: {
+    backgroundColor: colors.background,
+    padding: spacing.gutter,
+    gap: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  progressInfo: { gap: spacing.xs },
+  progressLabel: { ...typography.labelMd, color: colors.onSurfaceVariant },
+  progressTrack: {
+    height: 8,
+    backgroundColor: colors.surfaceContainerHighest,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+  },
+  btnRow: { flexDirection: 'row', gap: spacing.sm },
+  pauseBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.surfaceContainerHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  pauseBtnIcon: { fontSize: 20 },
+  repBtn: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    boxShadow: '0px 4px 16px rgba(0,71,141,0.3)',
+  } as any,
+  repBtnText: { ...typography.headlineMd, color: colors.onPrimary },
+  repBtnSub: { ...typography.labelSm, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+
+  // Completed screen
+  completedScreen: {
+    flex: 1,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.lg,
+  },
+  completedEmoji: { fontSize: 64 },
+  completedTitle: { ...typography.headlineXl, color: colors.onSurface },
+  completedSub: { ...typography.bodyLg, color: colors.onSurfaceVariant },
+  scoreCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: colors.primaryFixed,
+    borderWidth: 4,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreValue: { fontSize: 48, fontWeight: '700', color: colors.primary },
+  scoreLabel: { ...typography.labelMd, color: colors.onPrimaryFixedVariant },
+  completedStats: {
+    flexDirection: 'row',
+    gap: spacing.xl,
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: radius.xl,
+    width: '100%',
+    justifyContent: 'space-around',
+  },
+  completedStat: { alignItems: 'center', gap: spacing.xs },
+  completedStatValue: { ...typography.headlineLg, color: colors.onSurface },
+  completedStatLabel: { ...typography.labelSm, color: colors.onSurfaceVariant },
+  saveBtn: {
+    width: '100%',
+    backgroundColor: colors.primary,
+    paddingVertical: 17,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    boxShadow: '0px 4px 16px rgba(0,71,141,0.3)',
+  } as any,
+  saveBtnText: { ...typography.headlineMd, color: colors.onPrimary },
 });
