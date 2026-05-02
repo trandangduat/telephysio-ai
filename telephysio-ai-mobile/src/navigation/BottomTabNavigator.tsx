@@ -1,5 +1,5 @@
 /**
- * BottomTabNavigator — 4 tabs: Home, Library, Report, Feedback.
+ * BottomTabNavigator — 4 tabs: Home, Workout, Feedback, Profile.
  *
  * Styling follows Clinical Vitality Design System:
  * - Active: primary (Medical Blue), stroke-based icons
@@ -13,9 +13,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { HomeScreen } from '../screens/Home/HomeScreen';
-import { LibraryScreen } from '../screens/Library/LibraryScreen';
-import { ReportScreen } from '../screens/Report/ReportScreen';
+import { WorkoutScreen } from '../screens/Workout/WorkoutScreen';
 import { FeedbackScreen } from '../screens/Feedback/FeedbackScreen';
+import { LibraryScreen } from '../screens/Library/LibraryScreen';
+import { ProgressScreen } from '../screens/Progress/ProgressScreen';
 import { colors, typography } from '../theme';
 import type { BottomTabParamList } from './types';
 
@@ -23,9 +24,10 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const TAB_ICONS: Record<keyof BottomTabParamList, { active: string; inactive: string }> = {
   Home:     { active: 'home',           inactive: 'home-outline' },
-  Library:  { active: 'barbell',        inactive: 'barbell-outline' },
-  Report:   { active: 'stats-chart',    inactive: 'stats-chart-outline' },
-  Feedback: { active: 'chatbubble',     inactive: 'chatbubble-outline' },
+  Workout:  { active: 'barbell',        inactive: 'barbell-outline' },
+  Feedback: { active: 'stats-chart',    inactive: 'stats-chart-outline' },
+  Library:  { active: 'library',        inactive: 'library-outline' },
+  Progress: { active: 'trending-up',    inactive: 'trending-up-outline' },
 };
 
 export const BottomTabNavigator: React.FC = () => {
@@ -68,22 +70,27 @@ export const BottomTabNavigator: React.FC = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: t('tabs.home'), headerShown: false }}
+        options={{ title: t('tabs.home', 'Home'), headerShown: false }}
       />
       <Tab.Screen
-        name="Library"
-        component={LibraryScreen}
-        options={{ title: t('tabs.library'), headerShown: false }}
-      />
-      <Tab.Screen
-        name="Report"
-        component={ReportScreen}
-        options={{ title: t('tabs.report'), headerShown: false }}
+        name="Workout"
+        component={WorkoutScreen}
+        options={{ title: t('tabs.workout', 'Workout'), headerShown: false }}
       />
       <Tab.Screen
         name="Feedback"
         component={FeedbackScreen}
-        options={{ title: t('tabs.feedback'), headerShown: false }}
+        options={{ title: t('tabs.feedback', 'Feedback'), headerShown: false }}
+      />
+      <Tab.Screen
+        name="Library"
+        component={LibraryScreen}
+        options={{ title: t('tabs.library', 'Library'), headerShown: false }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{ title: t('tabs.progress', 'Progress'), headerShown: false }}
       />
     </Tab.Navigator>
   );

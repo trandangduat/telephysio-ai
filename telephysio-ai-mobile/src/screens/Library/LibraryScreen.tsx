@@ -1,94 +1,214 @@
-/**
- * LibraryScreen — UC4: view and filter assigned exercises.
- *
- * FlatList 2 columns + FilterChips + ExerciseCards
- */
-
-import React, { useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
 import { AppText } from '../../components/ui';
-import { FilterChips } from '../../components/library/FilterChips';
-import { ExerciseCard } from '../../components/library/ExerciseCard';
 import { colors, spacing } from '../../theme';
-import { exerciseLibrary } from '../../mocks/workout.mock';
+import type { RootStackParamList } from '../../navigation/types';
 
 export const LibraryScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
-  const [activeFilter, setActiveFilter] = useState('all');
-
-  const exerciseCategories = useMemo(() => [
-    { id: 'all',      label: t('library.filterAll') },
-    { id: 'assigned', label: t('library.filterAssigned') },
-    { id: 'ref',      label: t('library.filterRef') },
-    { id: 'upper',    label: t('library.filterUpper') },
-    { id: 'lower',    label: t('library.filterLower') },
-    { id: 'core',     label: t('library.filterCore') },
-  ], [t]);
-
-  const filteredExercises = useMemo(() => {
-    if (activeFilter === 'all') return exerciseLibrary;
-    if (activeFilter === 'assigned')
-      return exerciseLibrary.filter((e) => e.category === 'assigned');
-    if (activeFilter === 'ref')
-      return exerciseLibrary.filter((e) => e.category === 'reference');
-    return exerciseLibrary;
-  }, [activeFilter]);
+  
+  const [activeFilter, setActiveFilter] = useState('filterAll');
+  const filters = [
+    { key: 'filterAll', label: t('library.filterAll', 'All Items') },
+    { key: 'filterVideos', label: t('library.filterVideos', 'Videos') },
+    { key: 'filterPDFs', label: t('library.filterPDFs', 'PDFs') },
+    { key: 'filterArticles', label: t('library.filterArticles', 'Articles') }
+  ];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <AppText variant="headlineLg">{t('library.title')}</AppText>
+      {/* Unified Top Bar */}
+      <View style={styles.topBar}>
+        <View style={styles.logoRow}>
+          <Ionicons name="medical" size={20} color={colors.primary} />
+          <AppText variant="labelMd" style={styles.logoText}>TelePhysioAI</AppText>
+        </View>
+        <View style={styles.topBarIcons}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('DoctorChat' as any)}>
+            <Ionicons name="chatbubbles-outline" size={24} color={'#475569'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn}>
+            <Ionicons name="notifications-outline" size={24} color={'#475569'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile' as any)}>
+            <Ionicons name="person" size={14} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <FilterChips
-        chips={exerciseCategories.map((c) => ({ id: c.id, label: c.label }))}
-        activeId={activeFilter}
-        onSelect={setActiveFilter}
-      />
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search" size={20} color="#64748b" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('library.searchPlaceholder', 'Search exercises, guides, or videos...')}
+            placeholderTextColor="#94a3b8"
+          />
+        </View>
+      </View>
 
-      <FlatList
-        data={filteredExercises}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <ExerciseCard exercise={item} onPress={() => {}} />
-        )}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <AppText variant="bodyMd" color={colors.onSurfaceVariant}>
-              {t('library.noExercises')}
+      {/* Filter Chips */}
+      <View style={styles.chipsWrapper}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsContainer}>
+          {filters.map((filter) => (
+            <TouchableOpacity 
+              key={filter.key}
+              style={[styles.chip, activeFilter === filter.key && styles.chipActive]}
+              onPress={() => setActiveFilter(filter.key)}
+            >
+              <AppText variant="labelMd" style={activeFilter === filter.key ? styles.chipTextActive : styles.chipText}>
+                {filter.label}
+              </AppText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Daily Tip Banner */}
+        <View style={styles.card}>
+          <View style={styles.bannerImagePlaceholder}>
+            <Ionicons name="image-outline" size={48} color="#94a3b8" />
+            <View style={styles.dailyTipBadge}>
+              <AppText variant="labelSm" style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>DAILY TIP</AppText>
+            </View>
+          </View>
+          <View style={styles.bannerContent}>
+            <AppText variant="headlineMd" style={styles.cardTitle}>Morning Mobility Routine</AppText>
+            <AppText variant="bodyMd" style={styles.bannerDesc}>
+              Start your day with these 5 gentle joint movements to reduce stiffness and improve blood flow before your first session.
+            </AppText>
+            <TouchableOpacity style={styles.readMoreBtn} onPress={() => Alert.alert('Guide', 'Opening article...')}>
+              <AppText variant="labelMd" style={{ color: colors.primary }}>{t('library.readGuide', 'Read full guide')}</AppText>
+              <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Saved Exercises */}
+        <View style={styles.card}>
+          <View style={styles.cardHeaderBetween}>
+            <AppText variant="labelMd" style={styles.cardTitle}>Saved Exercises</AppText>
+            <Ionicons name="bookmark-outline" size={20} color={colors.primary} />
+          </View>
+          
+          <TouchableOpacity style={styles.savedItem} onPress={() => navigation.navigate('Calibration' as any)}>
+            <View style={styles.savedItemIcon}>
+              <Ionicons name="play" size={20} color="#fff" />
+            </View>
+            <View style={styles.savedItemInfo}>
+              <AppText variant="labelMd" style={styles.savedItemTitle}>Wall Slides</AppText>
+              <AppText variant="bodySm" style={styles.savedItemSub}>Scapular Mobility • 3 Sets</AppText>
+            </View>
+            <Ionicons name="play-circle-outline" size={24} color="#64748b" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.savedItem} onPress={() => navigation.navigate('Calibration' as any)}>
+            <View style={styles.savedItemIcon}>
+              <Ionicons name="play" size={20} color="#fff" />
+            </View>
+            <View style={styles.savedItemInfo}>
+              <AppText variant="labelMd" style={styles.savedItemTitle}>Single-Leg Bridge</AppText>
+              <AppText variant="bodySm" style={styles.savedItemSub}>Glute Activation • 12 Reps</AppText>
+            </View>
+            <Ionicons name="play-circle-outline" size={24} color="#64748b" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.viewAllBtn} onPress={() => Alert.alert('Saved', 'Viewing all saved items.')}>
+            <AppText variant="labelMd" style={{ color: colors.primary }}>{t('library.viewAllSaved', 'View All Saved')}</AppText>
+          </TouchableOpacity>
+        </View>
+
+        {/* Educational Guides */}
+        <View style={styles.sectionHeader}>
+          <AppText variant="labelMd" style={styles.cardTitle}>{t('library.educationalGuides', 'Educational Guides')}</AppText>
+        </View>
+
+        <TouchableOpacity style={styles.card} onPress={() => Alert.alert('Guide', 'Understanding Meniscus Recovery')}>
+          <View style={[styles.bannerImagePlaceholder, { height: 140, backgroundColor: '#1e293b' }]}>
+            <Ionicons name="medical-outline" size={48} color="#475569" />
+          </View>
+          <View style={styles.bannerContent}>
+            <View style={styles.tagRow}>
+              <Ionicons name="document-text-outline" size={14} color="#047857" />
+              <AppText variant="labelSm" style={{ color: '#047857' }}>{t('library.kneeHealth', 'Knee Health')}</AppText>
+            </View>
+            <AppText variant="headlineMd" style={styles.guideTitle}>Understanding Meniscus Recovery</AppText>
+            <AppText variant="bodyMd" style={styles.bannerDesc}>
+              Learn the biology of healing and how physical therapy accelerates recovery...
             </AppText>
           </View>
-        }
-      />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.card} onPress={() => Alert.alert('Video', 'Playing Posture Correction 101')}>
+          <View style={[styles.bannerImagePlaceholder, { height: 140, backgroundColor: '#f1f5f9' }]}>
+            <Ionicons name="body-outline" size={48} color="#94a3b8" />
+          </View>
+          <View style={styles.bannerContent}>
+            <View style={styles.tagRow}>
+              <Ionicons name="play-outline" size={14} color="#2563eb" />
+              <AppText variant="labelSm" style={{ color: '#2563eb' }}>{t('library.instructionalVideo', 'Instructional Video')}</AppText>
+            </View>
+            <AppText variant="headlineMd" style={styles.guideTitle}>Posture Correction 101</AppText>
+            <AppText variant="bodyMd" style={styles.bannerDesc}>
+              Master the art of spinal alignment during daily office tasks and home life.
+            </AppText>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.gutter,
-  },
-  header: {
-    marginBottom: spacing.sm,
-  },
-  row: {
-    gap: spacing.md,
-  },
-  listContent: {
-    gap: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingTop: spacing.xl,
-  },
+  safe: { flex: 1, backgroundColor: '#f8fafd' },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+  topBarIcons: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  iconBtn: { padding: 4 },
+  avatarBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  
+  searchContainer: { paddingHorizontal: spacing.gutter, paddingVertical: spacing.sm },
+  searchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: spacing.md, height: 44, borderWidth: 1, borderColor: '#e2e8f0' },
+  searchIcon: { marginRight: spacing.sm },
+  searchInput: { flex: 1, fontSize: 15, color: '#0f172a' },
+
+  chipsWrapper: { marginBottom: spacing.md },
+  chipsContainer: { paddingHorizontal: spacing.gutter, gap: spacing.sm },
+  chip: { backgroundColor: '#e2e8f0', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100 },
+  chipActive: { backgroundColor: colors.primary },
+  chipText: { color: '#475569', fontWeight: '600' },
+  chipTextActive: { color: '#fff', fontWeight: '600' },
+
+  scroll: { flex: 1 },
+  content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: spacing.xl * 2 },
+
+  card: { backgroundColor: '#fff', borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, overflow: 'hidden' },
+  bannerImagePlaceholder: { height: 180, backgroundColor: '#cbd5e1', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  dailyTipBadge: { position: 'absolute', bottom: 12, left: 12, backgroundColor: '#10b981', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  bannerContent: { padding: spacing.lg },
+  cardTitle: { color: '#0f172a', fontWeight: '700', fontSize: 16 },
+  bannerDesc: { color: '#475569', marginTop: spacing.xs, lineHeight: 22 },
+  readMoreBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.md },
+  
+  cardHeaderBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, paddingBottom: spacing.sm },
+  savedItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: '#f8fafc', marginHorizontal: spacing.lg, marginBottom: spacing.sm, borderRadius: 12 },
+  savedItemIcon: { width: 40, height: 40, borderRadius: 8, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  savedItemInfo: { flex: 1 },
+  savedItemTitle: { color: '#0f172a', fontWeight: '600' },
+  savedItemSub: { color: '#64748b', fontSize: 12 },
+  viewAllBtn: { marginHorizontal: spacing.lg, marginBottom: spacing.lg, paddingVertical: 12, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center' },
+
+  sectionHeader: { marginTop: spacing.sm, marginBottom: -spacing.xs },
+  tagRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.xs },
+  guideTitle: { color: '#0f172a', fontWeight: '700', fontSize: 18 },
 });

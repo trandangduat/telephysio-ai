@@ -23,6 +23,7 @@ import {
 } from '@expo-google-fonts/inter';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { AuthProvider } from './src/contexts/AuthContext';
 import { colors } from './src/theme';
 
 export default function App() {
@@ -43,10 +44,12 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar style="dark" />
-      <AppNavigator />
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <StatusBar style="dark" />
+        <AppNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
 
