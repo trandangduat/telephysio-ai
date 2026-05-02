@@ -1,69 +1,114 @@
+/**
+ * HomeScreen — UC1 (entry), UC6 (doctor notice)
+ *
+ * Layout: Header → TodayCard (Level 2) → RecoveryProgressBar → DoctorNoticeCard → WeekCalendar
+ */
+
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
-type RootStackParamList = {
-  Home: undefined;
-  Calibration: undefined;
-  Session: undefined;
-};
+import { AppText, ProgressBar } from '../../components/ui';
+import { TodayCard } from '../../components/home/TodayCard';
+import { WeekCalendar } from '../../components/home/WeekCalendar';
+import { DoctorNoticeCard } from '../../components/home/DoctorNoticeCard';
+import { colors, spacing } from '../../theme';
+import type { RootStackParamList, BottomTabParamList } from '../../navigation/types';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type HomeNavProp = CompositeNavigationProp<
+  BottomTabNavigationProp<BottomTabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface Props {
-  navigation: HomeScreenNavigationProp;
+  navigation: HomeNavProp;
 }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { t, i18n } = useTranslation();
+  const userName = 'Minh An';
+
+  const locale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
+  const today = new Date().toLocaleDateString(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>TelePhysioAI</Text>
-      <Text style={styles.subtitle}>Chào Minh An, hôm nay bạn thấy thế nào?</Text>
-      
-      <TouchableOpacity 
-        style={styles.primaryButton}
-        onPress={() => navigation.navigate('Calibration')}
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.buttonText}>Bắt đầu bài tập hôm nay</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <AppText variant="headlineMd">{t('home.greeting', { name: userName })}</AppText>
+          <AppText variant="bodySm" color={colors.onSurfaceVariant}>
+            {today}
+          </AppText>
+        </View>
+
+        {/* Today's Workout — Level 2 (floating) */}
+        <TodayCard onStart={() => navigation.navigate('Calibration')} />
+
+        {/* Recovery Progress */}
+        <View style={styles.section}>
+          <View style={styles.progressHeader}>
+            <AppText variant="labelMd" color={colors.onSurfaceVariant}>
+              {t('home.recoveryProgress')}
+            </AppText>
+            <AppText variant="labelMd" color={colors.tertiary}>
+              72%
+            </AppText>
+          </View>
+          <ProgressBar progress={0.72} variant="standard" />
+        </View>
+
+        {/* Doctor Notice */}
+        <DoctorNoticeCard />
+
+        {/* Week Calendar */}
+        <View style={styles.section}>
+          <AppText variant="labelMd" color={colors.onSurfaceVariant} style={styles.sectionLabel}>
+            {t('home.weekSchedule')}
+          </AppText>
+          <WeekCalendar />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    padding: 24,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.background,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-    marginBottom: 8,
+  scroll: {
+    flex: 1,
   },
-  subtitle: {
-    fontSize: 18,
-    color: '#7F8C8D',
-    marginBottom: 40,
-    textAlign: 'center',
+  content: {
+    padding: spacing.gutter,
+    gap: spacing.lg,
+    paddingBottom: spacing.xl,
   },
-  primaryButton: {
-    backgroundColor: '#3498DB',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+  header: {
+    gap: spacing.xs,
   },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
+  section: {
+    gap: spacing.sm,
+  },
+  sectionLabel: {
+    marginBottom: spacing.xs,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 });

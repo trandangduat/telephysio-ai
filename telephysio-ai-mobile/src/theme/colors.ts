@@ -1,0 +1,86 @@
+/**
+ * Clinical Vitality — Color Tokens
+ * Nguồn: DESIGN.md
+ *
+ * Không hardcode hex trong component.
+ * Chỉ import `colors` hoặc `palette`.
+ */
+
+export const colors = {
+  // Surfaces
+  surface:                '#f5faff',
+  surfaceDim:             '#d1dbe4',
+  surfaceBright:          '#f5faff',
+  surfaceContainerLowest: '#ffffff',
+  surfaceContainerLow:    '#ebf5fd',
+  surfaceContainerHigh:   '#dfeaf2',
+  surfaceContainerHighest:'#dae4ec',
+  surfaceContainer:       '#e5eff8',
+
+  // On-surface (text / icon trên nền surface)
+  onSurface:              '#131d23',
+  onSurfaceVariant:       '#424752',
+  inverseSurface:         '#283238',
+  inverseOnSurface:       '#e8f2fb',
+
+  // Outline
+  outline:                '#727783',
+  outlineVariant:         '#c2c6d4',
+
+  // Primary — Medical Blue
+  surfaceTint:            '#005db6',
+  primary:                '#00478d',
+  onPrimary:              '#ffffff',
+  primaryContainer:       '#005eb8',
+  onPrimaryContainer:     '#c8daff',
+  inversePrimary:         '#a9c7ff',
+  primaryFixed:           '#d6e3ff',
+  primaryFixedDim:        '#a9c7ff',
+  onPrimaryFixed:         '#001b3d',
+  onPrimaryFixedVariant:  '#00468c',
+
+  // Secondary — Wash Blue
+  secondary:              '#566067',
+  onSecondary:            '#ffffff',
+  secondaryContainer:     '#dae4ed',
+  onSecondaryContainer:   '#5c666d',
+  secondaryFixed:         '#dae4ed',
+  secondaryFixedDim:      '#bec8d0',
+  onSecondaryFixed:       '#131d23',
+  onSecondaryFixedVariant:'#3e484f',
+
+  // Tertiary — Success Green
+  tertiary:               '#00541e',
+  onTertiary:             '#ffffff',
+  tertiaryContainer:      '#006f2b',
+  onTertiaryContainer:    '#7df38e',
+  tertiaryFixed:          '#85fb96',
+  tertiaryFixedDim:       '#69de7c',
+  onTertiaryFixed:        '#002108',
+  onTertiaryFixedVariant: '#00531e',
+
+  // Error
+  error:                  '#ba1a1a',
+  onError:                '#ffffff',
+  errorContainer:         '#ffdad6',
+  onErrorContainer:       '#93000a',
+
+  // Background
+  background:             '#f5faff',
+  onBackground:           '#131d23',
+  surfaceVariant:         '#dae4ec',
+} as const;
+
+/**
+ * Alias ngắn — import nhanh trong component.
+ */
+export const palette = {
+  primary:   colors.primary,
+  success:   colors.tertiary,
+  error:     colors.error,
+  bg:        colors.background,
+  card:      colors.surfaceContainerLowest,
+  border:    colors.outlineVariant,
+  textMain:  colors.onSurface,
+  textMuted: colors.onSurfaceVariant,
+} as const;

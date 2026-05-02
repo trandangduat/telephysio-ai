@@ -1,36 +1,60 @@
-import React from 'react';
+/**
+ * App entry point — TelePhysioAI
+ *
+ * Loads Manrope + Inter fonts, then renders the main navigator.
+ */
+
+// Initialise i18n before any component renders
+import './src/i18n';
+
+import React, { useCallback } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import {
+  useFonts,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from '@expo-google-fonts/manrope';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+} from '@expo-google-fonts/inter';
 
-// Placeholder Screens
-import { HomeScreen } from './src/screens/Home/HomeScreen';
-import { CalibrationScreen } from './src/screens/Calibration/CalibrationScreen';
-import { SessionScreen } from './src/screens/Session/SessionScreen';
-
-const Stack = createNativeStackNavigator();
+import { AppNavigator } from './src/navigation/AppNavigator';
+import { colors } from './src/theme';
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ title: 'Bảng điều khiển' }} 
-        />
-        <Stack.Screen 
-          name="Calibration" 
-          component={CalibrationScreen} 
-          options={{ title: 'Hiệu chỉnh Camera' }} 
-        />
-        <Stack.Screen 
-          name="Session" 
-          component={SessionScreen} 
-          options={{ title: 'Phòng luyện tập AI', headerShown: false }} 
-        />
-      </Stack.Navigator>
+      <StatusBar style="dark" />
+      <AppNavigator />
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+});
