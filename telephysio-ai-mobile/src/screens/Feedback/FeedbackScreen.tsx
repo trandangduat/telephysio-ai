@@ -52,7 +52,7 @@ export const FeedbackScreen: React.FC = () => {
   const handleSend = async () => {
     if (!user) return;
     if (!message.trim()) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng nhập nội dung phản hồi.');
+      Alert.alert('Missing Info', 'Please enter a message before sending.');
       return;
     }
     setSending(true);
@@ -67,10 +67,10 @@ export const FeedbackScreen: React.FC = () => {
       });
       setMessage('');
       setPainLevel(0);
-      Alert.alert('Đã gửi! 👍', 'Phản hồi của bạn đã được gửi đến bác sĩ.');
+      Alert.alert('Sent! 👍', 'Your feedback has been sent to your doctor.');
       loadData();
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể gửi phản hồi. Vui lòng thử lại.');
+      Alert.alert('Error', 'Could not send feedback. Please try again.');
     } finally {
       setSending(false);
     }
@@ -78,7 +78,7 @@ export const FeedbackScreen: React.FC = () => {
 
   const formatDate = (date: Date) => {
     const d = new Date(date);
-    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
   };
 
   const PAIN_COLORS = ['', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#f44336', '#d32f2f', '#b71c1c'];
@@ -88,9 +88,9 @@ export const FeedbackScreen: React.FC = () => {
       {/* Tabs */}
       <View style={styles.tabs}>
         {([
-          { key: 'send', label: 'Gửi phản hồi' },
-          { key: 'received', label: 'Từ bác sĩ' },
-          { key: 'sent', label: 'Đã gửi' },
+          { key: 'send', label: 'Send Feedback' },
+          { key: 'received', label: 'From Doctor' },
+          { key: 'sent', label: 'Sent' },
         ] as const).map((t) => (
           <TouchableOpacity
             key={t.key}
@@ -120,15 +120,15 @@ export const FeedbackScreen: React.FC = () => {
         {tab === 'send' && (
           <View style={styles.sendSection}>
             <Card padding="md" style={styles.formCard}>
-              <Text style={styles.formTitle}>💬 Gửi phản hồi cho bác sĩ</Text>
+              <Text style={styles.formTitle}>💬 Send Feedback to Doctor</Text>
               <Text style={styles.formSub}>
-                Chia sẻ cảm giác sau buổi tập, đặt câu hỏi hoặc báo cáo vấn đề sức khỏe.
+                Share how you feel after your session, ask questions, or report any concerns.
               </Text>
 
               {/* Pain level */}
               <View style={styles.painSection}>
                 <Text style={styles.painLabel}>
-                  Mức độ đau / khó chịu: {painLevel > 0 ? `${painLevel}/10` : 'Không đau'}
+                  Pain / Discomfort Level: {painLevel > 0 ? `${painLevel}/10` : 'No pain'}
                 </Text>
                 <View style={styles.painScale}>
                   {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
@@ -148,7 +148,7 @@ export const FeedbackScreen: React.FC = () => {
                     >
                       <Text style={[
                         styles.painDotText,
-                        { color: painLevel === level ? colors.white : colors.onSurfaceVariant },
+                        { color: painLevel === level ? '#fff' : colors.onSurfaceVariant },
                       ]}>
                         {level}
                       </Text>
@@ -156,19 +156,19 @@ export const FeedbackScreen: React.FC = () => {
                   ))}
                 </View>
                 <View style={styles.painLabels}>
-                  <Text style={styles.painLabelEnd}>Không đau</Text>
-                  <Text style={styles.painLabelEnd}>Rất đau</Text>
+                  <Text style={styles.painLabelEnd}>No pain</Text>
+                  <Text style={styles.painLabelEnd}>Severe pain</Text>
                 </View>
               </View>
 
               {/* Message input */}
               <View style={styles.inputArea}>
-                <Text style={styles.inputLabel}>Nội dung</Text>
+                <Text style={styles.inputLabel}>Message</Text>
                 <TextInput
                   style={styles.textArea}
                   multiline
                   numberOfLines={5}
-                  placeholder="Mô tả cảm giác sau buổi tập, câu hỏi cho bác sĩ, hoặc báo cáo bất thường..."
+                  placeholder="Describe how you feel after your session, questions for your doctor, or any issues..."
                   placeholderTextColor={colors.onSurfaceVariant}
                   value={message}
                   onChangeText={setMessage}
@@ -177,7 +177,7 @@ export const FeedbackScreen: React.FC = () => {
               </View>
 
               <Button
-                title="📤 Gửi phản hồi"
+                title="📤 Send Feedback"
                 onPress={handleSend}
                 loading={sending}
                 fullWidth
@@ -186,12 +186,12 @@ export const FeedbackScreen: React.FC = () => {
 
             {/* Quick templates */}
             <View style={styles.templates}>
-              <Text style={styles.templatesTitle}>Mẫu nhanh</Text>
+              <Text style={styles.templatesTitle}>Quick Templates</Text>
               {[
-                'Tôi cảm thấy đau nhẹ ở khu vực đã tập sau buổi hôm nay.',
-                'Bài tập ngày hôm nay khá khó, tôi không hoàn thành đủ số lần.',
-                'Tôi muốn tăng độ khó bài tập vì cảm thấy đã quen.',
-                'Hôm nay tôi tập rất tốt và không có vấn đề gì!',
+                'I felt mild soreness in the area after today\'s session.',
+                'Today\'s exercises were quite challenging, I couldn\'t complete all reps.',
+                'I\'d like to increase the difficulty as I feel comfortable with the current level.',
+                'Great session today, no issues at all!',
               ].map((tmpl, i) => (
                 <TouchableOpacity
                   key={i}
@@ -211,8 +211,8 @@ export const FeedbackScreen: React.FC = () => {
             {fromDoctor.length === 0 ? (
               <Card padding="lg" style={styles.emptyCard}>
                 <Text style={styles.emptyIcon}>👨‍⚕️</Text>
-                <Text style={styles.emptyTitle}>Chưa có tin nhắn</Text>
-                <Text style={styles.emptyText}>Bác sĩ chưa gửi phản hồi nào cho bạn.</Text>
+                <Text style={styles.emptyTitle}>No messages yet</Text>
+                <Text style={styles.emptyText}>Your doctor hasn't sent you any notes yet.</Text>
               </Card>
             ) : (
               fromDoctor.map((fb) => (
@@ -222,7 +222,7 @@ export const FeedbackScreen: React.FC = () => {
                       <Text style={styles.doctorAvatarText}>👨‍⚕️</Text>
                     </View>
                     <View style={styles.feedbackMeta}>
-                      <Text style={styles.feedbackFrom}>Bác sĩ</Text>
+                      <Text style={styles.feedbackFrom}>Doctor</Text>
                       <Text style={styles.feedbackDate}>{formatDate(fb.createdAt)}</Text>
                     </View>
                   </View>
@@ -239,8 +239,8 @@ export const FeedbackScreen: React.FC = () => {
             {myFeedback.length === 0 ? (
               <Card padding="lg" style={styles.emptyCard}>
                 <Text style={styles.emptyIcon}>💬</Text>
-                <Text style={styles.emptyTitle}>Chưa gửi phản hồi nào</Text>
-                <Text style={styles.emptyText}>Hãy gửi phản hồi sau mỗi buổi tập để bác sĩ nắm tình trạng của bạn.</Text>
+                <Text style={styles.emptyTitle}>No feedback sent yet</Text>
+                <Text style={styles.emptyText}>Send feedback after each session so your doctor can monitor your progress.</Text>
               </Card>
             ) : (
               myFeedback.map((fb) => (
@@ -250,7 +250,7 @@ export const FeedbackScreen: React.FC = () => {
                       <Text style={styles.feedbackDate}>{formatDate(fb.createdAt)}</Text>
                       {fb.painLevel !== undefined && fb.painLevel > 0 && (
                         <Text style={styles.painChip}>
-                          Mức đau: {fb.painLevel}/10
+                          Pain level: {fb.painLevel}/10
                         </Text>
                       )}
                     </View>
@@ -258,7 +258,7 @@ export const FeedbackScreen: React.FC = () => {
                   <Text style={styles.feedbackMsg}>{fb.message}</Text>
                   {fb.reply && (
                     <View style={styles.replyBox}>
-                      <Text style={styles.replyLabel}>👨‍⚕️ Phản hồi từ bác sĩ:</Text>
+                      <Text style={styles.replyLabel}>👨‍⚕️ Doctor's reply:</Text>
                       <Text style={styles.replyText}>{fb.reply}</Text>
                     </View>
                   )}

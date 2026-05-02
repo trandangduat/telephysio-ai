@@ -26,17 +26,17 @@ interface Props {
 type CalibrationStatus = 'idle' | 'detecting' | 'partial' | 'ready';
 
 const JOINT_POINTS = [
-  { id: 'head', label: 'Đầu', x: 50, y: 8 },
-  { id: 'lShoulder', label: 'Vai T', x: 32, y: 20 },
-  { id: 'rShoulder', label: 'Vai P', x: 68, y: 20 },
-  { id: 'lElbow', label: 'Khuỷu T', x: 20, y: 34 },
-  { id: 'rElbow', label: 'Khuỷu P', x: 80, y: 34 },
-  { id: 'lHip', label: 'Hông T', x: 36, y: 50 },
-  { id: 'rHip', label: 'Hông P', x: 64, y: 50 },
-  { id: 'lKnee', label: 'Gối T', x: 30, y: 67 },
-  { id: 'rKnee', label: 'Gối P', x: 70, y: 67 },
-  { id: 'lAnkle', label: 'Cổ chân T', x: 28, y: 84 },
-  { id: 'rAnkle', label: 'Cổ chân P', x: 72, y: 84 },
+  { id: 'head', label: 'Head', x: 50, y: 8 },
+  { id: 'lShoulder', label: 'L Shoulder', x: 32, y: 20 },
+  { id: 'rShoulder', label: 'R Shoulder', x: 68, y: 20 },
+  { id: 'lElbow', label: 'L Elbow', x: 20, y: 34 },
+  { id: 'rElbow', label: 'R Elbow', x: 80, y: 34 },
+  { id: 'lHip', label: 'L Hip', x: 36, y: 50 },
+  { id: 'rHip', label: 'R Hip', x: 64, y: 50 },
+  { id: 'lKnee', label: 'L Knee', x: 30, y: 67 },
+  { id: 'rKnee', label: 'R Knee', x: 70, y: 67 },
+  { id: 'lAnkle', label: 'L Ankle', x: 28, y: 84 },
+  { id: 'rAnkle', label: 'R Ankle', x: 72, y: 84 },
 ];
 
 export const CalibrationScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -90,26 +90,26 @@ export const CalibrationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const statusConfig = {
     idle: {
-      message: 'Chuẩn bị hiệu chỉnh',
-      sub: 'Hãy đứng cách điện thoại 2–3 mét để camera thấy toàn thân',
+      message: 'Preparing calibration',
+      sub: 'Stand 2–3 meters from your phone so the camera can see your full body',
       color: colors.onSurfaceVariant,
       bgColor: colors.surfaceContainerHighest,
     },
     detecting: {
-      message: 'Đang nhận diện cơ thể...',
-      sub: 'Đứng thẳng, hai tay thả lỏng tự nhiên',
+      message: 'Detecting your body...',
+      sub: 'Stand straight with arms relaxed at your sides',
       color: colors.primary,
       bgColor: colors.primaryFixed,
     },
     partial: {
-      message: `Đã nhận diện ${detectedCount}/${JOINT_POINTS.length} điểm khớp`,
-      sub: 'Lùi thêm hoặc điều chỉnh góc camera',
+      message: `Detected ${detectedCount}/${JOINT_POINTS.length} joint points`,
+      sub: 'Step back or adjust the camera angle',
       color: '#e65100',
       bgColor: '#ffeedd',
     },
     ready: {
-      message: '✅ Sẵn sàng! Hệ thống đã nhận diện đủ cơ thể',
-      sub: 'Nhấn "Bắt đầu luyện tập" khi bạn đã sẵn sàng',
+      message: '✅ Ready! Full body detected',
+      sub: 'Press "Start Exercise" when you are ready',
       color: colors.tertiary,
       bgColor: colors.tertiaryFixed,
     },
@@ -122,7 +122,7 @@ export const CalibrationScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* Exercise info banner */}
       <View style={styles.infoBanner}>
         <Text style={styles.exerciseName}>{exerciseName}</Text>
-        <Text style={styles.exerciseMeta}>{sets} hiệp × {targetReps} lần</Text>
+        <Text style={styles.exerciseMeta}>{sets} sets × {targetReps} reps</Text>
       </View>
 
       {/* Camera preview (mock) */}
@@ -139,7 +139,7 @@ export const CalibrationScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.safeZone} />
 
         {/* Skeleton joints */}
-        {JOINT_POINTS.slice(0, detectedCount).map((joint, i) => (
+        {JOINT_POINTS.slice(0, detectedCount).map((joint) => (
           <View
             key={joint.id}
             style={[
@@ -158,7 +158,7 @@ export const CalibrationScreen: React.FC<Props> = ({ navigation, route }) => {
         {status === 'idle' && (
           <View style={styles.cameraPlaceholder}>
             <Text style={styles.cameraPlaceholderIcon}>📷</Text>
-            <Text style={styles.cameraPlaceholderText}>Camera đang khởi động</Text>
+            <Text style={styles.cameraPlaceholderText}>Camera starting up</Text>
           </View>
         )}
 
@@ -212,12 +212,12 @@ export const CalibrationScreen: React.FC<Props> = ({ navigation, route }) => {
             />
           </View>
           <Text style={styles.progressLabel}>
-            {detectedCount}/{JOINT_POINTS.length} điểm khớp
+            {detectedCount}/{JOINT_POINTS.length} joint points
           </Text>
         </Animated.View>
 
         <Button
-          title="▶ Bắt đầu luyện tập"
+          title="▶ Start Exercise"
           onPress={() => navigation.replace('Session', { exerciseId, exerciseName, targetReps, sets })}
           disabled={status !== 'ready'}
           fullWidth

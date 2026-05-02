@@ -36,19 +36,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const validate = () => {
     let valid = true;
     if (!email.trim()) {
-      setEmailError('Vui lòng nhập email');
+      setEmailError('Please enter your email');
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError('Email không hợp lệ');
+      setEmailError('Invalid email address');
       valid = false;
     } else {
       setEmailError('');
     }
     if (!password) {
-      setPasswordError('Vui lòng nhập mật khẩu');
+      setPasswordError('Please enter your password');
       valid = false;
     } else if (password.length < 6) {
-      setPasswordError('Mật khẩu phải có ít nhất 6 ký tự');
+      setPasswordError('Password must be at least 6 characters');
       valid = false;
     } else {
       setPasswordError('');
@@ -64,12 +64,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setUser(user);
     } catch (err: any) {
       const msg =
-        err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password'
-          ? 'Email hoặc mật khẩu không đúng'
+        err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'
+          ? 'Incorrect email or password.'
           : err.code === 'auth/too-many-requests'
-          ? 'Quá nhiều lần thử. Vui lòng thử lại sau.'
-          : 'Đăng nhập thất bại. Vui lòng thử lại.';
-      Alert.alert('Lỗi đăng nhập', msg);
+          ? 'Too many attempts. Please try again later.'
+          : 'Sign in failed. Please try again.';
+      Alert.alert('Sign In Failed', msg);
     } finally {
       setLoading(false);
     }
@@ -88,20 +88,20 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           {/* Logo & Brand */}
           <View style={styles.brand}>
             <View style={styles.logoMark}>
-              <Text style={styles.logoIcon}>⚡</Text>
+              <Text style={styles.logoIcon}>⚕️</Text>
             </View>
             <Text style={styles.logoTitle}>
               <Text style={{ color: colors.primary }}>TelePhysio</Text>
               <Text style={{ color: colors.tertiary, fontWeight: '700' }}>AI</Text>
             </Text>
-            <Text style={styles.logoSub}>Phục hồi thông minh, mọi lúc mọi nơi</Text>
+            <Text style={styles.logoSub}>Smart recovery, anytime anywhere</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            <Text style={styles.formTitle}>Đăng nhập</Text>
+            <Text style={styles.formTitle}>Sign In</Text>
             <Text style={styles.formSub}>
-              Chào mừng trở lại! Đăng nhập để tiếp tục hành trình hồi phục.
+              Welcome back! Sign in to continue your recovery journey.
             </Text>
 
             <View style={styles.fields}>
@@ -116,8 +116,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 error={emailError}
               />
               <Input
-                label="Mật khẩu"
-                placeholder="Nhập mật khẩu"
+                label="Password"
+                placeholder="Enter your password"
                 value={password}
                 onChangeText={setPassword}
                 isPassword
@@ -126,7 +126,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <Button
-              title="Đăng nhập"
+              title="Sign In"
               onPress={handleLogin}
               loading={isLoading}
               fullWidth
@@ -135,7 +135,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>hoặc</Text>
+              <Text style={styles.dividerText}>or</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -144,8 +144,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => navigation.navigate('Register')}
             >
               <Text style={styles.registerText}>
-                Chưa có tài khoản?{' '}
-                <Text style={styles.registerHighlight}>Đăng ký ngay</Text>
+                Don't have an account?{' '}
+                <Text style={styles.registerHighlight}>Create one</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   logoMark: {
     width: 72,
     height: 72,
-    borderRadius: radius.xxl,
+    borderRadius: 36,
     backgroundColor: colors.primaryFixed,
     alignItems: 'center',
     justifyContent: 'center',

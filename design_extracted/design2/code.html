@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Doctor Feedback - TelePhysioAI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#00531e",
+                        "outline": "#727783",
+                        "on-secondary-fixed": "#131d23",
+                        "on-secondary-container": "#5c666d",
+                        "on-primary-fixed": "#001b3d",
+                        "tertiary-fixed-dim": "#69de7c",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "on-surface": "#131d23",
+                        "on-secondary-fixed-variant": "#3e484f",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#dae4ed",
+                        "surface-bright": "#f5faff",
+                        "error-container": "#ffdad6",
+                        "background": "#f5faff",
+                        "secondary-fixed": "#dae4ed",
+                        "on-primary-fixed-variant": "#00468c",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#00541e",
+                        "tertiary-container": "#006f2b",
+                        "surface-container-low": "#ebf5fd",
+                        "tertiary-fixed": "#85fb96",
+                        "on-secondary": "#ffffff",
+                        "primary": "#00478d",
+                        "inverse-on-surface": "#e8f2fb",
+                        "on-primary-container": "#c8daff",
+                        "surface": "#f5faff",
+                        "surface-container-high": "#dfeaf2",
+                        "on-surface-variant": "#424752",
+                        "surface-container-highest": "#dae4ec",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#283238",
+                        "on-tertiary-fixed": "#002108",
+                        "on-tertiary-container": "#7df38e",
+                        "surface-tint": "#005db6",
+                        "secondary": "#566067",
+                        "error": "#ba1a1a",
+                        "surface-container": "#e5eff8",
+                        "primary-container": "#005eb8",
+                        "secondary-fixed-dim": "#bec8d0",
+                        "primary-fixed": "#d6e3ff",
+                        "on-background": "#131d23",
+                        "surface-dim": "#d1dbe4",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#dae4ec",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c2c6d4",
+                        "inverse-primary": "#a9c7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "base-unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-tablet": "32px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "xl": "32px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-xl": ["Manrope"],
+                        "headline-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-slate-50 dark:bg-slate-950 font-manrope antialiased docked full-width top-0 border-b border-slate-200 dark:border-slate-800 flat no shadows flex justify-between items-center w-full px-4 h-16 shrink-0">
+<button class="text-blue-700 dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-200 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="text-xl font-bold text-blue-700 dark:text-blue-400">TelePhysioAI</div>
+<button class="text-blue-700 dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-transform duration-200 p-1 rounded-full flex items-center justify-center">
+<img alt="User Profile" class="w-8 h-8 rounded-full object-cover" data-alt="Close up portrait of a young woman with natural makeup looking directly at camera, soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBhbuXsirByaZ2E_zoIYlKZRoQZ7ro_hqjOBsbCVh_pq7nKvz4QfjcoSr_RI28eAsSBevYvkcdj7rAE53gLCVhF-WgsjemsDSD5ayUlMssWvvHxEhg2xrrAc-atnffdj6Z6NcK3kSYQATHv4meSt_uvxFmC2lBZ3Kxw3xVRK2-dR-LDlArNayhq1e7ocnguWrBcthWnjMINw1sWaVH81P5iytWFpn11B6ACDjzH9SDXhdrLTX7TsZ-JxYFjwuEoRbFCLBAN-islKIu"/>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col p-margin-mobile md:p-margin-tablet gap-lg max-w-3xl mx-auto w-full pb-24 md:pb-margin-tablet">
+<!-- Header Section -->
+<div class="flex flex-col gap-sm">
+<h1 class="font-headline-xl text-headline-xl text-on-surface">Doctor Feedback</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Review your latest notes and assigned exercises.</p>
+</div>
+<!-- Doctor's Note Card -->
+<div class="bg-surface-container-lowest rounded-xl p-md border border-outline-variant/30 flex flex-col gap-md relative overflow-hidden shadow-[0_4px_12px_rgba(0,94,184,0.04)]">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
+<div class="flex items-start gap-md">
+<img alt="Dr. Sarah Jenkins" class="w-12 h-12 rounded-full object-cover border-2 border-surface-container" data-alt="Portrait of a female doctor in a white coat smiling warmly, clinical bright background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcvRYvotB05vNR6GoSmj2Isc7Hej51xuI_fcPtukoM5XkHAhhFBQNGjvPn5t4gKOmxp7DQZkJvcNisQ70gJotfCUiqvpORLzMoirxf9FUKeWCr6nC9to-DHNhTWE_trkXNhjT5QRJk-GKUmkMTJCJh7ohfB65WlWjaKz0OsnWhQXhuZ_za1BoFF9NyTkQjLCCyO-y9xzxFxlzXc_dpowz-Vxc2mvRNfNQxDnPd1UTxsOnzMT-w-lBS5iPYcbtVy-h6J2PXAm2qEubn"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary-container">Attending Physiotherapist</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Dr. Sarah Jenkins</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Oct 24, 2023</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md">
+<p class="font-body-md text-body-md text-on-surface">
+                    "Great progress on your shoulder mobility this week. Your form accuracy has improved significantly. I'm assigning a few new stretches to focus on the rotator cuff. Remember to keep the movements slow and controlled, and stop if you feel sharp pain."
+                </p>
+</div>
+</div>
+<!-- Assignments Section -->
+<div class="flex flex-col gap-md">
+<div class="flex justify-between items-end">
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Assigned Exercises</h3>
+<span class="font-label-md text-label-md text-on-surface-variant bg-surface-variant px-2 py-1 rounded-full">3 Tasks</span>
+</div>
+<!-- Exercise List -->
+<div class="flex flex-col gap-sm">
+<!-- Exercise 1 -->
+<div class="bg-surface-container-lowest rounded-lg p-md border border-outline-variant/30 flex items-center justify-between hover:bg-surface-container-low transition-colors duration-200 shadow-[0_2px_8px_rgba(0,94,184,0.02)]">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="accessibility_new">accessibility_new</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Wall Crawl Stretches</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">3 sets of 10 reps</span>
+</div>
+</div>
+<button class="font-label-md text-label-md text-primary bg-primary-fixed/20 hover:bg-primary-fixed/40 px-3 py-1.5 rounded-full transition-colors">Start</button>
+</div>
+<!-- Exercise 2 -->
+<div class="bg-surface-container-lowest rounded-lg p-md border border-outline-variant/30 flex items-center justify-between hover:bg-surface-container-low transition-colors duration-200 shadow-[0_2px_8px_rgba(0,94,184,0.02)]">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Resistance Band Rows</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">2 sets of 15 reps</span>
+</div>
+</div>
+<button class="font-label-md text-label-md text-primary bg-primary-fixed/20 hover:bg-primary-fixed/40 px-3 py-1.5 rounded-full transition-colors">Start</button>
+</div>
+<!-- Exercise 3 -->
+<div class="bg-surface-container-lowest rounded-lg p-md border border-outline-variant/30 flex items-center justify-between hover:bg-surface-container-low transition-colors duration-200 shadow-[0_2px_8px_rgba(0,94,184,0.02)]">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface strike-through opacity-70">Pendulum Swings</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant opacity-70">Completed Today</span>
+</div>
+</div>
+<button class="font-label-md text-label-md text-secondary bg-surface-variant px-3 py-1.5 rounded-full" disabled="">Done</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-white dark:bg-slate-900 docked full-width bottom-0 rounded-t-lg border-t border-slate-100 dark:border-slate-800 shadow-[0_-4px_12px_rgba(0,94,184,0.08)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-300 active:scale-90 transition-all duration-150 gap-1 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-manrope font-medium tracking-tight">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-300 active:scale-90 transition-all duration-150 gap-1 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+<span class="text-[10px] font-manrope font-medium tracking-tight">Workout</span>
+</a>
+<a class="flex flex-col items-center justify-center text-blue-700 dark:text-blue-400 font-bold scale-110 transition-all hover:text-blue-600 dark:hover:text-blue-300 active:scale-90 duration-150 gap-1 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+<span class="text-[10px] font-manrope font-medium tracking-tight">Feedback</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-300 active:scale-90 transition-all duration-150 gap-1 w-16" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] font-manrope font-medium tracking-tight">Profile</span>
+</a>
+</nav>
+</body></html>

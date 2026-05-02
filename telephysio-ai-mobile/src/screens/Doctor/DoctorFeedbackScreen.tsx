@@ -55,22 +55,22 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
 
   const handleReply = async (feedbackId: string) => {
     const reply = replyText[feedbackId]?.trim();
-    if (!reply) { Alert.alert('Vui lòng nhập nội dung phản hồi.'); return; }
+    if (!reply) { Alert.alert('Please enter a reply before sending.'); return; }
     setSendingReply(feedbackId);
     try {
       await replyToFeedback(feedbackId, reply);
       setReplyText((prev) => ({ ...prev, [feedbackId]: '' }));
-      Alert.alert('Đã gửi phản hồi! ✅');
+      Alert.alert('Reply sent! ✅');
       loadData();
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể gửi phản hồi.');
+      Alert.alert('Error', 'Could not send reply.');
     } finally {
       setSendingReply(null);
     }
   };
 
   const handleSendNote = async () => {
-    if (!user || !newMessage.trim()) { Alert.alert('Vui lòng nhập nội dung ghi chú.'); return; }
+    if (!user || !newMessage.trim()) { Alert.alert('Please enter a note before sending.'); return; }
     setSendingNew(true);
     try {
       await sendFeedback({
@@ -81,9 +81,9 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
         category: 'doctor_note',
       });
       setNewMessage('');
-      Alert.alert('Đã gửi ghi chú! 📋', `${patientName} sẽ nhận được thông báo.`);
+      Alert.alert('Note sent! 📋', `${patientName} will receive a notification.`);
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể gửi ghi chú.');
+      Alert.alert('Error', 'Could not send note.');
     } finally {
       setSendingNew(false);
     }
@@ -117,18 +117,18 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
           </View>
           <View>
             <Text style={styles.patientName}>{patientName}</Text>
-            <Text style={styles.patientSub}>{feedbacks.length} phản hồi</Text>
+            <Text style={styles.patientSub}>{feedbacks.length} feedback messages</Text>
           </View>
         </View>
 
         {/* Send note to patient */}
         <Card elevated style={styles.noteCard} padding="md">
-          <Text style={styles.noteTitle}>📋 Gửi ghi chú y tế cho bệnh nhân</Text>
+          <Text style={styles.noteTitle}>📋 Send Medical Note to Patient</Text>
           <TextInput
             style={styles.noteInput}
             multiline
             numberOfLines={4}
-            placeholder={`Ghi chú cho ${patientName}... Ví dụ: điều chỉnh bài tập, lời khuyên, nhắc nhở...`}
+            placeholder={`Note for ${patientName}... e.g. exercise adjustments, advice, reminders...`}
             placeholderTextColor={colors.onSurfaceVariant}
             value={newMessage}
             onChangeText={setNewMessage}
@@ -136,20 +136,20 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
           />
           <View style={styles.noteTemplates}>
             {[
-              'Bạn đang tiến bộ rất tốt! Hãy duy trì nhịp tập đều đặn.',
-              'Tôi nhận thấy điểm số hôm nay giảm. Hãy nghỉ ngơi và thử lại ngày mai.',
-              'Hãy tập bài gối thêm 2 lần/tuần để cải thiện biên độ vận động.',
+              'You are making great progress! Keep up the consistent routine.',
+              'I noticed your score dropped today. Please rest and try again tomorrow.',
+              'Try doing the knee exercise 2 more times per week to improve range of motion.',
             ].map((tmpl, i) => (
               <TouchableOpacity key={i} style={styles.templateChip} onPress={() => setNewMessage(tmpl)}>
                 <Text style={styles.templateText} numberOfLines={1}>{tmpl}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <Button title="📤 Gửi ghi chú" onPress={handleSendNote} loading={sendingNew} fullWidth />
+          <Button title="📤 Send Note" onPress={handleSendNote} loading={sendingNew} fullWidth />
         </Card>
 
         {/* Patient feedbacks */}
-        <Text style={styles.sectionTitle}>Phản hồi từ bệnh nhân ({feedbacks.length})</Text>
+        <Text style={styles.sectionTitle}>Patient Feedback ({feedbacks.length})</Text>
 
         {feedbacks.length === 0 ? (
           <Card padding="lg" style={styles.emptyCard}>
@@ -174,14 +174,14 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
 
               {/* Patient message */}
               <View style={styles.patientMessage}>
-                <Text style={styles.patientMessageLabel}>Bệnh nhân nói:</Text>
+                <Text style={styles.patientMessageLabel}>Patient says:</Text>
                 <Text style={styles.patientMessageText}>{fb.message}</Text>
               </View>
 
               {/* Existing reply */}
               {fb.reply && (
                 <View style={styles.replyBox}>
-                  <Text style={styles.replyLabel}>✅ Phản hồi của bạn ({fb.replyAt ? formatDate(fb.replyAt) : ''})</Text>
+                  <Text style={styles.replyLabel}>✅ Your reply ({fb.replyAt ? formatDate(fb.replyAt) : ''})</Text>
                   <Text style={styles.replyText}>{fb.reply}</Text>
                 </View>
               )}
@@ -191,7 +191,7 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
                 <View style={styles.replyInput}>
                   <TextInput
                     style={styles.replyTextInput}
-                    placeholder="Nhập phản hồi cho bệnh nhân..."
+                    placeholder="Enter your reply to this patient..."
                     placeholderTextColor={colors.onSurfaceVariant}
                     value={replyText[fb.id] ?? ''}
                     onChangeText={(text) => setReplyText((prev) => ({ ...prev, [fb.id]: text }))}
@@ -203,7 +203,7 @@ export const DoctorFeedbackScreen: React.FC<Props> = ({ route }) => {
                     disabled={sendingReply === fb.id}
                   >
                     <Text style={styles.replyBtnText}>
-                      {sendingReply === fb.id ? '...' : 'Gửi →'}
+                      {sendingReply === fb.id ? '...' : 'Send →'}
                     </Text>
                   </TouchableOpacity>
                 </View>

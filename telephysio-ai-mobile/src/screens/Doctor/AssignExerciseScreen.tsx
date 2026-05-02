@@ -31,7 +31,7 @@ interface Props {
   route: RouteProp<DoctorStackParamList, 'AssignExercise'>;
 }
 
-const DIFFICULTY_LABEL: Record<string, string> = { easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' };
+const DIFFICULTY_LABEL: Record<string, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 const DIFFICULTY_BADGE: Record<string, 'success' | 'warning' | 'error'> = { easy: 'success', medium: 'warning', hard: 'error' };
 
 export const AssignExerciseScreen: React.FC<Props> = ({ route }) => {
@@ -74,14 +74,14 @@ export const AssignExerciseScreen: React.FC<Props> = ({ route }) => {
           next.delete(exercise.id);
           return next;
         });
-        Alert.alert('Đã gỡ bỏ', `Đã gỡ bài tập "${exercise.name}" khỏi ${patientName}.`);
+        Alert.alert('Exercise removed', `Removed "${exercise.name}" from ${patientName}.`);
       } else {
         await assignExercise(patientId, exercise, user.uid);
         setCurrentAssignments((prev) => new Set([...prev, exercise.id]));
-        Alert.alert('Đã giao bài ✅', `Đã giao "${exercise.name}" cho ${patientName}.`);
+        Alert.alert('Exercise assigned ✅', `Assigned "${exercise.name}" to ${patientName}.`);
       }
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể cập nhật bài tập. Vui lòng thử lại.');
+      Alert.alert('Error', 'Could not update exercise. Please try again.');
     } finally {
       setAssigning(null);
     }
@@ -103,9 +103,9 @@ export const AssignExerciseScreen: React.FC<Props> = ({ route }) => {
     <SafeAreaView style={styles.safe}>
       {/* Patient info banner */}
       <View style={styles.banner}>
-        <Text style={styles.bannerTitle}>Giao bài tập cho</Text>
+        <Text style={styles.bannerTitle}>Assigning exercises to</Text>
         <Text style={styles.bannerPatient}>{patientName}</Text>
-        <Text style={styles.bannerSub}>{currentAssignments.size} bài tập đang giao</Text>
+        <Text style={styles.bannerSub}>{currentAssignments.size} exercises currently assigned</Text>
       </View>
 
       <FlatList
@@ -132,7 +132,7 @@ export const AssignExerciseScreen: React.FC<Props> = ({ route }) => {
                       <Text style={styles.exerciseName}>{ex.name}</Text>
                       <View style={styles.exerciseTags}>
                         <Badge label={DIFFICULTY_LABEL[ex.difficulty]} variant={DIFFICULTY_BADGE[ex.difficulty]} size="sm" />
-                        <Text style={styles.exerciseMeta}>{ex.sets} hiệp × {ex.targetReps} lần</Text>
+                        <Text style={styles.exerciseMeta}>{ex.sets} sets × {ex.targetReps} reps</Text>
                       </View>
                     </View>
                     <TouchableOpacity
@@ -148,7 +148,7 @@ export const AssignExerciseScreen: React.FC<Props> = ({ route }) => {
                         styles.assignBtnText,
                         isAssigned ? styles.assignBtnTextRemove : styles.assignBtnTextAdd,
                       ]}>
-                        {isLoading ? '...' : isAssigned ? '✓ Đã giao' : '+ Giao'}
+                        {isLoading ? '...' : isAssigned ? '✓ Assigned' : '+ Assign'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -160,7 +160,7 @@ export const AssignExerciseScreen: React.FC<Props> = ({ route }) => {
         )}
         ListEmptyComponent={
           loading ? (
-            <Text style={styles.loadingText}>Đang tải danh sách bài tập...</Text>
+            <Text style={styles.loadingText}>Loading exercise list...</Text>
           ) : null
         }
       />

@@ -29,15 +29,15 @@ interface Props {
 const ROLES: { value: UserRole; label: string; icon: string; desc: string }[] = [
   {
     value: 'patient',
-    label: 'Bệnh nhân',
+    label: 'Patient',
     icon: '🏃',
-    desc: 'Thực hiện bài tập & theo dõi tiến độ hồi phục',
+    desc: 'Perform exercises & track your recovery progress',
   },
   {
     value: 'doctor',
-    label: 'Bác sĩ / Chuyên viên',
+    label: 'Doctor / Therapist',
     icon: '👨‍⚕️',
-    desc: 'Theo dõi bệnh nhân & điều chỉnh phác đồ điều trị',
+    desc: 'Monitor patients & adjust treatment protocols',
   },
 ];
 
@@ -52,13 +52,13 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!name.trim()) e.name = 'Vui lòng nhập họ tên';
-    if (!email.trim()) e.email = 'Vui lòng nhập email';
-    else if (!/\S+@\S+\.\S+/.test(email)) e.email = 'Email không hợp lệ';
-    if (!password) e.password = 'Vui lòng nhập mật khẩu';
-    else if (password.length < 6) e.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    if (!confirmPassword) e.confirmPassword = 'Vui lòng xác nhận mật khẩu';
-    else if (password !== confirmPassword) e.confirmPassword = 'Mật khẩu không khớp';
+    if (!name.trim()) e.name = 'Please enter your full name';
+    if (!email.trim()) e.email = 'Please enter your email';
+    else if (!/\S+@\S+\.\S+/.test(email)) e.email = 'Invalid email address';
+    if (!password) e.password = 'Please enter a password';
+    else if (password.length < 6) e.password = 'Password must be at least 6 characters';
+    if (!confirmPassword) e.confirmPassword = 'Please confirm your password';
+    else if (password !== confirmPassword) e.confirmPassword = 'Passwords do not match';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -72,11 +72,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     } catch (err: any) {
       const msg =
         err.code === 'auth/email-already-in-use'
-          ? 'Email này đã được đăng ký. Vui lòng dùng email khác.'
+          ? 'This email is already registered. Please use a different one.'
           : err.code === 'auth/weak-password'
-          ? 'Mật khẩu quá yếu.'
-          : 'Đăng ký thất bại. Vui lòng thử lại.';
-      Alert.alert('Lỗi đăng ký', msg);
+          ? 'Password is too weak.'
+          : 'Registration failed. Please try again.';
+      Alert.alert('Registration Failed', msg);
     } finally {
       setLoading(false);
     }
@@ -100,15 +100,15 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             >
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Tạo tài khoản</Text>
+            <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
-              Điền thông tin để bắt đầu hành trình phục hồi của bạn
+              Fill in your details to start your recovery journey
             </Text>
           </View>
 
           {/* Role Selection */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Bạn là ai?</Text>
+            <Text style={styles.sectionLabel}>I am a</Text>
             <View style={styles.roleContainer}>
               {ROLES.map((r) => (
                 <TouchableOpacity
@@ -142,11 +142,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Fields */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Thông tin cá nhân</Text>
+            <Text style={styles.sectionLabel}>Personal Information</Text>
             <View style={styles.fields}>
               <Input
-                label="Họ và tên"
-                placeholder="Nguyễn Văn A"
+                label="Full Name"
+                placeholder="John Smith"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -163,16 +163,16 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 error={errors.email}
               />
               <Input
-                label="Mật khẩu"
-                placeholder="Tối thiểu 6 ký tự"
+                label="Password"
+                placeholder="At least 6 characters"
                 value={password}
                 onChangeText={setPassword}
                 isPassword
                 error={errors.password}
               />
               <Input
-                label="Xác nhận mật khẩu"
-                placeholder="Nhập lại mật khẩu"
+                label="Confirm Password"
+                placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 isPassword
@@ -182,7 +182,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <Button
-            title="Tạo tài khoản"
+            title="Create Account"
             onPress={handleRegister}
             loading={isLoading}
             fullWidth
@@ -194,8 +194,8 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => navigation.navigate('Login')}
           >
             <Text style={styles.loginText}>
-              Đã có tài khoản?{' '}
-              <Text style={styles.loginHighlight}>Đăng nhập</Text>
+              Already have an account?{' '}
+              <Text style={styles.loginHighlight}>Sign in</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>

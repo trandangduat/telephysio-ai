@@ -17,7 +17,7 @@ import { Session } from '../../types';
 
 const { width } = Dimensions.get('window');
 
-const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const ProgressScreen: React.FC = () => {
   const { user } = useAuthStore();
@@ -75,7 +75,7 @@ export const ProgressScreen: React.FC = () => {
 
   const formatDate = (date: Date) => {
     const d = new Date(date);
-    return `${d.getDate()}/${d.getMonth() + 1} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
   const getScoreColor = (score: number) => {
@@ -93,14 +93,14 @@ export const ProgressScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.pageTitle}>Tiến độ hồi phục</Text>
+        <Text style={styles.pageTitle}>Recovery Progress</Text>
 
         {/* Summary stats */}
         <View style={styles.statsRow}>
           {[
-            { icon: '🔥', value: stats.currentStreak, label: 'Chuỗi ngày', color: '#e65100' },
-            { icon: '📋', value: stats.totalSessions, label: 'Buổi tập', color: colors.primary },
-            { icon: '⭐', value: stats.avgScore > 0 ? `${stats.avgScore}%` : '--', label: 'Điểm TB', color: colors.tertiary },
+            { icon: '🔥', value: stats.currentStreak, label: 'Day Streak', color: '#e65100' },
+            { icon: '📋', value: stats.totalSessions, label: 'Sessions', color: colors.primary },
+            { icon: '⭐', value: stats.avgScore > 0 ? `${stats.avgScore}%` : '--', label: 'Avg Score', color: colors.tertiary },
           ].map((s) => (
             <Card key={s.label} style={styles.statCard} padding="md">
               <Text style={styles.statIcon}>{s.icon}</Text>
@@ -112,7 +112,7 @@ export const ProgressScreen: React.FC = () => {
 
         {/* Weekly bar chart */}
         <Card style={styles.chartCard} padding="md">
-          <Text style={styles.sectionTitle}>Hoạt động 7 ngày qua</Text>
+          <Text style={styles.sectionTitle}>7-Day Activity</Text>
           <View style={styles.barChart}>
             {weekData.map((d, i) => (
               <View key={i} style={styles.barColumn}>
@@ -139,9 +139,9 @@ export const ProgressScreen: React.FC = () => {
           </View>
           <View style={styles.chartLegend}>
             {[
-              { color: colors.tertiary, label: '≥85 Xuất sắc' },
-              { color: colors.primary, label: '65-84 Tốt' },
-              { color: colors.secondary, label: '<65 Cần cải thiện' },
+              { color: colors.tertiary, label: '≥85 Excellent' },
+              { color: colors.primary, label: '65–84 Good' },
+              { color: colors.secondary, label: '<65 Needs work' },
             ].map((l) => (
               <View key={l.label} style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: l.color }]} />
@@ -151,17 +151,17 @@ export const ProgressScreen: React.FC = () => {
           </View>
         </Card>
 
-        {/* Lộ trình leo núi */}
+        {/* Recovery Journey */}
         <Card style={styles.journeyCard} padding="md">
-          <Text style={styles.sectionTitle}>🏔️ Lộ trình hồi phục</Text>
+          <Text style={styles.sectionTitle}>🏔️ Recovery Journey</Text>
           <View style={styles.journeyTrack}>
             {[
-              { label: 'Khởi đầu', done: stats.totalSessions >= 1, icon: '🚩' },
-              { label: '5 buổi tập', done: stats.totalSessions >= 5, icon: '⭐' },
-              { label: '10 buổi tập', done: stats.totalSessions >= 10, icon: '🏅' },
-              { label: '3 ngày liên tiếp', done: stats.currentStreak >= 3, icon: '🔥' },
-              { label: '7 ngày liên tiếp', done: stats.currentStreak >= 7, icon: '💪' },
-              { label: 'Điểm TB 80+', done: stats.avgScore >= 80, icon: '🎯' },
+              { label: 'First Steps', done: stats.totalSessions >= 1, icon: '🚩' },
+              { label: '5 Sessions', done: stats.totalSessions >= 5, icon: '⭐' },
+              { label: '10 Sessions', done: stats.totalSessions >= 10, icon: '🏅' },
+              { label: '3-Day Streak', done: stats.currentStreak >= 3, icon: '🔥' },
+              { label: '7-Day Streak', done: stats.currentStreak >= 7, icon: '💪' },
+              { label: '80+ Avg Score', done: stats.avgScore >= 80, icon: '🎯' },
             ].map((milestone, i) => (
               <View key={i} style={styles.milestone}>
                 <View style={[styles.milestoneIcon, !milestone.done && styles.milestoneLocked]}>
@@ -170,9 +170,6 @@ export const ProgressScreen: React.FC = () => {
                 <Text style={[styles.milestoneLabel, !milestone.done && styles.milestoneLabelLocked]}>
                   {milestone.label}
                 </Text>
-                {i < 5 && (
-                  <View style={[styles.milestoneConnector, milestone.done && styles.milestoneConnectorDone]} />
-                )}
               </View>
             ))}
           </View>
@@ -180,13 +177,13 @@ export const ProgressScreen: React.FC = () => {
 
         {/* Session history */}
         <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Lịch sử buổi tập</Text>
+          <Text style={styles.sectionTitle}>Session History</Text>
           {loading ? (
-            <Text style={styles.loadingText}>Đang tải...</Text>
+            <Text style={styles.loadingText}>Loading...</Text>
           ) : sessions.length === 0 ? (
             <Card padding="lg" style={styles.emptyCard}>
               <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyText}>Chưa có buổi tập nào.{'\n'}Hãy bắt đầu bài tập đầu tiên!</Text>
+              <Text style={styles.emptyText}>No sessions yet.{'\n'}Complete your first exercise to get started!</Text>
             </Card>
           ) : (
             sessions.slice(0, 10).map((s) => (
@@ -204,10 +201,10 @@ export const ProgressScreen: React.FC = () => {
                 </View>
                 <View style={styles.sessionMeta}>
                   <Text style={styles.sessionMetaText}>
-                    {s.completedSets}/{s.targetSets} hiệp • {s.completedReps} lần lặp • {Math.floor(s.duration / 60)}p{s.duration % 60}s
+                    {s.completedSets}/{s.targetSets} sets • {s.completedReps} reps • {Math.floor(s.duration / 60)}m {s.duration % 60}s
                   </Text>
                   <Badge
-                    label={s.status === 'completed' ? 'Hoàn thành' : 'Chưa xong'}
+                    label={s.status === 'completed' ? 'Completed' : 'Incomplete'}
                     variant={s.status === 'completed' ? 'success' : 'warning'}
                     size="sm"
                   />
@@ -269,7 +266,11 @@ const styles = StyleSheet.create({
   legendText: { ...typography.labelSm, color: colors.onSurfaceVariant },
   journeyCard: { gap: spacing.md },
   journeyTrack: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  milestone: { alignItems: 'center', gap: spacing.xs, width: (width - spacing.gutter * 2 - spacing.md * 2 - spacing.md * 4) / 3 },
+  milestone: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    width: (width - spacing.gutter * 2 - spacing.md * 2 - spacing.md * 4) / 3,
+  },
   milestoneIcon: {
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: colors.primaryFixed,
@@ -282,8 +283,6 @@ const styles = StyleSheet.create({
   },
   milestoneLabel: { ...typography.labelSm, color: colors.onSurface, textAlign: 'center' },
   milestoneLabelLocked: { color: colors.onSurfaceVariant },
-  milestoneConnector: { display: 'none' },
-  milestoneConnectorDone: {},
   historySection: { gap: spacing.sm },
   loadingText: { ...typography.bodyMd, color: colors.onSurfaceVariant, textAlign: 'center' },
   emptyCard: { alignItems: 'center', gap: spacing.sm },

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Animated,
   Alert,
-  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -39,20 +38,19 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
   const [paused, setPaused] = useState(false);
   const [score, setScore] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState('Bắt đầu! Thực hiện đúng kỹ thuật nào 💪');
+  const [feedback, setFeedback] = useState('Let\'s go! Focus on good form 💪');
 
   const repAnim = useRef(new Animated.Value(1)).current;
-  const scoreAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const restTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const FEEDBACK_MESSAGES = [
-    'Tuyệt vời! Tiếp tục nào! 🔥',
-    'Giữ thẳng lưng nhé! 📏',
-    'Nhịp thở đều đặn! 🌬️',
-    'Xuất sắc! Bạn đang làm rất tốt! ⭐',
-    'Chậm và chuẩn hơn nhé! 🎯',
-    'Sắp xong rồi! Cố lên! 💪',
+    'Great job! Keep it up! 🔥',
+    'Keep your back straight! 📏',
+    'Breathe steadily! 🌬️',
+    'Excellent form! You\'re doing great! ⭐',
+    'Slow and controlled! 🎯',
+    'Almost there! Push through! 💪',
   ];
 
   // Main timer
@@ -75,7 +73,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
               setCurrentSet((s) => s + 1);
               setReps(0);
               setPhase('active');
-              setFeedback('Hiệp mới! Bắt đầu nào! 🔥');
+              setFeedback('New set! Let\'s go! 🔥');
             } else {
               setPhase('completed');
             }
@@ -111,7 +109,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
       setScore((s) => Math.round((s + repScore) / (currentSet)));
       if (currentSet < sets) {
         setPhase('resting');
-        setFeedback(`Hiệp ${currentSet} hoàn thành! Nghỉ 30 giây 👏`);
+        setFeedback(`Set ${currentSet} done! Rest 30 seconds 👏`);
       } else {
         setPhase('completed');
       }
@@ -119,9 +117,9 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [phase, paused, reps, targetReps, currentSet, sets]);
 
   const handleStop = () => {
-    Alert.alert('Dừng buổi tập', 'Bạn có muốn lưu kết quả đã tập không?', [
-      { text: 'Bỏ qua', style: 'destructive', onPress: () => navigation.navigate('Home') },
-      { text: 'Lưu & Thoát', onPress: () => saveResult('incomplete') },
+    Alert.alert('Stop Session', 'Do you want to save your progress?', [
+      { text: 'Discard', style: 'destructive', onPress: () => navigation.navigate('Home') },
+      { text: 'Save & Exit', onPress: () => saveResult('incomplete') },
     ]);
   };
 
@@ -145,7 +143,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.navigate('Home');
     } catch (e) {
       console.error('Save session error:', e);
-      Alert.alert('Lỗi', 'Không thể lưu kết quả. Vui lòng thử lại.');
+      Alert.alert('Error', 'Could not save your session. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -160,19 +158,19 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
       <SafeAreaView style={styles.safe}>
         <View style={styles.completedScreen}>
           <Text style={styles.completedEmoji}>🎉</Text>
-          <Text style={styles.completedTitle}>Xuất sắc!</Text>
-          <Text style={styles.completedSub}>Bạn đã hoàn thành buổi tập</Text>
+          <Text style={styles.completedTitle}>Excellent!</Text>
+          <Text style={styles.completedSub}>You've completed your session</Text>
 
           <View style={styles.scoreCircle}>
             <Text style={styles.scoreValue}>{finalScore}</Text>
-            <Text style={styles.scoreLabel}>Điểm</Text>
+            <Text style={styles.scoreLabel}>Score</Text>
           </View>
 
           <View style={styles.completedStats}>
             {[
-              { label: 'Số hiệp', value: `${sets}/${sets}` },
-              { label: 'Số lần lặp', value: `${targetReps * sets}` },
-              { label: 'Thời gian', value: formatTime(totalTime) },
+              { label: 'Sets', value: `${sets}/${sets}` },
+              { label: 'Reps', value: `${targetReps * sets}` },
+              { label: 'Time', value: formatTime(totalTime) },
             ].map((stat) => (
               <View key={stat.label} style={styles.completedStat}>
                 <Text style={styles.completedStatValue}>{stat.value}</Text>
@@ -187,7 +185,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
             disabled={saving}
             activeOpacity={0.85}
           >
-            <Text style={styles.saveBtnText}>{saving ? 'Đang lưu...' : '💾 Lưu kết quả'}</Text>
+            <Text style={styles.saveBtnText}>{saving ? 'Saving...' : '💾 Save Results'}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -199,7 +197,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* Top bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={handleStop} style={styles.stopBtn}>
-          <Text style={styles.stopBtnText}>✕ Dừng</Text>
+          <Text style={styles.stopBtnText}>✕ Stop</Text>
         </TouchableOpacity>
         <Text style={styles.exerciseTitleTop}>{exerciseName}</Text>
         <View style={styles.timerBadge}>
@@ -216,7 +214,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Rep counter overlay */}
         <View style={styles.repOverlay}>
-          <Text style={styles.repLabel}>LẶP LẠI</Text>
+          <Text style={styles.repLabel}>REPS</Text>
           <Animated.Text
             style={[styles.repCount, { transform: [{ scale: repAnim }] }]}
           >
@@ -232,16 +230,16 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Set indicator top right */}
         <View style={styles.setBadge}>
-          <Text style={styles.setBadgeText}>Hiệp {currentSet}/{sets}</Text>
+          <Text style={styles.setBadgeText}>Set {currentSet}/{sets}</Text>
         </View>
       </View>
 
       {/* Rest overlay */}
       {phase === 'resting' && (
         <View style={styles.restOverlay}>
-          <Text style={styles.restTitle}>Nghỉ giải lao</Text>
+          <Text style={styles.restTitle}>Rest Time</Text>
           <Text style={styles.restTimer}>{restTime}s</Text>
-          <Text style={styles.restSub}>Hiệp tiếp theo: {currentSet + 1}/{sets}</Text>
+          <Text style={styles.restSub}>Next set: {currentSet + 1}/{sets}</Text>
           <TouchableOpacity
             style={styles.skipRestBtn}
             onPress={() => {
@@ -251,7 +249,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
               setPhase('active');
             }}
           >
-            <Text style={styles.skipRestText}>Bỏ qua nghỉ →</Text>
+            <Text style={styles.skipRestText}>Skip rest →</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -261,7 +259,7 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Progress bar */}
         <View style={styles.progressInfo}>
           <Text style={styles.progressLabel}>
-            Tiến độ hiệp {currentSet}: {reps}/{targetReps}
+            Set {currentSet} progress: {reps}/{targetReps}
           </Text>
           <View style={styles.progressTrack}>
             <View
@@ -289,9 +287,9 @@ export const SessionScreen: React.FC<Props> = ({ navigation, route }) => {
             activeOpacity={0.85}
           >
             <Text style={styles.repBtnText}>
-              {paused ? '⏸ Tạm dừng' : '👆 Đếm lần lặp'}
+              {paused ? '⏸ Paused' : '👆 Count Rep'}
             </Text>
-            <Text style={styles.repBtnSub}>Nhấn sau mỗi lần thực hiện</Text>
+            <Text style={styles.repBtnSub}>Tap after each repetition</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -339,7 +337,7 @@ const styles = StyleSheet.create({
     height: 320,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.xxl,
+    borderRadius: 80,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',

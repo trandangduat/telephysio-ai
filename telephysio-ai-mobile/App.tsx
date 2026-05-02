@@ -79,7 +79,7 @@ function PatientTabNavigator() {
         name="HomeTab"
         component={HomeStack}
         options={{
-          tabBarLabel: 'Trang chủ',
+          tabBarLabel: 'Home',
           tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
         }}
       />
@@ -87,7 +87,7 @@ function PatientTabNavigator() {
         name="LibraryTab"
         component={LibraryStack}
         options={{
-          tabBarLabel: 'Thư viện',
+          tabBarLabel: 'Library',
           tabBarIcon: ({ focused }) => <TabIcon emoji="📚" focused={focused} />,
         }}
       />
@@ -95,7 +95,7 @@ function PatientTabNavigator() {
         name="ProgressTab"
         component={ProgressStack}
         options={{
-          tabBarLabel: 'Tiến độ',
+          tabBarLabel: 'Progress',
           tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
         }}
       />
@@ -103,7 +103,7 @@ function PatientTabNavigator() {
         name="FeedbackTab"
         component={FeedbackStack}
         options={{
-          tabBarLabel: 'Phản hồi',
+          tabBarLabel: 'Feedback',
           tabBarIcon: ({ focused }) => <TabIcon emoji="💬" focused={focused} />,
         }}
       />
@@ -129,7 +129,7 @@ function HomeStack() {
       <PatientStack.Screen
         name="Calibration"
         component={CalibrationScreen}
-        options={{ title: 'Hiệu chỉnh camera' }}
+        options={{ title: 'Camera Setup' }}
       />
       <PatientStack.Screen
         name="Session"
@@ -153,12 +153,12 @@ function LibraryStack() {
       <PatientStack.Screen
         name="Library"
         component={ExerciseLibraryScreen}
-        options={{ title: 'Thư viện bài tập' }}
+        options={{ title: 'Exercise Library' }}
       />
       <PatientStack.Screen
         name="Calibration"
         component={CalibrationScreen}
-        options={{ title: 'Hiệu chỉnh camera' }}
+        options={{ title: 'Camera Setup' }}
       />
       <PatientStack.Screen
         name="Session"
@@ -182,7 +182,7 @@ function ProgressStack() {
       <PatientStack.Screen
         name="Progress"
         component={ProgressScreen}
-        options={{ title: 'Tiến độ hồi phục', headerShown: false }}
+        options={{ title: 'Recovery Progress', headerShown: false }}
       />
     </PatientStack.Navigator>
   );
@@ -201,7 +201,7 @@ function FeedbackStack() {
       <PatientStack.Screen
         name="FeedbackMain"
         component={FeedbackScreen}
-        options={{ title: 'Phản hồi bác sĩ' }}
+        options={{ title: 'Doctor Feedback' }}
       />
     </PatientStack.Navigator>
   );
@@ -232,7 +232,7 @@ function DoctorTabNavigator() {
         name="DoctorHome"
         component={DoctorHomeStack}
         options={{
-          tabBarLabel: 'Bệnh nhân',
+          tabBarLabel: 'Patients',
           tabBarIcon: ({ focused }) => <TabIcon emoji="👥" focused={focused} />,
         }}
       />
@@ -259,21 +259,21 @@ function DoctorHomeStack() {
         name="PatientDetail"
         component={PatientDetailScreen}
         options={({ route }) => ({
-          title: (route.params as any)?.patientName ?? 'Chi tiết bệnh nhân',
+          title: (route.params as any)?.patientName ?? 'Patient Details',
         })}
       />
       <DoctorStack.Screen
         name="AssignExercise"
         component={AssignExerciseScreen}
         options={({ route }) => ({
-          title: `Giao bài – ${(route.params as any)?.patientName ?? ''}`,
+          title: `Assign – ${(route.params as any)?.patientName ?? ''}`,
         })}
       />
       <DoctorStack.Screen
         name="DoctorFeedback"
         component={DoctorFeedbackScreen}
         options={({ route }) => ({
-          title: `Phản hồi – ${(route.params as any)?.patientName ?? ''}`,
+          title: `Feedback – ${(route.params as any)?.patientName ?? ''}`,
         })}
       />
     </DoctorStack.Navigator>
@@ -290,7 +290,7 @@ function LoadingScreen() {
         <Text style={{ color: colors.tertiary }}>AI</Text>
       </Text>
       <ActivityIndicator color={colors.primary} size="large" style={{ marginTop: 32 }} />
-      <Text style={loadingStyles.loadingText}>Đang khởi động...</Text>
+      <Text style={loadingStyles.loadingText}>Starting up...</Text>
     </View>
   );
 }

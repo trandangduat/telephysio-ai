@@ -65,18 +65,18 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
-      { text: 'Hủy', style: 'cancel' },
-      { text: 'Đăng xuất', style: 'destructive', onPress: async () => { await signOut(); setUser(null); } },
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: async () => { await signOut(); setUser(null); } },
     ]);
   };
 
   const getActivityStatus = (p: PatientRow): { label: string; variant: 'success' | 'warning' | 'error' | 'neutral' } => {
-    if (!p.lastSession) return { label: 'Chưa tập', variant: 'neutral' };
+    if (!p.lastSession) return { label: 'No sessions', variant: 'neutral' };
     const daysSince = Math.floor((Date.now() - new Date(p.lastSession).getTime()) / 86400000);
-    if (daysSince === 0) return { label: 'Hôm nay', variant: 'success' };
-    if (daysSince <= 2) return { label: `${daysSince} ngày trước`, variant: 'warning' };
-    return { label: `${daysSince} ngày trước`, variant: 'error' };
+    if (daysSince === 0) return { label: 'Today', variant: 'success' };
+    if (daysSince <= 2) return { label: `${daysSince}d ago`, variant: 'warning' };
+    return { label: `${daysSince}d ago`, variant: 'error' };
   };
 
   const totalPatients = patients.length;
@@ -101,9 +101,9 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
             {/* Top bar */}
             <View style={styles.topBar}>
               <View>
-                <Text style={styles.greeting}>Xin chào,</Text>
+                <Text style={styles.greeting}>Hello,</Text>
                 <Text style={styles.doctorName}>
-                  Dr. {user?.name?.split(' ').pop() ?? 'Bác sĩ'} 👨‍⚕️
+                  Dr. {user?.name?.split(' ').pop() ?? 'Doctor'} 👨‍⚕️
                 </Text>
               </View>
               <TouchableOpacity style={styles.avatarBtn} onPress={handleLogout}>
@@ -114,9 +114,9 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
             {/* Summary cards */}
             <View style={styles.summaryRow}>
               {[
-                { value: totalPatients, label: 'Bệnh nhân', icon: '👥', color: colors.primary },
-                { value: activeToday, label: 'Tập hôm nay', icon: '✅', color: colors.tertiary },
-                { value: pendingTotal, label: 'Phản hồi chờ', icon: '💬', color: pendingTotal > 0 ? colors.error : colors.secondary },
+                { value: totalPatients, label: 'Patients', icon: '👥', color: colors.primary },
+                { value: activeToday, label: 'Active Today', icon: '✅', color: colors.tertiary },
+                { value: pendingTotal, label: 'Pending Feedback', icon: '💬', color: pendingTotal > 0 ? colors.error : colors.secondary },
               ].map((s) => (
                 <Card key={s.label} style={styles.summaryCard} padding="md">
                   <Text style={styles.summaryIcon}>{s.icon}</Text>
@@ -126,7 +126,7 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
               ))}
             </View>
 
-            <Text style={styles.sectionTitle}>Danh sách bệnh nhân</Text>
+            <Text style={styles.sectionTitle}>Patient List</Text>
           </View>
         }
         renderItem={({ item: p }) => {
@@ -149,7 +149,7 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
                     <Badge label={status.label} variant={status.variant} size="sm" />
                     {p.pendingFeedback > 0 && (
                       <View style={styles.pendingBadge}>
-                        <Text style={styles.pendingBadgeText}>{p.pendingFeedback} phản hồi</Text>
+                        <Text style={styles.pendingBadgeText}>{p.pendingFeedback} pending</Text>
                       </View>
                     )}
                   </View>
@@ -157,9 +157,9 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
                 <View style={styles.patientStats}>
                   {[
-                    { label: 'Buổi tập', value: p.totalSessions },
-                    { label: 'Điểm TB', value: p.avgScore > 0 ? `${p.avgScore}%` : '--' },
-                    { label: 'Chuỗi ngày', value: p.currentStreak },
+                    { label: 'Sessions', value: p.totalSessions },
+                    { label: 'Avg Score', value: p.avgScore > 0 ? `${p.avgScore}%` : '--' },
+                    { label: 'Streak', value: p.currentStreak },
                   ].map((stat) => (
                     <View key={stat.label} style={styles.patientStat}>
                       <Text style={styles.patientStatValue}>{stat.value}</Text>
@@ -173,13 +173,13 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
                     style={styles.actionBtn}
                     onPress={() => navigation.navigate('AssignExercise', { patientId: p.uid, patientName: p.name })}
                   >
-                    <Text style={styles.actionBtnText}>📋 Giao bài</Text>
+                    <Text style={styles.actionBtnText}>📋 Assign</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.actionBtnPrimary]}
                     onPress={() => navigation.navigate('DoctorFeedback', { patientId: p.uid, patientName: p.name })}
                   >
-                    <Text style={[styles.actionBtnText, styles.actionBtnPrimaryText]}>💬 Phản hồi</Text>
+                    <Text style={[styles.actionBtnText, styles.actionBtnPrimaryText]}>💬 Feedback</Text>
                   </TouchableOpacity>
                 </View>
               </Card>
@@ -190,14 +190,14 @@ export const DoctorDashboardScreen: React.FC<Props> = ({ navigation }) => {
           !loading ? (
             <Card padding="xl" style={styles.emptyCard}>
               <Text style={styles.emptyIcon}>👥</Text>
-              <Text style={styles.emptyTitle}>Chưa có bệnh nhân nào</Text>
+              <Text style={styles.emptyTitle}>No patients yet</Text>
               <Text style={styles.emptyText}>
-                Bệnh nhân cần đăng ký và chọn liên kết với bạn.
+                Patients need to register and link their account to you.
               </Text>
             </Card>
           ) : (
             <Card padding="xl" style={styles.emptyCard}>
-              <Text style={styles.loadingText}>Đang tải danh sách bệnh nhân...</Text>
+              <Text style={styles.loadingText}>Loading patient list...</Text>
             </Card>
           )
         }

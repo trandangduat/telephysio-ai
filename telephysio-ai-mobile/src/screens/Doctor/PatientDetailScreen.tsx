@@ -31,7 +31,7 @@ interface Props {
   route: RouteProp<DoctorStackParamList, 'PatientDetail'>;
 }
 
-const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { patientId, patientName } = route.params;
@@ -102,7 +102,7 @@ export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <View style={styles.patientInfo}>
             <Text style={styles.patientName}>{patientName}</Text>
-            <Text style={styles.patientSub}>{stats.totalSessions} buổi tập • {stats.currentStreak} ngày liên tiếp</Text>
+            <Text style={styles.patientSub}>{stats.totalSessions} sessions • {stats.currentStreak}-day streak</Text>
           </View>
         </View>
 
@@ -113,25 +113,25 @@ export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             onPress={() => navigation.navigate('AssignExercise', { patientId, patientName })}
           >
             <Text style={styles.actionIcon}>📋</Text>
-            <Text style={styles.actionLabel}>Giao bài tập</Text>
+            <Text style={styles.actionLabel}>Assign Exercise</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionBtnPrimary]}
             onPress={() => navigation.navigate('DoctorFeedback', { patientId, patientName })}
           >
             <Text style={styles.actionIcon}>💬</Text>
-            <Text style={[styles.actionLabel, { color: colors.onPrimary }]}>Gửi phản hồi</Text>
+            <Text style={[styles.actionLabel, { color: colors.onPrimary }]}>Send Feedback</Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats */}
         <Card style={styles.statsCard} padding="md">
-          <Text style={styles.sectionTitle}>Tổng quan</Text>
+          <Text style={styles.sectionTitle}>Overview</Text>
           <View style={styles.statsRow}>
             {[
-              { icon: '📋', value: stats.totalSessions, label: 'Tổng buổi tập' },
-              { icon: '⭐', value: stats.avgScore > 0 ? `${stats.avgScore}%` : '--', label: 'Điểm trung bình' },
-              { icon: '🔥', value: stats.currentStreak, label: 'Chuỗi ngày tập' },
+              { icon: '📋', value: stats.totalSessions, label: 'Total Sessions' },
+              { icon: '⭐', value: stats.avgScore > 0 ? `${stats.avgScore}%` : '--', label: 'Avg Score' },
+              { icon: '🔥', value: stats.currentStreak, label: 'Day Streak' },
             ].map((s) => (
               <View key={s.label} style={styles.statItem}>
                 <Text style={styles.statIcon}>{s.icon}</Text>
@@ -144,7 +144,7 @@ export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Weekly chart */}
         <Card style={styles.chartCard} padding="md">
-          <Text style={styles.sectionTitle}>Hoạt động 7 ngày</Text>
+          <Text style={styles.sectionTitle}>7-Day Activity</Text>
           <View style={styles.barChart}>
             {weekData.map((d, i) => (
               <View key={i} style={styles.barCol}>
@@ -170,16 +170,16 @@ export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Current assignments */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bài tập đang giao ({assignments.length})</Text>
+          <Text style={styles.sectionTitle}>Assigned Exercises ({assignments.length})</Text>
           {assignments.length === 0 ? (
             <Card padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Chưa giao bài tập nào. Nhấn "Giao bài tập" để bắt đầu.</Text>
+              <Text style={styles.emptyText}>No exercises assigned yet. Press "Assign Exercise" to get started.</Text>
             </Card>
           ) : (
             assignments.map((a, i) => (
               <Card key={i} style={styles.assignmentCard} padding="md">
                 <Text style={styles.assignmentName}>{a.exerciseName}</Text>
-                <Text style={styles.assignmentMeta}>{a.sets} hiệp × {a.targetReps} lần</Text>
+                <Text style={styles.assignmentMeta}>{a.sets} sets × {a.targetReps} reps</Text>
               </Card>
             ))
           )}
@@ -187,10 +187,10 @@ export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Recent sessions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Buổi tập gần đây</Text>
+          <Text style={styles.sectionTitle}>Recent Sessions</Text>
           {sessions.length === 0 ? (
             <Card padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Bệnh nhân chưa có buổi tập nào.</Text>
+              <Text style={styles.emptyText}>This patient hasn't completed any sessions yet.</Text>
             </Card>
           ) : (
             sessions.slice(0, 5).map((s) => (
@@ -211,7 +211,7 @@ export const PatientDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 </View>
                 <Text style={styles.sessionDate}>{formatDate(s.createdAt)}</Text>
                 <Text style={styles.sessionMeta}>
-                  {s.completedSets}/{s.targetSets} hiệp • {s.completedReps} lần • {Math.floor(s.duration / 60)}p{s.duration % 60}s
+                  {s.completedSets}/{s.targetSets} sets • {s.completedReps} reps • {Math.floor(s.duration / 60)}m {s.duration % 60}s
                 </Text>
               </Card>
             ))

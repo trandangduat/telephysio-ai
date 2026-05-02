@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Workout Session</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#00531e",
+                      "outline": "#727783",
+                      "on-secondary-fixed": "#131d23",
+                      "on-secondary-container": "#5c666d",
+                      "on-primary-fixed": "#001b3d",
+                      "tertiary-fixed-dim": "#69de7c",
+                      "primary-fixed-dim": "#a9c7ff",
+                      "on-surface": "#131d23",
+                      "on-secondary-fixed-variant": "#3e484f",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#dae4ed",
+                      "surface-bright": "#f5faff",
+                      "error-container": "#ffdad6",
+                      "background": "#f5faff",
+                      "secondary-fixed": "#dae4ed",
+                      "on-primary-fixed-variant": "#00468c",
+                      "on-error-container": "#93000a",
+                      "tertiary": "#00541e",
+                      "tertiary-container": "#006f2b",
+                      "surface-container-low": "#ebf5fd",
+                      "tertiary-fixed": "#85fb96",
+                      "on-secondary": "#ffffff",
+                      "primary": "#00478d",
+                      "inverse-on-surface": "#e8f2fb",
+                      "on-primary-container": "#c8daff",
+                      "surface": "#f5faff",
+                      "surface-container-high": "#dfeaf2",
+                      "on-surface-variant": "#424752",
+                      "surface-container-highest": "#dae4ec",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#283238",
+                      "on-tertiary-fixed": "#002108",
+                      "on-tertiary-container": "#7df38e",
+                      "surface-tint": "#005db6",
+                      "secondary": "#566067",
+                      "error": "#ba1a1a",
+                      "surface-container": "#e5eff8",
+                      "primary-container": "#005eb8",
+                      "secondary-fixed-dim": "#bec8d0",
+                      "primary-fixed": "#d6e3ff",
+                      "on-background": "#131d23",
+                      "surface-dim": "#d1dbe4",
+                      "on-tertiary": "#ffffff",
+                      "surface-variant": "#dae4ec",
+                      "on-primary": "#ffffff",
+                      "outline-variant": "#c2c6d4",
+                      "inverse-primary": "#a9c7ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "base-unit": "4px",
+                      "margin-mobile": "16px",
+                      "margin-tablet": "32px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "gutter": "16px",
+                      "xl": "32px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-xl": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "14px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-inverse-surface antialiased h-screen w-full overflow-hidden flex flex-col font-body-md text-body-md">
+<!-- Main Viewfinder / Canvas Area -->
+<main class="relative flex-1 w-full bg-inverse-surface flex flex-col items-center justify-center overflow-hidden">
+<!-- Camera Feed Placeholder & Skeleton Overlay -->
+<div class="absolute inset-0 w-full h-full bg-inverse-surface flex items-center justify-center">
+<img alt="Person doing a squat in a dark room" class="w-full h-full object-cover opacity-60 mix-blend-luminosity" data-alt="athlete performing a squat in a dim gym, high contrast, dark background, cinematic lighting, overlaid with vivid neon green computer vision tracking lines and joint nodes indicating posture analysis" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIeIF0cSCStyLXhD8_segJ7cQLtIFLWwl87R9k7iALIsZfDrMNbHWTk5it6Rlvcq_oD5zUUmqcFPIWb_PwEWZyXhEHXvE_6POMZ4RnRSPpyxaXBon0RGdRo2BMjr47UgMsjDUI7dL-hT_c0W2uzI6lPahPwNgI1bxFrF8aAOJdzXVqaPo-3Tu9Qxpk0S12ommhnZcyHc6aoWDrioAsYffC4dum8zZCCsvQkPycPWeuAdX6nQKROCX2A_Qiqw_33WOOayLqsVj36E2T"/>
+<!-- Simulated Skeleton UI Layer (CSS Shapes) -->
+<div class="absolute inset-0 w-full h-full pointer-events-none flex items-center justify-center opacity-80">
+<svg class="absolute stroke-tertiary-fixed-dim fill-transparent" height="100%" preserveaspectratio="xMidYMid slice" viewbox="0 0 300 500" width="100%">
+<!-- Head -->
+<circle cx="150" cy="120" r="15" stroke-width="3"></circle>
+<!-- Spine -->
+<line stroke-width="4" x1="150" x2="150" y1="135" y2="250"></line>
+<!-- Shoulders -->
+<line stroke-width="4" x1="100" x2="200" y1="160" y2="160"></line>
+<!-- Left Arm -->
+<line stroke-width="3" x1="100" x2="80" y1="160" y2="230"></line>
+<line stroke-width="3" x1="80" x2="90" y1="230" y2="290"></line>
+<!-- Right Arm -->
+<line stroke-width="3" x1="200" x2="220" y1="160" y2="230"></line>
+<line stroke-width="3" x1="220" x2="210" y1="230" y2="290"></line>
+<!-- Hips -->
+<line stroke-width="4" x1="120" x2="180" y1="250" y2="250"></line>
+<!-- Left Leg (Squat Position) -->
+<line stroke-width="4" x1="120" x2="100" y1="250" y2="330"></line>
+<line stroke-width="4" x1="100" x2="130" y1="330" y2="420"></line>
+<!-- Right Leg (Squat Position) -->
+<line stroke-width="4" x1="180" x2="200" y1="250" y2="330"></line>
+<line stroke-width="4" x1="200" x2="170" y1="330" y2="420"></line>
+<!-- Nodes -->
+<circle class="fill-tertiary-fixed-dim" cx="100" cy="160" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="200" cy="160" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="80" cy="230" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="220" cy="230" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="120" cy="250" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="180" cy="250" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="100" cy="330" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="200" cy="330" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="130" cy="420" r="4"></circle>
+<circle class="fill-tertiary-fixed-dim" cx="170" cy="420" r="4"></circle>
+</svg>
+</div>
+</div>
+<!-- Top Contextual HUD (Not standard TopAppBar as per mandate for focused flows) -->
+<header class="absolute top-0 left-0 w-full p-md pt-8 flex justify-between items-start z-20">
+<button class="w-10 h-10 rounded-full bg-inverse-surface/50 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-secondary hover:bg-inverse-surface/80 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex flex-col items-center">
+<div class="px-sm py-xs rounded-full bg-error/20 border border-error/50 backdrop-blur flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<span class="font-label-md text-label-md text-on-secondary tracking-widest uppercase">Live</span>
+</div>
+<span class="font-body-lg text-body-lg text-on-secondary mt-2 tabular-nums opacity-80">14:22</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-inverse-surface/50 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-secondary hover:bg-inverse-surface/80 transition-colors">
+<span class="material-symbols-outlined">cameraswitch</span>
+</button>
+</header>
+<!-- Real-time AI Feedback Badge -->
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 z-20">
+<div class="px-md py-sm rounded-full bg-surface/10 backdrop-blur-md border border-tertiary-fixed-dim/30 shadow-[0_4px_12px_rgba(105,222,124,0.15)] flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-lg">check_circle</span>
+<span class="font-label-md text-label-md text-on-secondary">Excellent Depth</span>
+</div>
+</div>
+</main>
+<!-- Bottom Dashboard Panel -->
+<section class="relative z-30 bg-surface w-full rounded-t-xl sm:rounded-t-3xl shadow-[0_-8px_24px_rgba(0,27,61,0.15)] flex flex-col gap-lg px-md sm:px-lg py-xl pb-safe border-t border-outline-variant/20">
+<!-- Header Info -->
+<div class="flex justify-between items-end">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Current Set</span>
+<h1 class="font-headline-xl text-headline-xl text-on-surface">Squat</h1>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Reps</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-xl text-headline-xl text-primary">8</span>
+<span class="font-headline-md text-headline-md text-outline">/12</span>
+</div>
+</div>
+</div>
+<!-- AI Progress Bar -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center px-1">
+<span class="font-label-md text-label-md text-outline">Form Accuracy</span>
+<span class="font-label-md text-label-md text-tertiary-container">92%</span>
+</div>
+<div class="w-full h-3 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full w-[92%] rounded-full bg-gradient-to-r from-primary to-tertiary-fixed-dim transition-all duration-300 ease-out"></div>
+</div>
+</div>
+<!-- Media Controls -->
+<div class="flex justify-center items-center gap-6 pt-sm">
+<button class="w-12 h-12 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center hover:bg-surface-dim transition-colors">
+<span class="material-symbols-outlined">skip_previous</span>
+</button>
+<button class="w-20 h-20 rounded-full bg-primary text-on-primary shadow-[0_4px_16px_rgba(0,71,141,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="w-12 h-12 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center hover:bg-surface-dim transition-colors">
+<span class="material-symbols-outlined">skip_next</span>
+</button>
+</div>
+</section>
+</body></html>

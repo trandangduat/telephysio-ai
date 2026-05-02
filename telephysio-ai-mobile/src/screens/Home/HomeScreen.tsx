@@ -38,19 +38,19 @@ interface Props {
 
 const GREETING = () => {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Chào buổi sáng';
-  if (hour < 17) return 'Chào buổi chiều';
-  return 'Chào buổi tối';
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 };
 
 const BODY_PART_LABELS: Record<string, string> = {
-  shoulder: 'Vai',
-  knee: 'Gối',
-  back: 'Lưng',
-  arm: 'Cánh tay',
-  leg: 'Chân',
-  hip: 'Hông',
-  ankle: 'Cổ chân',
+  shoulder: 'Shoulder',
+  knee: 'Knee',
+  back: 'Back',
+  arm: 'Arm',
+  leg: 'Leg',
+  hip: 'Hip',
+  ankle: 'Ankle',
 };
 
 const DIFFICULTY_BADGE: Record<string, 'success' | 'warning' | 'error'> = {
@@ -60,9 +60,9 @@ const DIFFICULTY_BADGE: Record<string, 'success' | 'warning' | 'error'> = {
 };
 
 const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: 'Dễ',
-  medium: 'Trung bình',
-  hard: 'Khó',
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
 };
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
@@ -102,10 +102,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Đăng xuất',
+        text: 'Sign Out',
         style: 'destructive',
         onPress: async () => {
           await signOut();
@@ -124,8 +124,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-  const unreadFeedback = feedback.filter((f) => f.reply && !f.replyAt);
-  const doctorMessages = feedback.filter((f) => f.category === 'doctor_note').slice(0, 2);
+  const doctorMessages = feedback.filter((f) => f.category === 'doctor_note').slice(0, 1);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -138,7 +137,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.greeting}>{GREETING()},</Text>
-            <Text style={styles.userName} numberOfLines={1}>{user?.name?.split(' ')[0] ?? 'Bạn'} 👋</Text>
+            <Text style={styles.userName} numberOfLines={1}>{user?.name?.split(' ')[0] ?? 'there'} 👋</Text>
           </View>
           <TouchableOpacity style={styles.avatarBtn} onPress={handleLogout}>
             <Text style={styles.avatarText}>
@@ -151,17 +150,17 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.statsRow}>
           <Card style={styles.statCard} padding="md">
             <Text style={styles.statValue}>{stats.currentStreak}</Text>
-            <Text style={styles.statLabel}>🔥 Chuỗi ngày</Text>
+            <Text style={styles.statLabel}>🔥 Day Streak</Text>
           </Card>
           <Card style={styles.statCard} padding="md">
             <Text style={styles.statValue}>{stats.totalSessions}</Text>
-            <Text style={styles.statLabel}>📋 Buổi tập</Text>
+            <Text style={styles.statLabel}>📋 Sessions</Text>
           </Card>
           <Card style={styles.statCard} padding="md">
             <Text style={styles.statValue}>
               {stats.avgScore > 0 ? `${stats.avgScore}%` : '--'}
             </Text>
-            <Text style={styles.statLabel}>⭐ Điểm TB</Text>
+            <Text style={styles.statLabel}>⭐ Avg Score</Text>
           </Card>
         </View>
 
@@ -171,7 +170,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.doctorBannerHeader}>
               <Text style={styles.doctorBannerIcon}>👨‍⚕️</Text>
               <View style={styles.doctorBannerInfo}>
-                <Text style={styles.doctorBannerTitle}>Thông báo từ bác sĩ</Text>
+                <Text style={styles.doctorBannerTitle}>Message from your doctor</Text>
                 <Text style={styles.doctorBannerSub} numberOfLines={2}>
                   {doctorMessages[0].message}
                 </Text>
@@ -181,7 +180,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => navigation.navigate('Feedback')}
               style={styles.doctorBannerBtn}
             >
-              <Text style={styles.doctorBannerBtnText}>Xem chi tiết →</Text>
+              <Text style={styles.doctorBannerBtnText}>View details →</Text>
             </TouchableOpacity>
           </Card>
         )}
@@ -189,22 +188,22 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* Today's Exercises */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Bài tập hôm nay</Text>
+            <Text style={styles.sectionTitle}>Today's Exercises</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Library')}>
-              <Text style={styles.sectionLink}>Xem tất cả →</Text>
+              <Text style={styles.sectionLink}>View all →</Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
             <Card padding="lg" style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Đang tải bài tập...</Text>
+              <Text style={styles.emptyText}>Loading exercises...</Text>
             </Card>
           ) : assignments.length === 0 ? (
             <Card padding="lg" style={styles.emptyCard}>
               <Text style={styles.emptyIcon}>🏋️</Text>
-              <Text style={styles.emptyTitle}>Chưa có bài tập</Text>
+              <Text style={styles.emptyTitle}>No exercises assigned</Text>
               <Text style={styles.emptyText}>
-                Bác sĩ chưa chỉ định bài tập cho bạn.{'\n'}Hãy liên hệ bác sĩ để được phân công.
+                Your doctor hasn't assigned any exercises yet.{'\n'}Contact your doctor to get started.
               </Text>
             </Card>
           ) : (
@@ -214,7 +213,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <View style={styles.exerciseInfo}>
                     <Text style={styles.exerciseName}>{asgn.exerciseName}</Text>
                     <Text style={styles.exerciseMeta}>
-                      {asgn.sets} hiệp × {asgn.targetReps} lần
+                      {asgn.sets} sets × {asgn.targetReps} reps
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -222,7 +221,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     onPress={() => handleStartExercise(asgn)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.startBtnText}>Bắt đầu</Text>
+                    <Text style={styles.startBtnText}>Start</Text>
                   </TouchableOpacity>
                 </View>
               </Card>
@@ -232,12 +231,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Truy cập nhanh</Text>
+          <Text style={styles.sectionTitle}>Quick Access</Text>
           <View style={styles.quickActions}>
             {[
-              { icon: '📊', label: 'Tiến độ', screen: 'Progress' as const },
-              { icon: '💬', label: 'Phản hồi', screen: 'Feedback' as const },
-              { icon: '📚', label: 'Thư viện', screen: 'Library' as const },
+              { icon: '📊', label: 'Progress', screen: 'Progress' as const },
+              { icon: '💬', label: 'Feedback', screen: 'Feedback' as const },
+              { icon: '📚', label: 'Library', screen: 'Library' as const },
             ].map((item) => (
               <TouchableOpacity
                 key={item.screen}
