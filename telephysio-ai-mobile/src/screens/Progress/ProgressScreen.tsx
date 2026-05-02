@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -8,12 +8,54 @@ import { useTranslation } from 'react-i18next';
 
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
+import { useAuth } from '../../contexts/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
+import { getActiveTreatmentPlan, getLatestProgress } from '../../services/firebase';
+import type { TreatmentPlan, ProgressSnapshot } from '../../services/firebase/types';
 
 export const ProgressScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
-  const [activeChart, setActiveChart] = useState('Flexion');
+  const { uid } = useAuth();
+  
+  const [activeChart, setActiveChart] = useState<'Flexion' | 'Extension'>('Flexion');
+  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<TreatmentPlan | null>(null);
+  const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!uid) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const [fetchedPlan, fetchedProgress] = await Promise.all([
+          getActiveTreatmentPlan(uid),
+          getLatestProgress(uid),
+        ]);
+        setPlan(fetchedPlan);
+        setProgress(fetchedProgress);
+      } catch (error) {
+        console.error('Error loading progress data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [uid]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  // Fallback values if progress is not yet recorded
+  const consistency = progress?.weeklyConsistency ?? 0;
+  const daysActive = Math.round((consistency / 100) * 7);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -40,7 +82,9 @@ export const ProgressScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <AppText variant="headlineLg" style={styles.pageTitle}>{t('progress.title', 'Your Recovery Journey')}</AppText>
-          <AppText variant="bodyMd" style={styles.pageSubtitle}>{t('progress.subtitle', 'Week 6 of ACL Rehabilitation • Phase 2')}</AppText>
+          <AppText variant="bodyMd" style={styles.pageSubtitle}>
+            {plan ? `Week ${plan.currentWeek} of ${plan.condition} • Phase ${plan.currentPhase}` : 'No active treatment plan'}
+          </AppText>
         </View>
 
         {/* Weekly Consistency */}
@@ -48,15 +92,15 @@ export const ProgressScreen: React.FC = () => {
           <View style={styles.cardHeader}>
             <AppText variant="headlineMd" style={styles.cardTitle}>{t('progress.weeklyConsistency', 'Weekly Consistency')}</AppText>
             <View style={styles.scoreBadge}>
-              <AppText variant="labelSm" style={{ color: '#166534' }}>85% {t('progress.score', 'Score')}</AppText>
+              <AppText variant="labelSm" style={{ color: '#166534' }}>{consistency}% {t('progress.score', 'Score')}</AppText>
             </View>
           </View>
           
           <View style={styles.daysRow}>
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
               <View key={i} style={styles.dayCol}>
-                <View style={[styles.dayCircle, i < 5 ? styles.dayCircleActive : {}]}>
-                  <Ionicons name="checkmark" size={14} color={i < 5 ? "#fff" : "transparent"} />
+                <View style={[styles.dayCircle, i < daysActive ? styles.dayCircleActive : {}]}>
+                  <Ionicons name="checkmark" size={14} color={i < daysActive ? "#fff" : "transparent"} />
                 </View>
                 <AppText variant="labelSm" style={styles.dayLabel}>{day}</AppText>
               </View>
@@ -64,7 +108,7 @@ export const ProgressScreen: React.FC = () => {
           </View>
           
           <AppText variant="bodySm" style={styles.cardDesc}>
-            {t('progress.greatJob', "Great job! You've hit your goals 5 out of 7 days this week.")}
+            {t('progress.greatJob', `Great job! You've hit your goals ${daysActive} out of 7 days this week.`)}
           </AppText>
         </View>
 
@@ -72,8 +116,13 @@ export const ProgressScreen: React.FC = () => {
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <View style={{ flex: 1 }}>
-              <AppText variant="headlineMd" style={styles.cardTitle}>{t('progress.rom', 'Range of Motion (Knee Flexion)')}</AppText>
-              <AppText variant="bodySm" style={styles.cardDesc}>{t('progress.romDesc', 'Measured in degrees via AI Analysis')}</AppText>
+              <AppText variant="headlineMd" style={styles.cardTitle}>
+                {activeChart === 'Flexion' ? t('progress.rom', 'Range of Motion (Knee Flexion)') : t('progress.romExt', 'Range of Motion (Knee Extension)')}
+              </AppText>
+              <AppText variant="bodySm" style={styles.cardDesc}>
+                {t('progress.romDesc', 'Measured in degrees via AI Analysis')} 
+                ({activeChart === 'Flexion' ? `${progress?.romFlexion ?? 0}°` : `${progress?.romExtension ?? 0}°`})
+              </AppText>
             </View>
             <View style={styles.toggleGroup}>
               <TouchableOpacity 
@@ -115,37 +164,39 @@ export const ProgressScreen: React.FC = () => {
           <View style={styles.progressRow}>
             <View style={styles.progressHeader}>
               <AppText variant="labelMd" style={styles.progressLabel}>{t('progress.quadriceps', 'Quadriceps Strength')}</AppText>
-              <AppText variant="labelMd" style={{ color: colors.primary }}>{t('progress.vsLastWeek', '+12% vs last week', { percent: 12 })}</AppText>
+              <AppText variant="labelMd" style={{ color: colors.primary }}>{progress?.quadricepsStrength ?? 0}%</AppText>
             </View>
             <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: '75%' }]} />
+              <View style={[styles.progressBarFill, { width: `${progress?.quadricepsStrength ?? 0}%` }]} />
             </View>
           </View>
 
           <View style={styles.progressRow}>
             <View style={styles.progressHeader}>
               <AppText variant="labelMd" style={styles.progressLabel}>{t('progress.hamstring', 'Hamstring Stability')}</AppText>
-              <AppText variant="labelMd" style={{ color: colors.primary }}>{t('progress.vsLastWeek', '+5% vs last week', { percent: 5 })}</AppText>
+              <AppText variant="labelMd" style={{ color: colors.primary }}>{progress?.hamstringStability ?? 0}%</AppText>
             </View>
             <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: '50%' }]} />
+              <View style={[styles.progressBarFill, { width: `${progress?.hamstringStability ?? 0}%` }]} />
             </View>
           </View>
         </View>
 
         {/* AI Insight */}
-        <View style={[styles.card, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md }}>
-            <Ionicons name="sparkles" size={20} color="#fff" />
-            <AppText variant="headlineMd" style={{ color: '#fff', fontWeight: '700' }}>{t('progress.aiInsight', 'AI Recovery Insight')}</AppText>
+        {progress?.aiInsight && (
+          <View style={[styles.card, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md }}>
+              <Ionicons name="sparkles" size={20} color="#fff" />
+              <AppText variant="headlineMd" style={{ color: '#fff', fontWeight: '700' }}>{t('progress.aiInsight', 'AI Recovery Insight')}</AppText>
+            </View>
+            <AppText variant="bodyMd" style={{ color: '#e0f2fe', lineHeight: 22, marginBottom: spacing.lg }}>
+              {progress.aiInsight}
+            </AppText>
+            <TouchableOpacity style={styles.insightBtn} onPress={() => navigation.navigate('Workout' as any)}>
+              <AppText variant="labelMd" style={{ color: colors.primary }}>{t('progress.viewRecommended', 'View Recommended Exercises')}</AppText>
+            </TouchableOpacity>
           </View>
-          <AppText variant="bodyMd" style={{ color: '#e0f2fe', lineHeight: 22, marginBottom: spacing.lg }}>
-            {t('progress.insightDesc', 'Based on your Range of Motion data, you are recovering 15% faster than average. Your knee extension is nearly perfect; focus on deep flexion exercises this week to stay on track for Phase 3.')}
-          </AppText>
-          <TouchableOpacity style={styles.insightBtn} onPress={() => navigation.navigate('Workout' as any)}>
-            <AppText variant="labelMd" style={{ color: colors.primary }}>{t('progress.viewRecommended', 'View Recommended Exercises')}</AppText>
-          </TouchableOpacity>
-        </View>
+        )}
 
         {/* Milestones */}
         <AppText variant="headlineMd" style={styles.sectionTitle}>{t('progress.recentMilestones', 'Recent Milestones')}</AppText>
@@ -156,7 +207,7 @@ export const ProgressScreen: React.FC = () => {
           </View>
           <View style={{ flex: 1 }}>
             <AppText variant="labelMd" style={styles.milestoneTitle}>{t('progress.flexionGoal', '120° Flexion Goal')}</AppText>
-            <AppText variant="bodySm" style={styles.milestoneDesc}>{t('progress.flexionGoalDesc', 'Achieved yesterday during evening session')}</AppText>
+            <AppText variant="bodySm" style={styles.milestoneDesc}>{t('progress.flexionGoalDesc', 'Achieved recently')}</AppText>
           </View>
         </View>
 
@@ -165,8 +216,8 @@ export const ProgressScreen: React.FC = () => {
             <Ionicons name="calendar-outline" size={24} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <AppText variant="labelMd" style={styles.milestoneTitle}>{t('progress.streak', '14 Day Streak')}</AppText>
-            <AppText variant="bodySm" style={styles.milestoneDesc}>{t('progress.streakDesc', 'Consistent daily therapy for two weeks')}</AppText>
+            <AppText variant="labelMd" style={styles.milestoneTitle}>{t('progress.streak', 'Consistency Streak')}</AppText>
+            <AppText variant="bodySm" style={styles.milestoneDesc}>{t('progress.streakDesc', `${daysActive} days active this week`)}</AppText>
           </View>
         </View>
 

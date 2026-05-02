@@ -2,8 +2,8 @@
  * DoctorFeedbackScreen — Doctor chat/feedback list with patients.
  */
 
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -13,49 +13,59 @@ import { useTranslation } from 'react-i18next';
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
 import type { DoctorStackParamList } from '../../navigation/types';
+import { useAuth } from '../../contexts/AuthContext';
+import { getDoctorConversations } from '../../services/firebase/chatService';
+import type { Conversation } from '../../services/firebase/types';
 
-const CONVERSATIONS = [
-  {
-    id: '1', patient: 'Cody Li', lastMessage: 'Thank you doctor, the exercises helped a lot!',
-    time: '5 min ago', unread: 2, avatar: 'C', hasFeedback: true,
-    feedbackSummary: 'Pain level: 3/10 | Improved ROM'
-  },
-  {
-    id: '2', patient: 'Emma Wilson', lastMessage: 'I felt some discomfort during shoulder rotations.',
-    time: '1 hour ago', unread: 0, avatar: 'E', hasFeedback: true,
-    feedbackSummary: 'Pain level: 6/10 | Stiffness reported'
-  },
-  {
-    id: '3', patient: 'James Park', lastMessage: 'Session completed. Ready for next phase assessment.',
-    time: '3 hours ago', unread: 1, avatar: 'J', hasFeedback: false,
-    feedbackSummary: ''
-  },
-  {
-    id: '4', patient: 'Maria Santos', lastMessage: 'Doctor, the ankle still swells after exercises.',
-    time: 'Yesterday', unread: 3, avatar: 'M', hasFeedback: true,
-    feedbackSummary: 'Pain level: 7/10 | Swelling | Needs review'
-  },
-  {
-    id: '5', patient: 'Alex Chen', lastMessage: 'Can we schedule a video call for tomorrow?',
-    time: 'Yesterday', unread: 0, avatar: 'A', hasFeedback: false,
-    feedbackSummary: ''
-  },
-];
+const formatTimeAgo = (date?: Date) => {
+  if (!date) return '';
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'Yesterday';
+  return `${days} days ago`;
+};
 
 export const DoctorFeedbackScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
   const { t } = useTranslation();
+  const { uid } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  const filtered = CONVERSATIONS.filter(c => {
-    const matchesSearch = c.patient.toLowerCase().includes(searchQuery.toLowerCase());
-    if (activeFilter === 'unread') return matchesSearch && c.unread > 0;
+  useEffect(() => {
+    async function loadData() {
+      if (!uid) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = await getDoctorConversations(uid);
+        setConversations(data);
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [uid]);
+
+  const filtered = conversations.filter(c => {
+    const matchesSearch = c.patientName.toLowerCase().includes(searchQuery.toLowerCase());
+    if (activeFilter === 'unread') return matchesSearch && c.unreadByDoctor > 0;
     if (activeFilter === 'feedback') return matchesSearch && c.hasFeedback;
     return matchesSearch;
   });
 
-  const totalUnread = CONVERSATIONS.reduce((sum, c) => sum + c.unread, 0);
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadByDoctor || 0), 0);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -111,54 +121,69 @@ export const DoctorFeedbackScreen: React.FC = () => {
         </View>
 
         {/* Conversation List */}
-        {filtered.map((conv) => (
-          <TouchableOpacity
-            key={conv.id}
-            style={[styles.convCard, conv.unread > 0 && styles.convCardUnread]}
-            onPress={() => navigation.navigate('DoctorChat')}
-          >
-            <View style={styles.convRow}>
-              {/* Avatar */}
-              <View style={[styles.convAvatar, conv.unread > 0 ? { backgroundColor: colors.primary } : {}]}>
-                <AppText variant="labelMd" style={{ color: conv.unread > 0 ? '#fff' : '#64748b', fontWeight: '700' }}>
-                  {conv.avatar}
-                </AppText>
-              </View>
-
-              {/* Content */}
-              <View style={styles.convContent}>
-                <View style={styles.convNameRow}>
-                  <AppText variant="labelMd" style={[styles.convName, conv.unread > 0 && { color: colors.onSurface }]}>
-                    {conv.patient}
-                  </AppText>
-                  <AppText variant="bodySm" style={[styles.convTime, conv.unread > 0 && { color: colors.primary }]}>
-                    {conv.time}
-                  </AppText>
-                </View>
-                <AppText variant="bodySm" style={styles.convMessage} numberOfLines={1}>
-                  {conv.lastMessage}
-                </AppText>
-
-                {/* Feedback Summary */}
-                {conv.hasFeedback && (
-                  <View style={styles.feedbackTag}>
-                    <Ionicons name="clipboard-outline" size={12} color="#b45309" />
-                    <AppText variant="bodySm" style={styles.feedbackText} numberOfLines={1}>
-                      {conv.feedbackSummary}
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
+        ) : filtered.length > 0 ? (
+          filtered.map((conv) => {
+            const timeDate = conv.lastMessageAt as any;
+            const timeAgo = formatTimeAgo(timeDate?.toDate ? timeDate.toDate() : new Date());
+            const unread = conv.unreadByDoctor || 0;
+            const avatarLetter = conv.patientName ? conv.patientName.charAt(0).toUpperCase() : 'P';
+            
+            return (
+              <TouchableOpacity
+                key={conv.id}
+                style={[styles.convCard, unread > 0 && styles.convCardUnread]}
+                onPress={() => navigation.navigate('DoctorChat')}
+              >
+                <View style={styles.convRow}>
+                  {/* Avatar */}
+                  <View style={[styles.convAvatar, unread > 0 ? { backgroundColor: colors.primary } : {}]}>
+                    <AppText variant="labelMd" style={{ color: unread > 0 ? '#fff' : '#64748b', fontWeight: '700' }}>
+                      {avatarLetter}
                     </AppText>
                   </View>
-                )}
-              </View>
 
-              {/* Unread Badge */}
-              {conv.unread > 0 && (
-                <View style={styles.unreadBadge}>
-                  <AppText variant="labelSm" style={styles.unreadText}>{conv.unread}</AppText>
+                  {/* Content */}
+                  <View style={styles.convContent}>
+                    <View style={styles.convNameRow}>
+                      <AppText variant="labelMd" style={[styles.convName, unread > 0 && { color: colors.onSurface }]}>
+                        {conv.patientName}
+                      </AppText>
+                      <AppText variant="bodySm" style={[styles.convTime, unread > 0 && { color: colors.primary }]}>
+                        {timeAgo}
+                      </AppText>
+                    </View>
+                    <AppText variant="bodySm" style={styles.convMessage} numberOfLines={1}>
+                      {conv.lastMessage}
+                    </AppText>
+
+                    {/* Feedback Summary */}
+                    {conv.hasFeedback && (
+                      <View style={styles.feedbackTag}>
+                        <Ionicons name="clipboard-outline" size={12} color="#b45309" />
+                        <AppText variant="bodySm" style={styles.feedbackText} numberOfLines={1}>
+                          {conv.feedbackSummary || 'Exercise Feedback Attached'}
+                        </AppText>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Unread Badge */}
+                  {unread > 0 && (
+                    <View style={styles.unreadBadge}>
+                      <AppText variant="labelSm" style={styles.unreadText}>{unread}</AppText>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
+              </TouchableOpacity>
+            );
+          })
+        ) : (
+          <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, padding: spacing.md, textAlign: 'center', marginTop: spacing.lg }}>
+            No conversations found.
+          </AppText>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

@@ -6,7 +6,13 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '../ui';
 import { colors, spacing } from '../../theme';
-import type { Milestone } from '../../mocks/report.mock';
+
+export interface Milestone {
+  id: string;
+  label: string;
+  achieved: boolean;
+  date?: string;
+}
 
 interface MilestoneRowProps {
   milestone: Milestone;

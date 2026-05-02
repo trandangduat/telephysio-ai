@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -8,14 +8,29 @@ import { useTranslation } from 'react-i18next';
 
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
+import { useAuth } from '../../contexts/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
+import { getActiveTreatmentPlan } from '../../services/firebase';
+import type { TreatmentPlan } from '../../services/firebase/types';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t, i18n } = useTranslation();
+  const { user, userName, uid, role, logout } = useAuth();
 
   const [isDark, setIsDark] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [plan, setPlan] = useState<TreatmentPlan | null>(null);
+
+  useEffect(() => {
+    async function loadPlan() {
+      if (uid && role === 'patient') {
+        const activePlan = await getActiveTreatmentPlan(uid);
+        setPlan(activePlan);
+      }
+    }
+    loadPlan();
+  }, [uid, role]);
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'vi' ? 'en' : 'vi';
@@ -53,10 +68,12 @@ export const ProfileScreen: React.FC = () => {
               <Ionicons name="pencil" size={14} color="#fff" />
             </TouchableOpacity>
           </View>
-          <AppText variant="headlineMd" style={[styles.profileName, { color: textTheme }]}>Cody Li</AppText>
+          <AppText variant="headlineMd" style={[styles.profileName, { color: textTheme }]}>{userName || 'User'}</AppText>
           <View style={styles.badgeRow}>
             <View style={styles.proBadge}>
-              <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>Knee Recovery - Week 4</AppText>
+              <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>
+                {role === 'doctor' ? 'Doctor Profile' : (plan ? `${plan.condition} - Week ${plan.currentWeek}` : 'No Active Plan')}
+              </AppText>
             </View>
           </View>
         </View>
@@ -154,19 +171,19 @@ export const ProfileScreen: React.FC = () => {
           <View style={[styles.infoRow, { borderBottomColor: borderColor }]}>
             <Ionicons name="mail-outline" size={20} color={textSubTheme} />
             <AppText variant="bodyMd" style={[styles.infoLabel, { color: textSubTheme }]}>Email</AppText>
-            <AppText variant="bodyMd" style={[styles.infoValue, { color: textTheme }]}>cody.li@example.com</AppText>
+            <AppText variant="bodyMd" style={[styles.infoValue, { color: textTheme }]}>{user?.email || 'N/A'}</AppText>
           </View>
 
           <View style={[styles.infoRow, { borderBottomColor: borderColor }]}>
             <Ionicons name="call-outline" size={20} color={textSubTheme} />
             <AppText variant="bodyMd" style={[styles.infoLabel, { color: textSubTheme }]}>Phone</AppText>
-            <AppText variant="bodyMd" style={[styles.infoValue, { color: textTheme }]}>+1 (555) 123-4567</AppText>
+            <AppText variant="bodyMd" style={[styles.infoValue, { color: textTheme }]}>{user?.phone || '+1 (555) 000-0000'}</AppText>
           </View>
 
           <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
             <Ionicons name="calendar-outline" size={20} color={textSubTheme} />
             <AppText variant="bodyMd" style={[styles.infoLabel, { color: textSubTheme }]}>Date of Birth</AppText>
-            <AppText variant="bodyMd" style={[styles.infoValue, { color: textTheme }]}>Sept 12, 1994</AppText>
+            <AppText variant="bodyMd" style={[styles.infoValue, { color: textTheme }]}>{user?.dateOfBirth || 'Not set'}</AppText>
           </View>
         </View>
 
@@ -213,7 +230,23 @@ export const ProfileScreen: React.FC = () => {
           <AppText variant="labelMd" style={[styles.supportText, { color: textSubTheme }]}>{t('profile.support', 'Contact Support Center')}</AppText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={() => Alert.alert(t('profile.logout', 'Log Out'), t('profile.logout', 'Log Out'), [{ text: t('common.cancel', 'Cancel'), style: 'cancel' }, { text: t('profile.logout', 'Log Out'), style: 'destructive' }])}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={() => {
+          if (Platform.OS === 'web') {
+            const confirmed = window.confirm(t('profile.logoutConfirm', 'Are you sure you want to log out?'));
+            if (confirmed) {
+              logout();
+            }
+          } else {
+            Alert.alert(
+              t('profile.logout', 'Log Out'),
+              t('profile.logoutConfirm', 'Are you sure you want to log out?'),
+              [
+                { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+                { text: t('profile.logout', 'Log Out'), style: 'destructive', onPress: () => {logout();} },
+              ]
+            );
+          }
+        }}>
           <Ionicons name="log-out-outline" size={20} color="#ef4444" />
           <AppText variant="labelMd" style={styles.logoutText}>{t('profile.logout', 'Log Out')}</AppText>
         </TouchableOpacity>

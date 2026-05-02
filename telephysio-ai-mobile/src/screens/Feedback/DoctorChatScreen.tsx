@@ -1,11 +1,5 @@
-/**
- * DoctorChatScreen
- *
- * Displays doctor's feedback notes and allows the user to chat with the doctor.
- */
-
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -14,47 +8,84 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppText } from '../../components/ui';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAuth } from '../../contexts/AuthContext';
+import { 
+  getOrCreateConversation, 
+  onMessagesChange, 
+  sendMessage, 
+  getPatientConversation, 
+  getDoctorConversations 
+} from '../../services/firebase';
+import { getActiveTreatmentPlan } from '../../services/firebase/assignmentService';
+import type { ChatMessage, Conversation } from '../../services/firebase/types';
 
 export const DoctorChatScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { uid, role, userName } = useAuth();
+  
   const [inputText, setInputText] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const chatData = [
-    {
-      id: 'm0',
-      type: 'patient_feedback',
-      sender: 'user',
-      patientName: 'You',
-      patientTitle: 'Lateral Lunges • Session Feedback',
-      text: "I felt a bit of a pinch on my outer knee during the descent. It wasn't sharp pain, but enough to make me pause and lose balance.",
-      tags: ['Pain: 5/10', 'Difficulty: Medium 😐'],
-      time: 'Yesterday, 4:10 PM'
-    },
-    {
-      id: 'm1',
-      type: 'feedback',
-      sender: 'doctor',
-      doctorName: 'Dr. Marcus Sterling',
-      doctorTitle: 'Lead Physiotherapist • Knee Recovery Specialist',
-      text: "Hello! I've reviewed your last three AI-guided exercise sessions. Your range of motion in the left knee has improved by 12% since last Tuesday. However, the AI sensor noted some instability during the lateral lunges. Please focus on engaging your core more specifically during those reps to stabilize the joint. Let's aim to increase the lunge depth by just a few centimeters this week.",
-      tags: ['12% Mobility Gain', 'Avg. 15min Sessions'],
-      time: 'Yesterday, 9:00 AM'
-    },
-    {
-      id: 'm2',
-      type: 'text',
-      sender: 'user',
-      text: 'Thank you, Doctor. I did feel that instability too. Should I wear the brace during the lateral lunges?',
-      time: 'Yesterday, 4:12 PM'
-    },
-    {
-      id: 'm3',
-      type: 'text',
-      sender: 'doctor',
-      text: 'Yes, please wear the sleeve for support for the next 2 sessions while we build that stability back up. Let me know how it feels.',
-      time: 'Today, 9:05 AM'
+  useEffect(() => {
+    async function initChat() {
+      if (!uid) return;
+      try {
+        let convId = null;
+        if (role === 'patient') {
+          // Find if a conversation already exists
+          const existingConv = await getPatientConversation(uid);
+          if (existingConv) {
+            convId = existingConv.id;
+          } else {
+            // Find doctorId from active plan to create conversation
+            const plan = await getActiveTreatmentPlan(uid);
+            if (plan) {
+              convId = await getOrCreateConversation(uid, plan.doctorId, userName || 'Patient', 'Your Doctor');
+            }
+          }
+        } else {
+          // If doctor, for now just load the first conversation
+          const convs = await getDoctorConversations(uid);
+          if (convs.length > 0) {
+            convId = convs[0].id;
+          }
+        }
+        setConversationId(convId);
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    initChat();
+  }, [uid, role, userName]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    const unsubscribe = onMessagesChange(conversationId, (newMessages) => {
+      setMessages(newMessages);
+    });
+    return () => unsubscribe();
+  }, [conversationId]);
+
+  const handleSend = async () => {
+    if (!inputText.trim() || !conversationId || !uid) return;
+    const textToSend = inputText;
+    setInputText('');
+    try {
+      await sendMessage(conversationId, {
+        sender: role === 'patient' ? 'user' : 'doctor',
+        senderName: userName || (role === 'patient' ? 'You' : 'Doctor'),
+        type: 'text',
+        text: textToSend,
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setInputText(textToSend); // restore on failure
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -64,7 +95,9 @@ export const DoctorChatScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <AppText variant="headlineMd" style={styles.headerTitle}>Doctor Feedback & Chat</AppText>
+          <AppText variant="headlineMd" style={styles.headerTitle}>
+            {role === 'patient' ? 'Doctor Feedback & Chat' : 'Patient Chat'}
+          </AppText>
         </View>
       </View>
 
@@ -73,101 +106,114 @@ export const DoctorChatScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <AppText variant="bodyMd" style={styles.headerSubtitle}>
-            Review your latest progress notes from Dr. Sterling.
-          </AppText>
+          {role === 'patient' && (
+            <AppText variant="bodyMd" style={styles.headerSubtitle}>
+              Review your latest progress notes from your doctor.
+            </AppText>
+          )}
 
-          <View style={styles.chatSection}>
-            {chatData.map((msg) => {
-              if (msg.type === 'patient_feedback') {
-                return (
-                  <View key={msg.id} style={styles.patientNoteCard}>
-                    <View style={styles.doctorHeader}>
-                      <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-                        <Ionicons name="person" size={24} color="#fff" />
-                      </View>
-                      <View style={styles.doctorInfo}>
-                        <AppText variant="headlineMd" style={styles.doctorName}>{msg.patientName}</AppText>
-                        <AppText variant="labelSm" style={styles.doctorTitle}>{msg.patientTitle}</AppText>
-                      </View>
-                      <View style={[styles.newBadge, { backgroundColor: '#dcfce7' }]}>
-                        <AppText variant="labelSm" style={{ color: '#166534', fontSize: 10 }}>Self Report</AppText>
-                      </View>
-                    </View>
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
+          ) : !conversationId ? (
+            <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, textAlign: 'center', marginTop: spacing.xl }}>
+              No active chat available.
+            </AppText>
+          ) : (
+            <View style={styles.chatSection}>
+              {messages.length === 0 && (
+                <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, textAlign: 'center', marginTop: spacing.lg }}>
+                  No messages yet. Say hello!
+                </AppText>
+              )}
+              {messages.map((msg) => {
+                const isMe = (role === 'patient' && msg.sender === 'user') || (role === 'doctor' && msg.sender === 'doctor');
+                const timeString = (msg.createdAt as any)?.toDate?.().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Just now';
 
-                    <View style={[styles.messageBox, { backgroundColor: '#f0fdf4' }]}>
-                      <View style={[styles.messageIndicator, { backgroundColor: '#10b981' }]} />
-                      <AppText variant="bodyMd" style={styles.doctorMessage}>
-                        "{msg.text}"
-                      </AppText>
-                    </View>
-
-                    <View style={styles.tagRow}>
-                      {msg.tags?.map((tag, idx) => (
-                        <View key={idx} style={[styles.tag, { backgroundColor: idx === 0 ? '#fee2e2' : '#fef3c7' }]}>
-                          <Ionicons name={idx === 0 ? "pulse" : "barbell"} size={14} color={idx === 0 ? "#ef4444" : "#f59e0b"} />
-                          <AppText variant="labelSm" style={styles.tagText}>{tag}</AppText>
+                if (msg.type === 'patient_feedback') {
+                  return (
+                    <View key={msg.id} style={styles.patientNoteCard}>
+                      <View style={styles.doctorHeader}>
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                          <Ionicons name="person" size={24} color="#fff" />
                         </View>
-                      ))}
-                    </View>
-                    <AppText style={styles.chatTimePatientMsg}>{msg.time}</AppText>
-                  </View>
-                );
-              }
-
-              if (msg.type === 'feedback') {
-                return (
-                  <View key={msg.id} style={styles.noteCard}>
-                    <View style={styles.doctorHeader}>
-                      <View style={styles.avatarPlaceholder}>
-                        <Ionicons name="person" size={24} color="#fff" />
-                      </View>
-                      <View style={styles.doctorInfo}>
-                        <AppText variant="headlineMd" style={styles.doctorName}>{msg.doctorName}</AppText>
-                        <AppText variant="labelSm" style={styles.doctorTitle}>{msg.doctorTitle}</AppText>
-                      </View>
-                      <View style={styles.newBadge}>
-                        <AppText variant="labelSm" style={{ color: colors.primary, fontSize: 10 }}>New Assessment</AppText>
-                      </View>
-                    </View>
-
-                    <View style={styles.messageBox}>
-                      <View style={styles.messageIndicator} />
-                      <AppText variant="bodyMd" style={styles.doctorMessage}>
-                        "{msg.text}"
-                      </AppText>
-                    </View>
-
-                    <View style={styles.tagRow}>
-                      {msg.tags?.map((tag, idx) => (
-                        <View key={idx} style={styles.tag}>
-                          <Ionicons name={idx === 0 ? "trending-up" : "time-outline"} size={14} color={idx === 0 ? "#047857" : colors.primary} />
-                          <AppText variant="labelSm" style={styles.tagText}>{tag}</AppText>
+                        <View style={styles.doctorInfo}>
+                          <AppText variant="headlineMd" style={styles.doctorName}>{msg.senderName}</AppText>
+                          {msg.senderTitle && <AppText variant="labelSm" style={styles.doctorTitle}>{msg.senderTitle}</AppText>}
                         </View>
-                      ))}
+                        <View style={[styles.newBadge, { backgroundColor: '#dcfce7' }]}>
+                          <AppText variant="labelSm" style={{ color: '#166534', fontSize: 10 }}>Self Report</AppText>
+                        </View>
+                      </View>
+
+                      <View style={[styles.messageBox, { backgroundColor: '#f0fdf4' }]}>
+                        <View style={[styles.messageIndicator, { backgroundColor: '#10b981' }]} />
+                        <AppText variant="bodyMd" style={styles.doctorMessage}>
+                          "{msg.text}"
+                        </AppText>
+                      </View>
+
+                      {msg.tags && msg.tags.length > 0 && (
+                        <View style={styles.tagRow}>
+                          {msg.tags.map((tag, idx) => (
+                            <View key={idx} style={[styles.tag, { backgroundColor: idx === 0 ? '#fee2e2' : '#fef3c7' }]}>
+                              <Ionicons name={idx === 0 ? "pulse" : "barbell"} size={14} color={idx === 0 ? "#ef4444" : "#f59e0b"} />
+                              <AppText variant="labelSm" style={styles.tagText}>{tag}</AppText>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                      <AppText style={styles.chatTimePatientMsg}>{timeString}</AppText>
                     </View>
-                    <AppText style={styles.chatTimeFeedbackMsg}>{msg.time}</AppText>
-                  </View>
-                );
-              }
+                  );
+                }
 
-              if (msg.sender === 'user') {
+                if (msg.type === 'feedback') {
+                  return (
+                    <View key={msg.id} style={styles.noteCard}>
+                      <View style={styles.doctorHeader}>
+                        <View style={styles.avatarPlaceholder}>
+                          <Ionicons name="person" size={24} color="#fff" />
+                        </View>
+                        <View style={styles.doctorInfo}>
+                          <AppText variant="headlineMd" style={styles.doctorName}>{msg.senderName}</AppText>
+                          {msg.senderTitle && <AppText variant="labelSm" style={styles.doctorTitle}>{msg.senderTitle}</AppText>}
+                        </View>
+                        <View style={styles.newBadge}>
+                          <AppText variant="labelSm" style={{ color: colors.primary, fontSize: 10 }}>Assessment</AppText>
+                        </View>
+                      </View>
+
+                      <View style={styles.messageBox}>
+                        <View style={styles.messageIndicator} />
+                        <AppText variant="bodyMd" style={styles.doctorMessage}>
+                          "{msg.text}"
+                        </AppText>
+                      </View>
+
+                      {msg.tags && msg.tags.length > 0 && (
+                        <View style={styles.tagRow}>
+                          {msg.tags.map((tag, idx) => (
+                            <View key={idx} style={styles.tag}>
+                              <Ionicons name={idx === 0 ? "trending-up" : "time-outline"} size={14} color={idx === 0 ? "#047857" : colors.primary} />
+                              <AppText variant="labelSm" style={styles.tagText}>{tag}</AppText>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                      <AppText style={styles.chatTimeFeedbackMsg}>{timeString}</AppText>
+                    </View>
+                  );
+                }
+
                 return (
-                  <View key={msg.id} style={styles.chatBubbleUser}>
-                    <AppText style={styles.chatTextUser}>{msg.text}</AppText>
-                    <AppText style={styles.chatTimeUser}>{msg.time}</AppText>
+                  <View key={msg.id} style={isMe ? styles.chatBubbleUser : styles.chatBubbleDoctor}>
+                    <AppText style={isMe ? styles.chatTextUser : styles.chatTextDoctor}>{msg.text}</AppText>
+                    <AppText style={isMe ? styles.chatTimeUser : styles.chatTimeDoctor}>{timeString}</AppText>
                   </View>
                 );
-              }
-
-              return (
-                <View key={msg.id} style={styles.chatBubbleDoctor}>
-                  <AppText style={styles.chatTextDoctor}>{msg.text}</AppText>
-                  <AppText style={styles.chatTimeDoctor}>{msg.time}</AppText>
-                </View>
-              );
-            })}
-          </View>
+              })}
+            </View>
+          )}
         </ScrollView>
 
         {/* Input Area */}
@@ -183,7 +229,7 @@ export const DoctorChatScreen: React.FC = () => {
               value={inputText}
               onChangeText={setInputText}
             />
-            <TouchableOpacity style={styles.sendBtn}>
+            <TouchableOpacity style={styles.sendBtn} onPress={handleSend}>
               <Ionicons name="send" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -217,8 +263,8 @@ const styles = StyleSheet.create({
   messageIndicator: { width: 4, backgroundColor: colors.primary, borderRadius: 2, marginRight: spacing.md },
   doctorMessage: { flex: 1, color: '#334155', fontStyle: 'italic', lineHeight: 22 },
 
-  tagRow: { flexDirection: 'row', gap: spacing.sm },
-  tag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e2e8f0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, gap: 6 },
+  tagRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  tag: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e2e8f0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, gap: 6, marginTop: 4 },
   tagText: { color: '#0f172a', fontWeight: '600' },
   chatTimeFeedbackMsg: { color: '#64748b', fontSize: 10, alignSelf: 'flex-start', marginTop: spacing.sm },
   chatTimePatientMsg: { color: '#64748b', fontSize: 10, alignSelf: 'flex-end', marginTop: spacing.sm },

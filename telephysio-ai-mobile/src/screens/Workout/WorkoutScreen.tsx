@@ -1,12 +1,5 @@
-/**
- * WorkoutScreen
- *
- * Tab entry for Workout. Displays the list of exercises for the current routine.
- * Allows the user to select an exercise and start it (navigates to Calibration).
- */
-
-import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +9,10 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 import { AppText } from '../../components/ui';
 import { colors, radius, spacing, typography } from '../../theme';
+import { useAuth } from '../../contexts/AuthContext';
 import type { RootStackParamList, BottomTabParamList } from '../../navigation/types';
+import { getPatientAssignments } from '../../services/firebase';
+import type { Assignment, Exercise } from '../../services/firebase/types';
 
 type WorkoutNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, 'Workout'>,
@@ -27,14 +23,43 @@ interface Props {
   navigation: WorkoutNavProp;
 }
 
-const mockExercises = [
-  { id: '1', name: 'Squat', sets: 3, reps: 10, duration: '5 mins', icon: 'barbell-outline', color: colors.primary },
-  { id: '2', name: 'Post-Op Knee Flexion', sets: 2, reps: 15, duration: '10 mins', icon: 'fitness-outline', color: '#0f766e' },
-  { id: '3', name: 'Lunges', sets: 3, reps: 12, duration: '8 mins', icon: 'walk-outline', color: '#6366f1' },
-];
-
 export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
+  const { uid } = useAuth();
+  
+  const [loading, setLoading] = useState(true);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!uid) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const assignments = await getPatientAssignments(uid, 'active');
+        if (assignments.length > 0) {
+          // Just take the first active assignment's exercises for today's routine
+          setExercises(assignments[0].exercises || []);
+        } else {
+          setExercises([]);
+        }
+      } catch (error) {
+        console.error('Error loading assignments:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [uid]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -67,11 +92,11 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {mockExercises.map((ex, index) => (
-          <View key={ex.id} style={styles.card}>
+        {exercises.length > 0 ? exercises.map((ex, index) => (
+          <View key={ex.id || index.toString()} style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: ex.color + '1A' }]}>
-                <Ionicons name={ex.icon as any} size={24} color={ex.color} />
+              <View style={[styles.iconBox, { backgroundColor: (ex.color || colors.primary) + '1A' }]}>
+                <Ionicons name={(ex.icon || 'barbell-outline') as any} size={24} color={ex.color || colors.primary} />
               </View>
               <View style={styles.cardTitleCol}>
                 <AppText variant="headlineMd" style={styles.exerciseName}>{ex.name}</AppText>
@@ -89,7 +114,11 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
               <AppText variant="labelMd" style={{ color: '#fff' }}>Start Exercise</AppText>
             </TouchableOpacity>
           </View>
-        ))}
+        )) : (
+          <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, textAlign: 'center', marginTop: spacing.xl }}>
+            No exercises assigned for today. Great job resting!
+          </AppText>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

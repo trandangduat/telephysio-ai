@@ -4,8 +4,8 @@
  * Displays the Exercise Feedback List and handles the Submit Feedback dialog.
  */
 
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, TextInput, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -14,25 +14,94 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppText } from '../../components/ui';
 import { colors, spacing, typography, radius } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAuth } from '../../contexts/AuthContext';
+import { getPatientSessions, getActiveTreatmentPlan, submitFeedback as submitFeedbackApi } from '../../services/firebase';
+import type { Session, TreatmentPlan } from '../../services/firebase/types';
 
 export const FeedbackScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { uid } = useAuth();
+  
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | null>(null);
   const [notes, setNotes] = useState('');
+  const [painLevel, setPainLevel] = useState(5);
 
-  const openFeedbackModal = () => setModalVisible(true);
+  const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [treatmentPlan, setTreatmentPlan] = useState<TreatmentPlan | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!uid) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const [fetchedSessions, fetchedPlan] = await Promise.all([
+          getPatientSessions(uid, 10),
+          getActiveTreatmentPlan(uid)
+        ]);
+        setSessions(fetchedSessions);
+        setTreatmentPlan(fetchedPlan);
+      } catch (error) {
+        console.error('Error loading feedback data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [uid]);
+
+  const openFeedbackModal = (session: Session) => {
+    setSelectedSession(session);
+    setModalVisible(true);
+  };
+
   const closeFeedbackModal = () => {
     setModalVisible(false);
     setNotes('');
     setSelectedDifficulty(null);
+    setPainLevel(5);
+    setSelectedSession(null);
   };
 
-  const submitFeedback = () => {
-    closeFeedbackModal();
-    // In a real app, this would submit data, then maybe navigate or show success
-    navigation.navigate('DoctorChat' as any);
+  const handleSubmit = async () => {
+    if (!uid || !selectedSession) return;
+    if (!selectedDifficulty) {
+      Alert.alert('Selection Required', 'Please select a difficulty level.');
+      return;
+    }
+
+    try {
+      await submitFeedbackApi({
+        patientId: uid,
+        sessionId: selectedSession.id,
+        exerciseName: 'Physical Therapy Session', // Fallback name
+        difficulty: selectedDifficulty,
+        painLevel: painLevel,
+        notes: notes,
+      });
+      
+      Alert.alert('Success', 'Your feedback has been submitted!');
+      closeFeedbackModal();
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      Alert.alert('Error', 'Failed to submit feedback. Please try again.');
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safe, styles.center]} edges={['top']}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const prioritySession = sessions.length > 0 ? sessions[0] : null;
+  const remainingSessions = sessions.length > 1 ? sessions.slice(1) : [];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -42,13 +111,13 @@ export const FeedbackScreen: React.FC = () => {
           <AppText variant="labelMd" style={styles.logoText}>TelePhysioAI</AppText>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity onPress={() => navigation.navigate('DoctorChat' as any)} style={styles.iconBtn}>
+          <TouchableOpacity onPress={() => navigation.navigate('DoctorChat')} style={styles.iconBtn}>
             <Ionicons name="chatbubbles-outline" size={24} color={'#475569'} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn}>
             <Ionicons name="notifications-outline" size={24} color={'#475569'} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile' as any)}>
+          <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile')}>
             <Ionicons name="person" size={14} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -60,66 +129,68 @@ export const FeedbackScreen: React.FC = () => {
           Review your recently completed sessions and provide feedback to help our AI adjust your recovery plan for better results.
         </AppText>
 
-        {/* Priority Review Card */}
-        <View style={styles.priorityCard}>
-          <View style={styles.priorityImagePlaceholder}>
-            <View style={styles.completedBadge}>
-              <Ionicons name="checkmark-circle-outline" size={12} color="#fff" style={{ marginRight: 4 }} />
-              <AppText variant="labelSm" style={{ color: '#fff' }}>Completed Today</AppText>
+        {prioritySession ? (
+          <View style={styles.priorityCard}>
+            <View style={styles.priorityImagePlaceholder}>
+              <View style={styles.completedBadge}>
+                <Ionicons name="checkmark-circle-outline" size={12} color="#fff" style={{ marginRight: 4 }} />
+                <AppText variant="labelSm" style={{ color: '#fff' }}>Recently Completed</AppText>
+              </View>
+            </View>
+            <View style={styles.priorityContent}>
+              <AppText variant="labelSm" style={styles.priorityLabel}>PRIORITY REVIEW</AppText>
+              <AppText variant="headlineMd" style={styles.priorityTitle}>Last Session</AppText>
+              <AppText variant="bodySm" style={styles.priorityDesc}>
+                You completed {prioritySession.exercisesCompleted || prioritySession.completedExercises || 0} exercises with {prioritySession.accuracy || prioritySession.accuracyScore || 0}% form accuracy. How did you feel?
+              </AppText>
+              <TouchableOpacity style={styles.primaryButton} onPress={() => openFeedbackModal(prioritySession)}>
+                <AppText variant="labelMd" style={{ color: '#fff' }}>Give Feedback</AppText>
+                <Ionicons name="chatbubble-ellipses-outline" size={16} color="#fff" style={{ marginLeft: 8 }} />
+              </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.priorityContent}>
-            <AppText variant="labelSm" style={styles.priorityLabel}>PRIORITY REVIEW</AppText>
-            <AppText variant="headlineMd" style={styles.priorityTitle}>Knee Extension</AppText>
-            <AppText variant="bodySm" style={styles.priorityDesc}>
-              You completed 3 sets of 12 reps with high form accuracy. How did your joint feel during the final set?
-            </AppText>
-            <TouchableOpacity style={styles.primaryButton} onPress={openFeedbackModal}>
-              <AppText variant="labelMd" style={{ color: '#fff' }}>Give Feedback</AppText>
-              <Ionicons name="chatbubble-ellipses-outline" size={16} color="#fff" style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
+        ) : (
+          <View style={styles.infoCard}>
+             <AppText variant="bodyMd" style={{ color: '#64748b' }}>No recent sessions to review.</AppText>
           </View>
-        </View>
+        )}
 
         {/* Weekly Goal Card */}
-        <View style={styles.weeklyGoalCard}>
-          <AppText variant="labelMd" style={{ color: '#e0e7ff' }}>Weekly Goal</AppText>
-          <AppText variant="bodySm" style={{ color: '#e0e7ff', marginBottom: spacing.md }}>Progress towards your recovery target.</AppText>
-          
-          <View style={styles.goalRow}>
-            <AppText style={styles.goalPercent}>85%</AppText>
-            <AppText variant="labelSm" style={{ color: '#e0e7ff' }}>12/14 SESSIONS</AppText>
+        {treatmentPlan && (
+          <View style={styles.weeklyGoalCard}>
+            <AppText variant="labelMd" style={{ color: '#e0e7ff' }}>{treatmentPlan.condition} Goal</AppText>
+            <AppText variant="bodySm" style={{ color: '#e0e7ff', marginBottom: spacing.md }}>Progress towards your phase {treatmentPlan.currentPhase} target.</AppText>
+            
+            <View style={styles.goalRow}>
+              <AppText style={styles.goalPercent}>{treatmentPlan.progress}%</AppText>
+              <AppText variant="labelSm" style={{ color: '#e0e7ff' }}>WEEK {treatmentPlan.currentWeek}/{treatmentPlan.totalWeeks}</AppText>
+            </View>
+            
+            <View style={styles.goalBarTrack}>
+              <View style={[styles.goalBarFill, { width: `${treatmentPlan.progress}%` }]} />
+            </View>
+            
+            <View style={styles.goalFooter}>
+              <Ionicons name="trending-up" size={16} color="#34d399" />
+              <AppText variant="labelSm" style={{ color: '#e0e7ff', marginLeft: 8 }}>
+                {treatmentPlan.status === 'on-track' ? "You're on track with your plan!" : 
+                 treatmentPlan.status === 'ahead' ? "You're ahead of schedule this week!" : 
+                 "Stay consistent to get back on track!"}
+              </AppText>
+            </View>
           </View>
-          
-          <View style={styles.goalBarTrack}>
-            <View style={[styles.goalBarFill, { width: '85%' }]} />
-          </View>
-          
-          <View style={styles.goalFooter}>
-            <Ionicons name="trending-up" size={16} color="#34d399" />
-            <AppText variant="labelSm" style={{ color: '#e0e7ff', marginLeft: 8 }}>You're ahead of schedule this week!</AppText>
-          </View>
-        </View>
+        )}
 
         {/* List Items */}
-        <FeedbackListItem 
-          title="Bodyweight Squats" 
-          desc="Completed yesterday. AI detected a slight tilt in your pelvis during descent." 
-          icon="resize-outline"
-          onPress={openFeedbackModal} 
-        />
-        <FeedbackListItem 
-          title="Wall Slides" 
-          desc="Targeted shoulder mobility session. 2 sets of 10 reps completed." 
-          icon="body-outline"
-          onPress={openFeedbackModal} 
-        />
-        <FeedbackListItem 
-          title="Ankle Circles" 
-          desc="Morning flexibility routine. AI noted improved range of motion in right ankle." 
-          icon="footsteps-outline"
-          onPress={openFeedbackModal} 
-        />
+        {remainingSessions.map((session) => (
+          <FeedbackListItem 
+            key={session.id}
+            title={`Session on ${session.date ? (session.date as any).toDate().toLocaleDateString() : 'Recent'}`} 
+            desc={`${session.exercisesCompleted || session.completedExercises || 0} exercises completed · ${session.duration || session.totalDuration || '0m'} active.`} 
+            icon="calendar-outline"
+            onPress={() => openFeedbackModal(session)} 
+          />
+        ))}
 
         {/* Why feedback matters */}
         <View style={styles.infoCard}>
@@ -134,7 +205,7 @@ export const FeedbackScreen: React.FC = () => {
       </ScrollView>
 
       {/* SUBMIT FEEDBACK MODAL */}
-      <Modal visible={modalVisible} transparent animationType="slide">
+      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeFeedbackModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <AppText style={styles.modalTitle}>Submit Feedback</AppText>
@@ -145,12 +216,19 @@ export const FeedbackScreen: React.FC = () => {
             <View style={styles.inputGroup}>
               <View style={styles.rowBetween}>
                 <AppText variant="labelMd" style={styles.inputLabel}>PAIN LEVEL</AppText>
-                <AppText variant="labelMd" style={{ color: colors.primary }}>5/10</AppText>
+                <AppText variant="labelMd" style={{ color: colors.primary }}>{painLevel}/10</AppText>
               </View>
-              {/* Fake Slider */}
-              <View style={styles.fakeSliderTrack}>
-                <View style={[styles.fakeSliderFill, { width: '50%' }]} />
-                <View style={[styles.fakeSliderThumb, { left: '50%' }]} />
+              {/* Simple Pain Selection */}
+              <View style={styles.painRow}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                  <TouchableOpacity 
+                    key={level} 
+                    style={[styles.painBtn, painLevel === level && styles.painBtnActive]}
+                    onPress={() => setPainLevel(level)}
+                  >
+                    <AppText style={{ color: painLevel === level ? '#fff' : '#475569', fontSize: 12 }}>{level}</AppText>
+                  </TouchableOpacity>
+                ))}
               </View>
               <View style={styles.rowBetween}>
                 <AppText variant="labelSm" style={styles.grayText}>No Pain</AppText>
@@ -180,7 +258,7 @@ export const FeedbackScreen: React.FC = () => {
               />
             </View>
 
-            <TouchableOpacity style={styles.submitBtn} onPress={submitFeedback}>
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
               <AppText variant="labelMd" style={{ color: '#fff' }}>Submit Feedback</AppText>
             </TouchableOpacity>
@@ -222,6 +300,7 @@ const DifficultyButton = ({ emoji, label, selected, onPress }: any) => (
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f8fafd' },
+  center: { justifyContent: 'center', alignItems: 'center' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.sm },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logoText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
@@ -270,10 +349,10 @@ const styles = StyleSheet.create({
   inputGroup: { marginBottom: spacing.xl },
   inputLabel: { color: '#475569', fontWeight: '700', fontSize: 12, letterSpacing: 0.5, marginBottom: spacing.sm },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  fakeSliderTrack: { height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, marginVertical: spacing.md, position: 'relative' },
-  fakeSliderFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 4 },
-  fakeSliderThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.primary, position: 'absolute', top: -6, marginLeft: -10, borderWidth: 3, borderColor: '#fff' },
   grayText: { color: '#64748b' },
+  painRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: spacing.md },
+  painBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  painBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   difficultyRow: { flexDirection: 'row', gap: spacing.md },
   diffBtn: { flex: 1, alignItems: 'center', paddingVertical: spacing.md, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12 },
   diffBtnSelected: { borderColor: colors.primary, backgroundColor: '#eff6ff', borderWidth: 2 },

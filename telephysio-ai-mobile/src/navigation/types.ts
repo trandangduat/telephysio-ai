@@ -2,6 +2,12 @@
  * Navigation — central type definitions & param lists.
  */
 
+// ── Auth Navigation ─────────────────────────────────
+export type AuthStackParamList = {
+  Login: undefined;
+  SignUp: undefined;
+};
+
 // ── Patient Navigation ──────────────────────────────
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -36,6 +42,9 @@ export type DoctorTabParamList = {
 
 // Screen names as constants to avoid typo
 export const SCREENS = {
+  // Auth
+  Login: 'Login',
+  SignUp: 'SignUp',
   // Patient
   MainTabs: 'MainTabs',
   Home: 'Home',

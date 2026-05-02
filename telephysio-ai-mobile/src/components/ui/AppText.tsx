@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { Text, TextProps, TextStyle } from 'react-native';
+import { Text, TextProps, TextStyle, ColorValue } from 'react-native';
 import { typography } from '../../theme';
 import { colors } from '../../theme';
 
@@ -15,7 +15,7 @@ type TypographyVariant = keyof typeof typography;
 
 interface AppTextProps extends TextProps {
   variant?: TypographyVariant;
-  color?: string;
+  color?: ColorValue | string;
   children: React.ReactNode;
 }
 

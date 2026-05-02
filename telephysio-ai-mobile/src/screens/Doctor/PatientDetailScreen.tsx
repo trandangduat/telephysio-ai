@@ -1,9 +1,5 @@
-/**
- * PatientDetailScreen — Detailed view of a single patient's recovery.
- */
-
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,21 +10,63 @@ import { useTranslation } from 'react-i18next';
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
 import type { DoctorStackParamList } from '../../navigation/types';
-
-const SESSION_HISTORY = [
-  { date: 'May 2', exercises: 6, accuracy: 89, duration: '42 min', pain: 3 },
-  { date: 'May 1', exercises: 5, accuracy: 85, duration: '38 min', pain: 4 },
-  { date: 'Apr 30', exercises: 6, accuracy: 91, duration: '45 min', pain: 2 },
-  { date: 'Apr 29', exercises: 4, accuracy: 78, duration: '30 min', pain: 5 },
-  { date: 'Apr 28', exercises: 6, accuracy: 87, duration: '40 min', pain: 3 },
-];
+import { 
+  getActiveTreatmentPlan, 
+  getLatestProgress, 
+  getPatientSessions 
+} from '../../services/firebase';
+import type { TreatmentPlan, ProgressSnapshot, Session } from '../../services/firebase/types';
 
 export const PatientDetailScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
   const route = useRoute<RouteProp<DoctorStackParamList, 'PatientDetail'>>();
   const { t } = useTranslation();
-  const { patientName } = route.params;
+  
+  // Note: the route params should ideally include patientId from DoctorPatientsScreen navigation
+  const { patientName, patientId } = route.params;
+  const actualPatientId = patientId;
+
   const [activeChart, setActiveChart] = useState('ROM');
+  const [loading, setLoading] = useState(true);
+  
+  const [plan, setPlan] = useState<TreatmentPlan | null>(null);
+  const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [fetchedPlan, fetchedProgress, fetchedSessions] = await Promise.all([
+          getActiveTreatmentPlan(actualPatientId),
+          getLatestProgress(actualPatientId),
+          getPatientSessions(actualPatientId),
+        ]);
+        setPlan(fetchedPlan);
+        setProgress(fetchedProgress);
+        setSessions(fetchedSessions);
+      } catch (error) {
+        console.error('Error loading patient details:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [actualPatientId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const accuracy = progress?.movementScore ?? 0;
+  const sessionsCount = sessions.length;
+  // Calculate average pain from sessions
+  const avgPain = sessionsCount > 0 
+    ? Math.round(sessions.reduce((acc, s) => acc + (s.averagePain || 0), 0) / sessionsCount) 
+    : 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -51,13 +89,17 @@ export const PatientDetailScreen: React.FC = () => {
           </View>
           <View style={{ flex: 1 }}>
             <AppText variant="headlineMd" style={styles.profileName}>{patientName}</AppText>
-            <AppText variant="bodySm" style={styles.profileCondition}>ACL Recovery · Week 6 · Phase 2</AppText>
+            <AppText variant="bodySm" style={styles.profileCondition}>
+              {plan ? `${plan.condition} · Week ${plan.currentWeek} · Phase ${plan.currentPhase}` : 'No active plan'}
+            </AppText>
             <View style={styles.profileBadges}>
               <View style={[styles.badge, { backgroundColor: '#dcfce7' }]}>
-                <AppText variant="labelSm" style={{ color: '#166534', fontSize: 10 }}>On Track</AppText>
+                <AppText variant="labelSm" style={{ color: '#166534', fontSize: 10 }}>
+                  {plan?.status === 'on-track' ? 'On Track' : (plan?.status || 'Active')}
+                </AppText>
               </View>
               <View style={[styles.badge, { backgroundColor: '#e0f2fe' }]}>
-                <AppText variant="labelSm" style={{ color: colors.primary, fontSize: 10 }}>18 Sessions</AppText>
+                <AppText variant="labelSm" style={{ color: colors.primary, fontSize: 10 }}>{sessionsCount} Sessions</AppText>
               </View>
             </View>
           </View>
@@ -66,10 +108,10 @@ export const PatientDetailScreen: React.FC = () => {
         {/* Quick Stats */}
         <View style={styles.quickStats}>
           {[
-            { label: 'Accuracy', value: '87%', icon: 'analytics', color: colors.primary },
-            { label: 'Sessions', value: '18', icon: 'calendar', color: '#0f766e' },
-            { label: 'Streak', value: '14d', icon: 'flame', color: '#b45309' },
-            { label: 'Pain Avg', value: '3/10', icon: 'pulse', color: '#dc2626' },
+            { label: 'Accuracy', value: `${accuracy}%`, icon: 'analytics', color: colors.primary },
+            { label: 'Sessions', value: `${sessionsCount}`, icon: 'calendar', color: '#0f766e' },
+            { label: 'Streak', value: `${progress?.weeklyConsistency ? Math.round((progress.weeklyConsistency/100)*7) : 0}d`, icon: 'flame', color: '#b45309' },
+            { label: 'Pain Avg', value: `${avgPain}/10`, icon: 'pulse', color: '#dc2626' },
           ].map((stat) => (
             <View key={stat.label} style={styles.quickStatItem}>
               <Ionicons name={stat.icon as any} size={18} color={stat.color} />
@@ -112,31 +154,36 @@ export const PatientDetailScreen: React.FC = () => {
         <View style={styles.card}>
           <AppText variant="headlineMd" style={[styles.cardTitle, { marginBottom: spacing.md }]}>Session History</AppText>
 
-          {SESSION_HISTORY.map((session, i) => (
-            <View key={i} style={styles.sessionRow}>
-              <View style={styles.sessionDate}>
-                <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>{session.date}</AppText>
+          {sessions.length > 0 ? sessions.map((session, i) => {
+            const dateStr = (session.date as any)?.toDate?.().toLocaleDateString() || 'Recent';
+            return (
+              <View key={session.id || i.toString()} style={styles.sessionRow}>
+                <View style={styles.sessionDate}>
+                  <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>{dateStr}</AppText>
+                </View>
+                <View style={styles.sessionStats}>
+                  <View style={styles.sessionStat}>
+                    <Ionicons name="barbell-outline" size={12} color="#64748b" />
+                    <AppText variant="bodySm" style={styles.sessionStatText}>{session.completedExercises || 0} exercises</AppText>
+                  </View>
+                  <View style={styles.sessionStat}>
+                    <Ionicons name="analytics-outline" size={12} color="#64748b" />
+                    <AppText variant="bodySm" style={styles.sessionStatText}>{session.accuracyScore || 0}%</AppText>
+                  </View>
+                  <View style={styles.sessionStat}>
+                    <Ionicons name="time-outline" size={12} color="#64748b" />
+                    <AppText variant="bodySm" style={styles.sessionStatText}>{session.totalDuration || '0 min'}</AppText>
+                  </View>
+                  <View style={styles.sessionStat}>
+                    <Ionicons name="pulse-outline" size={12} color={(session.averagePain || 0) > 5 ? '#dc2626' : '#64748b'} />
+                    <AppText variant="bodySm" style={[styles.sessionStatText, (session.averagePain || 0) > 5 && { color: '#dc2626' }]}>Pain {session.averagePain || 0}</AppText>
+                  </View>
+                </View>
               </View>
-              <View style={styles.sessionStats}>
-                <View style={styles.sessionStat}>
-                  <Ionicons name="barbell-outline" size={12} color="#64748b" />
-                  <AppText variant="bodySm" style={styles.sessionStatText}>{session.exercises} exercises</AppText>
-                </View>
-                <View style={styles.sessionStat}>
-                  <Ionicons name="analytics-outline" size={12} color="#64748b" />
-                  <AppText variant="bodySm" style={styles.sessionStatText}>{session.accuracy}%</AppText>
-                </View>
-                <View style={styles.sessionStat}>
-                  <Ionicons name="time-outline" size={12} color="#64748b" />
-                  <AppText variant="bodySm" style={styles.sessionStatText}>{session.duration}</AppText>
-                </View>
-                <View style={styles.sessionStat}>
-                  <Ionicons name="pulse-outline" size={12} color={session.pain > 5 ? '#dc2626' : '#64748b'} />
-                  <AppText variant="bodySm" style={[styles.sessionStatText, session.pain > 5 && { color: '#dc2626' }]}>Pain {session.pain}</AppText>
-                </View>
-              </View>
-            </View>
-          ))}
+            );
+          }) : (
+            <AppText variant="bodySm" style={{ color: colors.onSurfaceVariant, textAlign: 'center' }}>No sessions recorded yet.</AppText>
+          )}
         </View>
 
         {/* Actions */}

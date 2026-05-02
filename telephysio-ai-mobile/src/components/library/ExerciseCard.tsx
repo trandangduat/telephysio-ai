@@ -6,7 +6,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Card, AppText, Badge } from '../ui';
 import { colors, radius, spacing } from '../../theme';
-import type { Exercise } from '../../mocks/workout.mock';
+import type { Exercise } from '../../services/firebase/types';
 
 interface ExerciseCardProps {
   exercise: Exercise;

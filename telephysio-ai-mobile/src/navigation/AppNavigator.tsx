@@ -1,49 +1,47 @@
 /**
- * AppNavigator — Root Stack navigator with role-based routing.
+ * AppNavigator — Root navigator with Auth → Role-based routing.
  *
- * Structure:
- *   AppNavigator (Stack)
- *   ├── [Patient role]
- *   │   └── BottomTabNavigator (Tabs)
- *   │       ├── HomeScreen
- *   │       ├── WorkoutScreen
- *   │       ├── FeedbackScreen
- *   │       ├── LibraryScreen
- *   │       └── ProgressScreen
- *   │   ├── CalibrationScreen
- *   │   ├── TrainingScreen
- *   │   ├── DoctorChatScreen
- *   │   └── ProfileScreen
- *   └── [Doctor role]
- *       └── DoctorTabNavigator (Tabs)
- *           ├── DashboardScreen
- *           ├── AssignmentsScreen
- *           ├── DoctorFeedbackScreen
- *           └── PatientsScreen
- *       ├── PatientDetailScreen
- *       ├── DoctorProfileScreen (reuses ProfileScreen)
- *       └── DoctorChatScreen
+ * Flow:
+ *   isLoading?  → Splash (ActivityIndicator)
+ *   !isAuthenticated? → AuthNavigator (Login / SignUp)
+ *   role=patient → PatientNavigator
+ *   role=doctor  → DoctorNavigator
  */
 
 import React from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../contexts/AuthContext';
 
-// Patient
+// Auth screens
+import { LoginScreen } from '../screens/Auth/LoginScreen';
+import { SignUpScreen } from '../screens/Auth/SignUpScreen';
+
+// Patient screens
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { CalibrationScreen } from '../screens/Calibration/CalibrationScreen';
 import { TrainingScreen } from '../screens/Training/TrainingScreen';
 import { DoctorChatScreen } from '../screens/Feedback/DoctorChatScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 
-// Doctor
+// Doctor screens
 import { DoctorTabNavigator } from './DoctorTabNavigator';
 import { PatientDetailScreen } from '../screens/Doctor/PatientDetailScreen';
 
 import { colors, typography } from '../theme';
-import type { RootStackParamList, DoctorStackParamList } from './types';
+import type { AuthStackParamList, RootStackParamList, DoctorStackParamList } from './types';
+
+// ── Auth Stack ──────────────────────────────────────
+const Auth = createNativeStackNavigator<AuthStackParamList>();
+
+const AuthNavigator: React.FC = () => (
+  <Auth.Navigator screenOptions={{ headerShown: false }}>
+    <Auth.Screen name="Login" component={LoginScreen} />
+    <Auth.Screen name="SignUp" component={SignUpScreen} />
+  </Auth.Navigator>
+);
 
 // ── Patient Stack ───────────────────────────────────
 const PatientStack = createNativeStackNavigator<RootStackParamList>();
@@ -65,10 +63,10 @@ const PatientNavigator: React.FC = () => {
       }}
     >
       <PatientStack.Screen name="MainTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
-      <PatientStack.Screen name="Calibration" component={CalibrationScreen} options={{ title: t('nav.calibration', 'Chuẩn bị'), headerShown: false }} />
-      <PatientStack.Screen name="Training" component={TrainingScreen} options={{ title: t('nav.training', 'Tập luyện'), headerShown: false }} />
-      <PatientStack.Screen name="DoctorChat" component={DoctorChatScreen} options={{ title: t('nav.doctorChat', 'Doctor Feedback & Chat'), headerShown: false }} />
-      <PatientStack.Screen name="Profile" component={ProfileScreen} options={{ title: t('profile.navTitle', 'Profile & Settings'), headerShown: false }} />
+      <PatientStack.Screen name="Calibration" component={CalibrationScreen} options={{ headerShown: false }} />
+      <PatientStack.Screen name="Training" component={TrainingScreen} options={{ headerShown: false }} />
+      <PatientStack.Screen name="DoctorChat" component={DoctorChatScreen} options={{ headerShown: false }} />
+      <PatientStack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
     </PatientStack.Navigator>
   );
 };
@@ -100,8 +98,33 @@ const DoctorNavigator: React.FC = () => {
   );
 };
 
-// ── Root: Role-based ────────────────────────────────
+// ── Root: Auth → Role-based ─────────────────────────
 export const AppNavigator: React.FC = () => {
-  const { role } = useAuth();
+  const { isAuthenticated, isLoading, role, uid } = useAuth();
+
+  // Show splash while checking Firebase Auth state
+  if (isLoading) {
+    return (
+      <View style={styles.splash}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // Not logged in → show Login/SignUp
+  if (!isAuthenticated) {
+    return <AuthNavigator />;
+  }
+
+  // Logged in → show role-based navigator
   return role === 'doctor' ? <DoctorNavigator /> : <PatientNavigator />;
 };
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+});
