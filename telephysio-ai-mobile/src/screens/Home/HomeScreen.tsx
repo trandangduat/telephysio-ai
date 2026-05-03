@@ -24,8 +24,14 @@ import type {
   RootStackParamList,
   BottomTabParamList,
 } from "../../navigation/types";
-import { getActiveTreatmentPlan, getLatestProgress } from "../../services/firebase";
-import type { TreatmentPlan, ProgressSnapshot } from "../../services/firebase/types";
+import {
+  getActiveTreatmentPlan,
+  getLatestProgress,
+} from "../../services/firebase";
+import type {
+  TreatmentPlan,
+  ProgressSnapshot,
+} from "../../services/firebase/types";
 
 type HomeNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, "Home">,
@@ -37,8 +43,8 @@ interface Props {
 }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const { switchRole, userName, uid } = useAuth();
-  
+  const { userName, uid } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<TreatmentPlan | null>(null);
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
@@ -67,21 +73,30 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safe, { justifyContent: "center", alignItems: "center" }]}>
+      <SafeAreaView
+        style={[
+          styles.safe,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   const protocolTitle = plan?.condition || "No Active Plan";
-  const protocolSubtitle = plan ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}` : "Please contact your doctor.";
-  
+  const protocolSubtitle = plan
+    ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}`
+    : "Please contact your doctor.";
+
   const movementScore = progress?.movementScore || 0;
   const timeActive = progress?.timeActiveMinutes || 0;
   const dailyGoalPercent = progress?.dailyGoalPercent || 0;
   const sessionsCompleted = progress?.sessionsCompleted || 0;
   const sessionsTarget = progress?.sessionsTarget || 3;
-  const aiInsight = progress?.aiInsight || "Complete a session to get your AI recovery insight.";
+  const aiInsight =
+    progress?.aiInsight ||
+    "Complete a session to get your AI recovery insight.";
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -201,9 +216,24 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.chartBar, { height: 45 }]} />
               <View style={[styles.chartBar, { height: 40 }]} />
               <View style={[styles.chartBar, { height: 60 }]} />
-              <View style={[styles.chartBar, { height: Math.max(30, movementScore - 10) }]} />
-              <View style={[styles.chartBar, { height: Math.max(30, movementScore - 5) }]} />
-              <View style={[styles.chartBar, { height: Math.max(30, movementScore + 10) }]} />
+              <View
+                style={[
+                  styles.chartBar,
+                  { height: Math.max(30, movementScore - 10) },
+                ]}
+              />
+              <View
+                style={[
+                  styles.chartBar,
+                  { height: Math.max(30, movementScore - 5) },
+                ]}
+              />
+              <View
+                style={[
+                  styles.chartBar,
+                  { height: Math.max(30, movementScore + 10) },
+                ]}
+              />
             </View>
           </View>
           <AppText
@@ -235,7 +265,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <View
               style={[
                 styles.progressBarFill,
-                { width: `${Math.min(100, dailyGoalPercent)}%`, backgroundColor: colors.tertiaryFixedDim },
+                {
+                  width: `${Math.min(100, dailyGoalPercent)}%`,
+                  backgroundColor: colors.tertiaryFixedDim,
+                },
               ]}
             />
           </View>
@@ -262,13 +295,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={styles.statRow}>
             <AppText style={styles.statBig}>{sessionsCompleted}</AppText>
-            <AppText style={styles.statSmall}> /{sessionsTarget} this week</AppText>
+            <AppText style={styles.statSmall}>
+              {" "}
+              /{sessionsTarget} this week
+            </AppText>
           </View>
           <View style={styles.progressBarTrack}>
             <View
               style={[
                 styles.progressBarFill,
-                { width: `${Math.min(100, (sessionsCompleted / sessionsTarget) * 100)}%`, backgroundColor: colors.primary },
+                {
+                  width: `${Math.min(100, (sessionsCompleted / sessionsTarget) * 100)}%`,
+                  backgroundColor: colors.primary,
+                },
               ]}
             />
           </View>

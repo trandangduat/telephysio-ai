@@ -80,3 +80,13 @@ export {
   getTodaySchedule,
   createScheduleItem,
 } from './scheduleService';
+
+// Library
+export {
+  getLibraryItems,
+} from './libraryService';
+
+// Seeding
+export {
+  seedMockData
+} from './seedService';

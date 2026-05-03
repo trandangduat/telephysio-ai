@@ -19,6 +19,7 @@ import {
   onAuthChange,
   getUserProfile,
   logoutUser,
+  getCurrentUser,
 } from "../services/firebase/authService";
 import type { UserProfile } from "../services/firebase/types";
 
@@ -83,8 +84,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // Derived values — backward-compatible with all existing screens
   const role = roleOverride ?? (user?.role || "patient");
-  const userName = user?.displayName || "";
-  const uid = user?.uid || null;
+  const authUser = getCurrentUser();
+  const userName = user?.displayName || authUser?.displayName || "";
+  const uid = user?.uid || authUser?.uid || null;
   const isAuthenticated = !!user;
 
   const switchRole = (newRole: UserRole) => {

@@ -77,7 +77,7 @@ export async function getWeeklySessionCount(patientId: string): Promise<number> 
 export async function getLatestProgress(patientId: string): Promise<ProgressSnapshot | null> {
   const snap = await getDocs(
     query(
-      collection(db, 'progressSnapshots'),
+      collection(db, 'progress_snapshots'),
       where('patientId', '==', patientId),
       orderBy('date', 'desc'),
       limit(1)
@@ -91,7 +91,7 @@ export async function getLatestProgress(patientId: string): Promise<ProgressSnap
 export async function saveProgressSnapshot(
   data: Omit<ProgressSnapshot, 'id' | 'date'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'progressSnapshots'), {
+  const ref = await addDoc(collection(db, 'progress_snapshots'), {
     ...data,
     date: serverTimestamp(),
   });
@@ -106,7 +106,7 @@ export async function getProgressHistory(
 ): Promise<ProgressSnapshot[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'progressSnapshots'),
+      collection(db, 'progress_snapshots'),
       where('patientId', '==', patientId),
       orderBy('date', 'desc'),
       limit(maxResults)
@@ -124,7 +124,7 @@ export async function getProgressHistory(
 export async function submitFeedback(
   data: Omit<ExerciseFeedback, 'id' | 'createdAt'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'exerciseFeedback'), {
+  const ref = await addDoc(collection(db, 'exercise_feedback'), {
     ...data,
     createdAt: serverTimestamp(),
   });
@@ -139,7 +139,7 @@ export async function getPatientFeedback(
 ): Promise<ExerciseFeedback[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'exerciseFeedback'),
+      collection(db, 'exercise_feedback'),
       where('patientId', '==', patientId),
       orderBy('createdAt', 'desc'),
       limit(maxResults)
@@ -153,7 +153,7 @@ export async function getPatientFeedback(
 export async function getAverageAccuracy(doctorId: string): Promise<number> {
   // Get all patient IDs for this doctor
   const plansSnap = await getDocs(
-    query(collection(db, 'treatmentPlans'), where('doctorId', '==', doctorId))
+    query(collection(db, 'treatment_plans'), where('doctorId', '==', doctorId))
   );
   const patientIds = [...new Set(plansSnap.docs.map(d => d.data().patientId))];
 

@@ -25,7 +25,7 @@ import type { Assignment, Exercise, TreatmentPlan, ExerciseTemplate } from './ty
 export async function getActiveTreatmentPlan(patientId: string): Promise<TreatmentPlan | null> {
   const snap = await getDocs(
     query(
-      collection(db, 'treatmentPlans'),
+      collection(db, 'treatment_plans'),
       where('patientId', '==', patientId),
       orderBy('createdAt', 'desc')
     )
@@ -36,13 +36,15 @@ export async function getActiveTreatmentPlan(patientId: string): Promise<Treatme
 // ── Get All Plans for Doctor ────────────────────────
 // Called by DoctorPatientsScreen (patient cards with condition/week/phase/status)
 export async function getDoctorTreatmentPlans(doctorId: string): Promise<TreatmentPlan[]> {
+  console.log(`[Service] getDoctorTreatmentPlans called with doctorId: ${doctorId}`);
   const snap = await getDocs(
     query(
-      collection(db, 'treatmentPlans'),
+      collection(db, 'treatment_plans'),
       where('doctorId', '==', doctorId),
       orderBy('updatedAt', 'desc')
     )
   );
+  console.log(`[Service] getDoctorTreatmentPlans found ${snap.size} documents`);
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as TreatmentPlan));
 }
 
@@ -51,7 +53,7 @@ export async function getDoctorTreatmentPlans(doctorId: string): Promise<Treatme
 export async function createTreatmentPlan(
   data: Omit<TreatmentPlan, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'treatmentPlans'), {
+  const ref = await addDoc(collection(db, 'treatment_plans'), {
     ...data,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -65,7 +67,7 @@ export async function updateTreatmentPlan(
   planId: string,
   data: Partial<Pick<TreatmentPlan, 'currentPhase' | 'currentWeek' | 'status' | 'progress'>>
 ): Promise<void> {
-  await updateDoc(doc(db, 'treatmentPlans', planId), {
+  await updateDoc(doc(db, 'treatment_plans', planId), {
     ...data,
     updatedAt: serverTimestamp(),
   });
@@ -134,7 +136,7 @@ export async function completeAssignment(assignmentId: string): Promise<void> {
 export async function getExerciseTemplates(doctorId: string): Promise<ExerciseTemplate[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'exerciseTemplates'),
+      collection(db, 'exercise_templates'),
       where('doctorId', '==', doctorId),
       orderBy('createdAt', 'desc')
     )
@@ -149,7 +151,7 @@ export async function createExerciseTemplate(data: {
   exercises: Exercise[];
   totalDuration: string;
 }): Promise<string> {
-  const ref = await addDoc(collection(db, 'exerciseTemplates'), {
+  const ref = await addDoc(collection(db, 'exercise_templates'), {
     ...data,
     patientCount: 0,
     createdAt: serverTimestamp(),

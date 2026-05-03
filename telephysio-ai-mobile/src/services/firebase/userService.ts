@@ -52,10 +52,11 @@ export async function uploadAvatar(uid: string, fileUri: string): Promise<string
 // ── Get All Patients (Doctor use) ───────────────────
 // Called by DoctorPatientsScreen, DoctorDashboardScreen
 export async function getPatients(doctorId: string): Promise<UserProfile[]> {
+  console.log(`[Service] getPatients called with doctorId: ${doctorId}`);
   // Query users where role=patient AND they have an active treatment plan with this doctor
   // For simplicity, we query treatment plans first, then fetch user profiles
   const plansSnap = await getDocs(
-    query(collection(db, 'treatmentPlans'), where('doctorId', '==', doctorId))
+    query(collection(db, 'treatment_plans'), where('doctorId', '==', doctorId))
   );
   const patientIds = [...new Set(plansSnap.docs.map(d => d.data().patientId))];
 
@@ -67,6 +68,7 @@ export async function getPatients(doctorId: string): Promise<UserProfile[]> {
     const user = await getUser(id);
     if (user) profiles.push(user);
   }
+  console.log(`[Service] getPatients found ${profiles.length} profiles`);
   return profiles;
 }
 
@@ -75,7 +77,7 @@ export async function getPatients(doctorId: string): Promise<UserProfile[]> {
 export async function getPatientDoctor(patientId: string): Promise<UserProfile | null> {
   const plansSnap = await getDocs(
     query(
-      collection(db, 'treatmentPlans'),
+      collection(db, 'treatment_plans'),
       where('patientId', '==', patientId),
       orderBy('createdAt', 'desc')
     )
