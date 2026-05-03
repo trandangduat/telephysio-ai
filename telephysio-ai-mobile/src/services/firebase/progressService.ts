@@ -42,12 +42,15 @@ export async function getPatientSessions(
   const snap = await getDocs(
     query(
       collection(db, 'sessions'),
-      where('patientId', '==', patientId),
-      orderBy('date', 'desc'),
-      limit(maxResults)
+      where('patientId', '==', patientId)
     )
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Session));
+  const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() } as Session));
+  return sessions.sort((a, b) => {
+    const aTime = (a.date as any)?.toMillis?.() || 0;
+    const bTime = (b.date as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  }).slice(0, maxResults);
 }
 
 // ── Get Session Count This Week ─────────────────────
@@ -78,12 +81,17 @@ export async function getLatestProgress(patientId: string): Promise<ProgressSnap
   const snap = await getDocs(
     query(
       collection(db, 'progress_snapshots'),
-      where('patientId', '==', patientId),
-      orderBy('date', 'desc'),
-      limit(1)
+      where('patientId', '==', patientId)
     )
   );
-  return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() } as ProgressSnapshot;
+  if (snap.empty) return null;
+  const snapshots = snap.docs.map(d => ({ id: d.id, ...d.data() } as ProgressSnapshot));
+  snapshots.sort((a, b) => {
+    const aTime = (a.date as any)?.toMillis?.() || 0;
+    const bTime = (b.date as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
+  return snapshots[0] || null;
 }
 
 // ── Save Progress Snapshot ──────────────────────────
@@ -107,12 +115,15 @@ export async function getProgressHistory(
   const snap = await getDocs(
     query(
       collection(db, 'progress_snapshots'),
-      where('patientId', '==', patientId),
-      orderBy('date', 'desc'),
-      limit(maxResults)
+      where('patientId', '==', patientId)
     )
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as ProgressSnapshot));
+  const snapshots = snap.docs.map(d => ({ id: d.id, ...d.data() } as ProgressSnapshot));
+  return snapshots.sort((a, b) => {
+    const aTime = (a.date as any)?.toMillis?.() || 0;
+    const bTime = (b.date as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  }).slice(0, maxResults);
 }
 
 // ═══════════════════════════════════════════════════
@@ -140,12 +151,15 @@ export async function getPatientFeedback(
   const snap = await getDocs(
     query(
       collection(db, 'exercise_feedback'),
-      where('patientId', '==', patientId),
-      orderBy('createdAt', 'desc'),
-      limit(maxResults)
+      where('patientId', '==', patientId)
     )
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as ExerciseFeedback));
+  const feedbacks = snap.docs.map(d => ({ id: d.id, ...d.data() } as ExerciseFeedback));
+  return feedbacks.sort((a, b) => {
+    const aTime = (a.createdAt as any)?.toMillis?.() || 0;
+    const bTime = (b.createdAt as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  }).slice(0, maxResults);
 }
 
 // ── Get Avg Stats for Doctor Dashboard ──────────────
@@ -166,13 +180,18 @@ export async function getAverageAccuracy(doctorId: string): Promise<number> {
     const sessSnap = await getDocs(
       query(
         collection(db, 'sessions'),
-        where('patientId', '==', pid),
-        orderBy('date', 'desc'),
-        limit(5)
+        where('patientId', '==', pid)
       )
     );
-    sessSnap.docs.forEach(d => {
-      totalAccuracy += d.data().accuracy;
+    const sessions = sessSnap.docs.map(d => d.data() as Session);
+    sessions.sort((a, b) => {
+      const aTime = (a.date as any)?.toMillis?.() || 0;
+      const bTime = (b.date as any)?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+    
+    sessions.slice(0, 5).forEach(d => {
+      totalAccuracy += d.accuracy;
       count++;
     });
   }

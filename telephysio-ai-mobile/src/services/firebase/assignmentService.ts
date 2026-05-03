@@ -26,11 +26,17 @@ export async function getActiveTreatmentPlan(patientId: string): Promise<Treatme
   const snap = await getDocs(
     query(
       collection(db, 'treatment_plans'),
-      where('patientId', '==', patientId),
-      orderBy('createdAt', 'desc')
+      where('patientId', '==', patientId)
     )
   );
-  return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() } as TreatmentPlan;
+  if (snap.empty) return null;
+  const plans = snap.docs.map(d => ({ id: d.id, ...d.data() } as TreatmentPlan));
+  plans.sort((a, b) => {
+    const aTime = (a.createdAt as any)?.toMillis?.() || 0;
+    const bTime = (b.createdAt as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
+  return plans[0];
 }
 
 // ── Get All Plans for Doctor ────────────────────────
@@ -40,12 +46,16 @@ export async function getDoctorTreatmentPlans(doctorId: string): Promise<Treatme
   const snap = await getDocs(
     query(
       collection(db, 'treatment_plans'),
-      where('doctorId', '==', doctorId),
-      orderBy('updatedAt', 'desc')
+      where('doctorId', '==', doctorId)
     )
   );
   console.log(`[Service] getDoctorTreatmentPlans found ${snap.size} documents`);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as TreatmentPlan));
+  const plans = snap.docs.map(d => ({ id: d.id, ...d.data() } as TreatmentPlan));
+  return plans.sort((a, b) => {
+    const aTime = (a.updatedAt as any)?.toMillis?.() || 0;
+    const bTime = (b.updatedAt as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
 }
 
 // ── Create Treatment Plan ───────────────────────────
@@ -87,11 +97,15 @@ export async function getPatientAssignments(
     query(
       collection(db, 'assignments'),
       where('patientId', '==', patientId),
-      where('status', '==', status),
-      orderBy('assignedAt', 'desc')
+      where('status', '==', status)
     )
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Assignment));
+  const assignments = snap.docs.map(d => ({ id: d.id, ...d.data() } as Assignment));
+  return assignments.sort((a, b) => {
+    const aTime = (a.assignedAt as any)?.toMillis?.() || 0;
+    const bTime = (b.assignedAt as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
 }
 
 // ── Get Assignments by Doctor ───────────────────────
@@ -100,11 +114,15 @@ export async function getDoctorAssignments(doctorId: string): Promise<Assignment
   const snap = await getDocs(
     query(
       collection(db, 'assignments'),
-      where('doctorId', '==', doctorId),
-      orderBy('assignedAt', 'desc')
+      where('doctorId', '==', doctorId)
     )
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Assignment));
+  const assignments = snap.docs.map(d => ({ id: d.id, ...d.data() } as Assignment));
+  return assignments.sort((a, b) => {
+    const aTime = (a.assignedAt as any)?.toMillis?.() || 0;
+    const bTime = (b.assignedAt as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
 }
 
 // ── Create Assignment ───────────────────────────────
@@ -137,11 +155,15 @@ export async function getExerciseTemplates(doctorId: string): Promise<ExerciseTe
   const snap = await getDocs(
     query(
       collection(db, 'exercise_templates'),
-      where('doctorId', '==', doctorId),
-      orderBy('createdAt', 'desc')
+      where('doctorId', '==', doctorId)
     )
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as ExerciseTemplate));
+  const templates = snap.docs.map(d => ({ id: d.id, ...d.data() } as ExerciseTemplate));
+  return templates.sort((a, b) => {
+    const aTime = (a.createdAt as any)?.toMillis?.() || 0;
+    const bTime = (b.createdAt as any)?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
 }
 
 // ── Create Template ─────────────────────────────────
