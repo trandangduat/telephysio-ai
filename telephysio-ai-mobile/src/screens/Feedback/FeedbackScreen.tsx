@@ -143,6 +143,17 @@ export const FeedbackScreen: React.FC = () => {
               <AppText variant="bodySm" style={styles.priorityDesc}>
                 You completed {prioritySession.exercisesCompleted || prioritySession.completedExercises || 0} exercises with {prioritySession.accuracy || prioritySession.accuracyScore || 0}% form accuracy. How did you feel?
               </AppText>
+
+              {prioritySession.doctorFeedback && (
+                <View style={styles.doctorFeedbackBox}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 6 }}>
+                    <Ionicons name="medical" size={12} color={colors.primary} />
+                    <AppText variant="labelSm" style={styles.doctorFeedbackLabel}>DOCTOR'S NOTE</AppText>
+                  </View>
+                  <AppText variant="bodySm" style={styles.doctorFeedbackText}>"{prioritySession.doctorFeedback}"</AppText>
+                </View>
+              )}
+
               <TouchableOpacity style={styles.primaryButton} onPress={() => openFeedbackModal(prioritySession)}>
                 <AppText variant="labelMd" style={{ color: '#fff' }}>Give Feedback</AppText>
                 <Ionicons name="chatbubble-ellipses-outline" size={16} color="#fff" style={{ marginLeft: 8 }} />
@@ -188,6 +199,7 @@ export const FeedbackScreen: React.FC = () => {
             title={`Session on ${session.date ? (session.date as any).toDate().toLocaleDateString() : 'Recent'}`} 
             desc={`${session.exercisesCompleted || session.completedExercises || 0} exercises completed · ${session.duration || session.totalDuration || '0m'} active.`} 
             icon="calendar-outline"
+            doctorFeedback={session.doctorFeedback}
             onPress={() => openFeedbackModal(session)} 
           />
         ))}
@@ -273,7 +285,7 @@ export const FeedbackScreen: React.FC = () => {
   );
 };
 
-const FeedbackListItem = ({ title, desc, icon, onPress }: any) => (
+const FeedbackListItem = ({ title, desc, icon, doctorFeedback, onPress }: any) => (
   <View style={styles.listItem}>
     <View style={styles.listHeader}>
       <View style={styles.listIconBox}>
@@ -285,6 +297,17 @@ const FeedbackListItem = ({ title, desc, icon, onPress }: any) => (
     </View>
     <AppText variant="headlineMd" style={styles.listTitle}>{title}</AppText>
     <AppText variant="bodySm" style={styles.listDesc}>{desc}</AppText>
+    
+    {doctorFeedback && (
+      <View style={[styles.doctorFeedbackBox, { marginBottom: spacing.md }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 6 }}>
+          <Ionicons name="medical" size={12} color={colors.primary} />
+          <AppText variant="labelSm" style={styles.doctorFeedbackLabel}>DOCTOR'S NOTE</AppText>
+        </View>
+        <AppText variant="bodySm" style={styles.doctorFeedbackText}>"{doctorFeedback}"</AppText>
+      </View>
+    )}
+
     <TouchableOpacity style={styles.outlineButton} onPress={onPress}>
       <AppText variant="labelMd" style={{ color: colors.primary }}>Give Feedback</AppText>
     </TouchableOpacity>
@@ -319,6 +342,27 @@ const styles = StyleSheet.create({
   priorityLabel: { color: colors.primary, fontWeight: '700', fontSize: 10, letterSpacing: 0.5, marginBottom: 4 },
   priorityTitle: { color: '#0f172a', fontWeight: '700', fontSize: 20, marginBottom: 8 },
   priorityDesc: { color: '#475569', marginBottom: spacing.lg },
+  
+  doctorFeedbackBox: {
+    backgroundColor: '#f0f9ff',
+    padding: spacing.md,
+    borderRadius: 12,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  doctorFeedbackLabel: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
+  doctorFeedbackText: {
+    color: '#0f172a',
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+
   primaryButton: { flexDirection: 'row', backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 
   weeklyGoalCard: { backgroundColor: '#1d4ed8', borderRadius: 20, padding: spacing.lg, elevation: 2, shadowColor: '#1d4ed8', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12 },
