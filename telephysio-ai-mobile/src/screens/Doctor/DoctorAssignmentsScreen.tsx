@@ -233,12 +233,14 @@ export const DoctorAssignmentsScreen: React.FC = () => {
 
             {/* Template Cards */}
             {templates.length > 0 ? templates.map((tpl) => (
-              <TouchableOpacity
+              <View
                 key={tpl.id}
                 style={styles.card}
-                onPress={() => navigation.navigate('TemplateEditor', { templateId: tpl.id })}
               >
-                <View style={styles.cardRow}>
+                <TouchableOpacity
+                  style={styles.cardRow}
+                  onPress={() => navigation.navigate('TemplateEditor', { templateId: tpl.id })}
+                >
                   <View
                     style={[
                       styles.templateIcon,
@@ -261,7 +263,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                     </AppText>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </View>
+                </TouchableOpacity>
 
                 <View style={styles.templateActions}>
                   <TouchableOpacity
@@ -299,7 +301,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                     </AppText>
                   </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
+              </View>
             )) : (
               <AppText variant="bodyMd" style={{ color: "#64748b", padding: spacing.md, textAlign: 'center' }}>
                 No templates found. Create one to get started.
