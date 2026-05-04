@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Platform, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,16 +13,21 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppText } from '../../components/ui';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAuth } from '../../contexts/AuthContext';
+import { getPatientAssignments, recordSession, completeAssignment } from '../../services/firebase';
+
 
 type TrainingNavProp = NativeStackNavigationProp<RootStackParamList, 'Training'>;
 interface Props { navigation: TrainingNavProp; }
 
 export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
+  const { uid } = useAuth();
   const [isFullScreen, setIsFullScreen] = useState(true); // Toggle state
   const [currentRep, setCurrentRep] = useState(8);
   const [formAccuracy, setFormAccuracy] = useState(92);
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(14 * 60 + 22);
+  const [isFinishing, setIsFinishing] = useState(false);
   
   const totalReps = 12;
   const currentSet = 2;
@@ -36,6 +41,45 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
   }, [paused]);
 
   const handleStop = useCallback(() => { navigation.goBack(); }, [navigation]);
+
+  const handleFinishWorkout = async () => {
+    if (!uid) return;
+    setIsFinishing(true);
+    setPaused(true);
+    try {
+      // 1. Get active assignment
+      const assignments = await getPatientAssignments(uid, 'active');
+      const activeAssignment = assignments[0];
+      
+      if (activeAssignment) {
+        // 2. Record Session
+        await recordSession({
+          patientId: uid,
+          assignmentId: activeAssignment.id,
+          exercisesCompleted: activeAssignment.exercises.length,
+          accuracy: formAccuracy,
+          durationSeconds: elapsed,
+          duration: `${Math.floor(elapsed / 60)} min`,
+          painLevel: 2, // Mock pain level, ideally asked in a modal
+          reps: currentRep,
+          sets: currentSet,
+        });
+
+        // 3. Mark Assignment as Completed
+        await completeAssignment(activeAssignment.id);
+      }
+
+      Alert.alert('Great job!', 'Your workout session has been recorded.', [
+        { text: 'OK', onPress: () => navigation.navigate('MainTabs' as any) }
+      ]);
+    } catch (error) {
+      console.error('Failed to finish workout:', error);
+      Alert.alert('Error', 'Failed to save session. Please try again.');
+      setPaused(false);
+    } finally {
+      setIsFinishing(false);
+    }
+  };
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -114,8 +158,12 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
               <Ionicons name={paused ? "play" : "pause"} size={32} color="#fff" />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.skipButton}>
-              <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
+            <TouchableOpacity style={styles.skipButton} onPress={handleFinishWorkout} disabled={isFinishing}>
+              {isFinishing ? (
+                <ActivityIndicator size="small" color={colors.onSurfaceVariant} />
+              ) : (
+                <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -219,8 +267,12 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
             </AppText>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('MainTabs' as any)}>
-            <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
+          <TouchableOpacity style={styles.skipButton} onPress={handleFinishWorkout} disabled={isFinishing}>
+            {isFinishing ? (
+              <ActivityIndicator size="small" color={colors.onSurfaceVariant} />
+            ) : (
+              <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

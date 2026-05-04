@@ -91,6 +91,8 @@ export interface Session {
   date: Timestamp;
   reps: number;
   sets: number;
+  doctorFeedback?: string;    // NEW: Doctor's note for this session
+  feedbackUpdatedAt?: Timestamp; // NEW: Timestamp when feedback was added
 }
 
 // ── Progress Snapshot ───────────────────────────────
