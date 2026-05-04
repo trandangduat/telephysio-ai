@@ -71,6 +71,17 @@ export async function getWeeklySessionCount(patientId: string): Promise<number> 
   return snap.size;
 }
 
+// ── Submit Doctor Feedback for Session ──────────────
+export async function submitDoctorFeedback(
+  sessionId: string,
+  feedback: string
+): Promise<void> {
+  await updateDoc(doc(db, 'sessions', sessionId), {
+    doctorFeedback: feedback,
+    feedbackUpdatedAt: serverTimestamp(),
+  });
+}
+
 // ═══════════════════════════════════════════════════
 // PROGRESS SNAPSHOTS
 // ═══════════════════════════════════════════════════

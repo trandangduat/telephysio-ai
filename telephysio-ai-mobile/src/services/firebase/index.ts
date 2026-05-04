@@ -57,6 +57,7 @@ export {
 export {
   recordSession,
   getPatientSessions,
+  submitDoctorFeedback,
   getWeeklySessionCount,
   getLatestProgress,
   saveProgressSnapshot,

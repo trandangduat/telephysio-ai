@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -13,7 +13,8 @@ import type { DoctorStackParamList } from '../../navigation/types';
 import { 
   getActiveTreatmentPlan, 
   getLatestProgress, 
-  getPatientSessions 
+  getPatientSessions,
+  submitDoctorFeedback
 } from '../../services/firebase';
 import type { TreatmentPlan, ProgressSnapshot, Session } from '../../services/firebase/types';
 
@@ -32,9 +33,13 @@ export const PatientDetailScreen: React.FC = () => {
   const [plan, setPlan] = useState<TreatmentPlan | null>(null);
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  
+  // Feedback modal/inline state
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState<string>('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
+  const loadData = async () => {
       try {
         const [fetchedPlan, fetchedProgress, fetchedSessions] = await Promise.all([
           getActiveTreatmentPlan(actualPatientId),
@@ -49,9 +54,36 @@ export const PatientDetailScreen: React.FC = () => {
       } finally {
         setLoading(false);
       }
-    }
+  };
+
+  useEffect(() => {
     loadData();
   }, [actualPatientId]);
+
+  const handleExpandSession = (session: Session) => {
+    if (expandedSessionId === session.id) {
+      setExpandedSessionId(null);
+    } else {
+      setExpandedSessionId(session.id);
+      setFeedbackText(session.doctorFeedback || '');
+    }
+  };
+
+  const handleSaveFeedback = async (sessionId: string) => {
+    if (!feedbackText.trim()) return;
+    setSubmittingFeedback(true);
+    try {
+      await submitDoctorFeedback(sessionId, feedbackText.trim());
+      Alert.alert('Success', 'Feedback saved successfully.');
+      setExpandedSessionId(null);
+      loadData(); // Reload sessions to get the new feedback
+    } catch (error) {
+      console.error('Failed to save feedback', error);
+      Alert.alert('Error', 'Failed to save feedback. Please try again.');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -156,29 +188,69 @@ export const PatientDetailScreen: React.FC = () => {
 
           {sessions.length > 0 ? sessions.map((session, i) => {
             const dateStr = (session.date as any)?.toDate?.().toLocaleDateString() || 'Recent';
+            const isExpanded = expandedSessionId === session.id;
             return (
-              <View key={session.id || i.toString()} style={styles.sessionRow}>
-                <View style={styles.sessionDate}>
-                  <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>{dateStr}</AppText>
-                </View>
-                <View style={styles.sessionStats}>
-                  <View style={styles.sessionStat}>
-                    <Ionicons name="barbell-outline" size={12} color="#64748b" />
-                    <AppText variant="bodySm" style={styles.sessionStatText}>{session.completedExercises || 0} exercises</AppText>
+              <View key={session.id || i.toString()} style={styles.sessionRowContainer}>
+                <TouchableOpacity 
+                  style={styles.sessionRow}
+                  onPress={() => handleExpandSession(session)}
+                >
+                  <View style={styles.sessionDate}>
+                    <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>{dateStr}</AppText>
                   </View>
-                  <View style={styles.sessionStat}>
-                    <Ionicons name="analytics-outline" size={12} color="#64748b" />
-                    <AppText variant="bodySm" style={styles.sessionStatText}>{session.accuracyScore || 0}%</AppText>
+                  <View style={styles.sessionStats}>
+                    <View style={styles.sessionStat}>
+                      <Ionicons name="barbell-outline" size={12} color="#64748b" />
+                      <AppText variant="bodySm" style={styles.sessionStatText}>{session.completedExercises || session.exercisesCompleted || 0} exercises</AppText>
+                    </View>
+                    <View style={styles.sessionStat}>
+                      <Ionicons name="analytics-outline" size={12} color="#64748b" />
+                      <AppText variant="bodySm" style={styles.sessionStatText}>{session.accuracyScore || session.accuracy || 0}%</AppText>
+                    </View>
+                    <View style={styles.sessionStat}>
+                      <Ionicons name="time-outline" size={12} color="#64748b" />
+                      <AppText variant="bodySm" style={styles.sessionStatText}>{session.totalDuration || session.duration || '0 min'}</AppText>
+                    </View>
+                    <View style={styles.sessionStat}>
+                      <Ionicons name="pulse-outline" size={12} color={(session.averagePain || session.painLevel || 0) > 5 ? '#dc2626' : '#64748b'} />
+                      <AppText variant="bodySm" style={[styles.sessionStatText, (session.averagePain || session.painLevel || 0) > 5 && { color: '#dc2626' }]}>Pain {session.averagePain || session.painLevel || 0}</AppText>
+                    </View>
                   </View>
-                  <View style={styles.sessionStat}>
-                    <Ionicons name="time-outline" size={12} color="#64748b" />
-                    <AppText variant="bodySm" style={styles.sessionStatText}>{session.totalDuration || '0 min'}</AppText>
+                  <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color="#cbd5e1" />
+                </TouchableOpacity>
+                
+                {isExpanded && (
+                  <View style={styles.feedbackContainer}>
+                    <AppText variant="labelSm" style={styles.feedbackLabel}>CLINICAL FEEDBACK</AppText>
+                    <TextInput
+                      style={styles.feedbackInput}
+                      multiline
+                      placeholder="Add notes or advice for the patient..."
+                      placeholderTextColor="#94a3b8"
+                      value={feedbackText}
+                      onChangeText={setFeedbackText}
+                    />
+                    <View style={styles.feedbackActions}>
+                      <TouchableOpacity 
+                        style={styles.btnCancel}
+                        onPress={() => setExpandedSessionId(null)}
+                      >
+                        <AppText variant="labelMd" style={{ color: '#64748b' }}>Cancel</AppText>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.btnSave, !feedbackText.trim() && { opacity: 0.5 }]}
+                        onPress={() => handleSaveFeedback(session.id)}
+                        disabled={submittingFeedback || !feedbackText.trim()}
+                      >
+                        {submittingFeedback ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <AppText variant="labelMd" style={{ color: '#fff' }}>Save Feedback</AppText>
+                        )}
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.sessionStat}>
-                    <Ionicons name="pulse-outline" size={12} color={(session.averagePain || 0) > 5 ? '#dc2626' : '#64748b'} />
-                    <AppText variant="bodySm" style={[styles.sessionStatText, (session.averagePain || 0) > 5 && { color: '#dc2626' }]}>Pain {session.averagePain || 0}</AppText>
-                  </View>
-                </View>
+                )}
               </View>
             );
           }) : (
@@ -235,11 +307,55 @@ const styles = StyleSheet.create({
   chartLabels: { flexDirection: 'row', justifyContent: 'space-between', paddingLeft: 10 },
   chartLabelText: { color: '#94a3b8', fontSize: 10 },
 
-  sessionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12 },
+  sessionRowContainer: {
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+  },
+  sessionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.md, gap: 12 },
   sessionDate: { backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   sessionStats: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   sessionStat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   sessionStatText: { color: '#64748b', fontSize: 12 },
+
+  feedbackContainer: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  feedbackLabel: { color: '#475569', fontWeight: '700', marginBottom: 8, letterSpacing: 0.5 },
+  feedbackInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    fontSize: 14,
+    color: '#0f172a',
+    marginBottom: spacing.md,
+  },
+  feedbackActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  btnCancel: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  btnSave: {
+    backgroundColor: colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
 
   actionsRow: { flexDirection: 'row', gap: spacing.md },
   actionPrimary: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 16 },
