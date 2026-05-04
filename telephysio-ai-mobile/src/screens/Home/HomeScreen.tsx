@@ -27,10 +27,12 @@ import type {
 import {
   getActiveTreatmentPlan,
   getLatestProgress,
+  getPatientAssignments,
 } from "../../services/firebase";
 import type {
   TreatmentPlan,
   ProgressSnapshot,
+  Assignment,
 } from "../../services/firebase/types";
 
 type HomeNavProp = CompositeNavigationProp<
@@ -47,27 +49,42 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<TreatmentPlan | null>(null);
+  const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
 
   useEffect(() => {
-    async function loadData() {
-      if (!uid) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const [fetchedPlan, fetchedProgress] = await Promise.all([
-          getActiveTreatmentPlan(uid),
-          getLatestProgress(uid),
-        ]);
-        setPlan(fetchedPlan);
-        setProgress(fetchedProgress);
-      } catch (error) {
-        console.error("Error loading home data:", error);
-      } finally {
-        setLoading(false);
-      }
+    const unsubscribe = navigation.addListener("focus", () => {
+      loadData();
+    });
+    return unsubscribe;
+  }, [navigation, uid]);
+
+  async function loadData() {
+    if (!uid) {
+      setLoading(false);
+      return;
     }
+    try {
+      const [fetchedPlan, fetchedProgress, assignments] = await Promise.all([
+        getActiveTreatmentPlan(uid),
+        getLatestProgress(uid),
+        getPatientAssignments(uid, "active"),
+      ]);
+      setPlan(fetchedPlan);
+      setProgress(fetchedProgress);
+      if (assignments && assignments.length > 0) {
+        setActiveAssignment(assignments[0]);
+      } else {
+        setActiveAssignment(null);
+      }
+    } catch (error) {
+      console.error("Error loading home data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
     loadData();
   }, [uid]);
 
@@ -84,8 +101,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  const protocolTitle = plan?.condition || "No Active Plan";
-  const protocolSubtitle = plan
+  const protocolTitle = activeAssignment?.templateName || plan?.condition || "No Active Protocol";
+  const protocolSubtitle = activeAssignment
+    ? `${activeAssignment.exercises.length} exercises • ${activeAssignment.totalDuration || "0 min"}`
+    : plan
     ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}`
     : "Please contact your doctor.";
 
