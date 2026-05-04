@@ -31,7 +31,6 @@ export const AssignTemplateScreen: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
   const [patients, setPatients] = useState<UserProfile[]>([]);
   const [template, setTemplate] = useState<ExerciseTemplate | null>(null);
-  const [assignmentName, setAssignmentName] = useState(templateName);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -50,9 +49,6 @@ export const AssignTemplateScreen: React.FC = () => {
       setPatients(patientsData);
       const found = templatesData.find(t => t.id === templateId);
       setTemplate(found || null);
-      if (found) {
-        setAssignmentName(found.name);
-      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -84,37 +80,31 @@ export const AssignTemplateScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert(
-      'Confirm Assignment',
-      `Assign "${templateName}" to ${selectedPatient.displayName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Assign',
-          onPress: async () => {
-            setAssigning(true);
-            try {
-              await createAssignment({
-                doctorId: uid,
-                patientId: selectedPatientId,
-                templateName: assignmentName,
-                exercises: template.exercises,
-                totalDuration: template.totalDuration,
-                status: 'active',
-              });
-              Alert.alert('Success', `Exercises assigned to ${selectedPatient.displayName}!`, [
-                { text: 'OK', onPress: () => navigation.popToTop() },
-              ]);
-            } catch (error) {
-              console.error('Error assigning template:', error);
-              Alert.alert('Error', 'Failed to assign template. Please try again.');
-            } finally {
-              setAssigning(false);
-            }
-          },
-        },
-      ]
-    );
+    console.log('--- START ASSIGNING ---');
+    console.log('Doctor:', uid);
+    console.log('Patient:', selectedPatientId);
+    console.log('Template:', templateName);
+
+    setAssigning(true);
+    try {
+      await createAssignment({
+        doctorId: uid,
+        patientId: selectedPatientId,
+        templateName: template.name,
+        exercises: template.exercises,
+        totalDuration: template.totalDuration,
+        status: 'active',
+      });
+      console.log('--- ASSIGN SUCCESS ---');
+      Alert.alert('Success', `Exercises assigned to ${selectedPatient.displayName}!`, [
+        { text: 'OK', onPress: () => navigation.popToTop() },
+      ]);
+    } catch (error) {
+      console.error('Error assigning template:', error);
+      Alert.alert('Error', 'Failed to assign template. Please try again.');
+    } finally {
+      setAssigning(false);
+    }
   };
 
   if (loading) {
@@ -148,18 +138,6 @@ export const AssignTemplateScreen: React.FC = () => {
               {template?.exercises.length || 0} exercises - {template?.totalDuration || '0 min'}
             </AppText>
           </View>
-        </View>
-
-        {/* Assignment Name Input */}
-        <View style={styles.section}>
-          <AppText variant="labelMd" style={styles.sectionLabel}>ASSIGNMENT NAME</AppText>
-          <TextInput
-            style={[styles.searchBox, { fontSize: 16, fontWeight: '500', color: '#0f172a' }]}
-            value={assignmentName}
-            onChangeText={setAssignmentName}
-            placeholder="e.g. Morning routine for John"
-            placeholderTextColor="#94a3b8"
-          />
         </View>
 
         {/* Select Patient */}
