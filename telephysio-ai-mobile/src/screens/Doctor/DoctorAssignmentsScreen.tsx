@@ -24,7 +24,8 @@ import type { DoctorStackParamList } from "../../navigation/types";
 import { 
   getExerciseTemplates, 
   getDoctorAssignments,
-  getPatients
+  getPatients,
+  deleteExerciseTemplate,
 } from "../../services/firebase";
 import type { Assignment, ExerciseTemplate } from "../../services/firebase/types";
 
@@ -39,40 +40,73 @@ export const DoctorAssignmentsScreen: React.FC = () => {
   const [templates, setTemplates] = useState<ExerciseTemplate[]>([]);
   const [assignments, setAssignments] = useState<(Assignment & { patientName?: string, dateString?: string })[]>([]);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!uid) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const [fetchedTemplates, fetchedAssignments, patients] = await Promise.all([
-          getExerciseTemplates(uid),
-          getDoctorAssignments(uid),
-          getPatients(uid),
-        ]);
-
-        const patientMap = new Map(patients.map(p => [p.uid, p.displayName || 'Unknown Patient']));
-
-        const mappedAssignments = fetchedAssignments.map(a => {
-          const date = a.assignedAt as any;
-          return {
-            ...a,
-            patientName: patientMap.get(a.patientId) || 'Unknown',
-            dateString: date?.toDate ? date.toDate().toLocaleDateString() : 'Unknown Date',
-          };
-        });
-
-        setTemplates(fetchedTemplates);
-        setAssignments(mappedAssignments);
-      } catch (error) {
-        console.error('Error loading assignments:', error);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    if (!uid) {
+      setLoading(false);
+      return;
     }
+    try {
+      const [fetchedTemplates, fetchedAssignments, patients] = await Promise.all([
+        getExerciseTemplates(uid),
+        getDoctorAssignments(uid),
+        getPatients(uid),
+      ]);
+
+      const patientMap = new Map(patients.map(p => [p.uid, p.displayName || 'Unknown Patient']));
+
+      const mappedAssignments = fetchedAssignments.map(a => {
+        const date = a.assignedAt as any;
+        return {
+          ...a,
+          patientName: patientMap.get(a.patientId) || 'Unknown',
+          dateString: date?.toDate ? date.toDate().toLocaleDateString() : 'Unknown Date',
+        };
+      });
+
+      setTemplates(fetchedTemplates);
+      setAssignments(mappedAssignments);
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, [uid]);
+
+  // Refresh when screen is focused (after navigating back from editor)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (uid) loadData();
+    });
+    return unsubscribe;
+  }, [navigation, uid]);
+
+  const handleDeleteTemplate = (tpl: ExerciseTemplate) => {
+    Alert.alert(
+      'Delete Template',
+      `Are you sure you want to delete "${tpl.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteExerciseTemplate(tpl.id);
+              setTemplates(prev => prev.filter(t => t.id !== tpl.id));
+              Alert.alert('Deleted', 'Template deleted successfully.');
+            } catch (error) {
+              console.error('Error deleting template:', error);
+              Alert.alert('Error', 'Failed to delete template.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -154,12 +188,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             {/* Create New */}
             <TouchableOpacity
               style={styles.createBtn}
-              onPress={() =>
-                Alert.alert(
-                  "New Template",
-                  "Exercise template editor coming soon.",
-                )
-              }
+              onPress={() => navigation.navigate('TemplateEditor', {})}
             >
               <Ionicons
                 name="add-circle-outline"
@@ -179,12 +208,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
               <TouchableOpacity
                 key={tpl.id}
                 style={styles.card}
-                onPress={() =>
-                  Alert.alert(
-                    tpl.name,
-                    `${tpl.exercises?.length || 0} exercises · ${tpl.totalDuration || '0 min'}`,
-                  )
-                }
+                onPress={() => navigation.navigate('TemplateEditor', { templateId: tpl.id })}
               >
                 <View style={styles.cardRow}>
                   <View
@@ -214,7 +238,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                 <View style={styles.templateActions}>
                   <TouchableOpacity
                     style={styles.actionBtn}
-                    onPress={() => Alert.alert("Edit", `Editing ${tpl.name}`)}
+                    onPress={() => navigation.navigate('TemplateEditor', { templateId: tpl.id })}
                   >
                     <Ionicons name="pencil-outline" size={16} color="#475569" />
                     <AppText variant="labelSm" style={{ color: "#475569" }}>
@@ -223,12 +247,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.assignBtn]}
-                    onPress={() =>
-                      Alert.alert(
-                        "Assign",
-                        `Assigning "${tpl.name}" to patients.`,
-                      )
-                    }
+                    onPress={() => navigation.navigate('AssignTemplate', { templateId: tpl.id, templateName: tpl.name })}
                   >
                     <Ionicons
                       name="person-add-outline"
@@ -244,13 +263,11 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionBtn}
-                    onPress={() =>
-                      Alert.alert("Duplicate", `Duplicating ${tpl.name}`)
-                    }
+                    onPress={() => handleDeleteTemplate(tpl)}
                   >
-                    <Ionicons name="copy-outline" size={16} color="#475569" />
-                    <AppText variant="labelSm" style={{ color: "#475569" }}>
-                      Duplicate
+                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                    <AppText variant="labelSm" style={{ color: "#ef4444" }}>
+                      Delete
                     </AppText>
                   </TouchableOpacity>
                 </View>

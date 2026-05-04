@@ -29,6 +29,8 @@ import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 // Doctor screens
 import { DoctorTabNavigator } from './DoctorTabNavigator';
 import { PatientDetailScreen } from '../screens/Doctor/PatientDetailScreen';
+import { TemplateEditorScreen } from '../screens/Doctor/TemplateEditorScreen';
+import { AssignTemplateScreen } from '../screens/Doctor/AssignTemplateScreen';
 
 import { colors, typography } from '../theme';
 import type { AuthStackParamList, RootStackParamList, DoctorStackParamList } from './types';
@@ -94,6 +96,8 @@ const DoctorNavigator: React.FC = () => {
       <DoctorStack.Screen name="PatientDetail" component={PatientDetailScreen} options={{ headerShown: false }} />
       <DoctorStack.Screen name="DoctorProfile" component={ProfileScreen} options={{ headerShown: false }} />
       <DoctorStack.Screen name="DoctorChat" component={DoctorChatScreen} options={{ headerShown: false }} />
+      <DoctorStack.Screen name="TemplateEditor" component={TemplateEditorScreen} options={{ headerShown: false }} />
+      <DoctorStack.Screen name="AssignTemplate" component={AssignTemplateScreen} options={{ headerShown: false }} />
     </DoctorStack.Navigator>
   );
 };

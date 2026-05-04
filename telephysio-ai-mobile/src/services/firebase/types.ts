@@ -42,6 +42,8 @@ export interface TreatmentPlan {
 
 // ── Exercise (Template) ─────────────────────────────
 // Derived from: WorkoutScreen mockExercises, DoctorAssignments templates
+export type ExerciseDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface Exercise {
   id: string;
   name: string;               // "Squat", "Post-Op Knee Flexion"
@@ -52,6 +54,9 @@ export interface Exercise {
   color: string;              // hex color for UI
   description?: string;
   category?: string;          // "Upper Body", "Lower Body", "Core"
+  difficulty?: ExerciseDifficulty;
+  restBetweenSets?: number;   // seconds: 30, 60, 90, 120
+  notes?: string;             // doctor's notes for this exercise
 }
 
 // ── Assignment (Doctor → Patient) ───────────────────
@@ -146,10 +151,12 @@ export interface ExerciseTemplate {
   id: string;
   doctorId: string;
   name: string;
+  description?: string;
   exercises: Exercise[];
   totalDuration: string;
   patientCount: number;
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 // ── Feedback (Exercise feedback) ────────────────────

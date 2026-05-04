@@ -170,6 +170,7 @@ export async function getExerciseTemplates(doctorId: string): Promise<ExerciseTe
 export async function createExerciseTemplate(data: {
   doctorId: string;
   name: string;
+  description?: string;
   exercises: Exercise[];
   totalDuration: string;
 }): Promise<string> {
@@ -177,6 +178,29 @@ export async function createExerciseTemplate(data: {
     ...data,
     patientCount: 0,
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
   return ref.id;
+}
+
+// ── Update Template ─────────────────────────────────
+export async function updateExerciseTemplate(
+  templateId: string,
+  data: Partial<Pick<ExerciseTemplate, 'name' | 'description' | 'exercises' | 'totalDuration'>>
+): Promise<void> {
+  await updateDoc(doc(db, 'exercise_templates', templateId), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// ── Delete Template ─────────────────────────────────
+export async function deleteExerciseTemplate(templateId: string): Promise<void> {
+  await deleteDoc(doc(db, 'exercise_templates', templateId));
+}
+
+// ── Get Global Exercises (for picker) ───────────────
+export async function getGlobalExercises(): Promise<Exercise[]> {
+  const snap = await getDocs(collection(db, 'exercises'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Exercise));
 }

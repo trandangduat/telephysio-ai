@@ -11,7 +11,7 @@ export { auth, db, storage } from './config';
 // Types
 export type {
   UserProfile, UserRole,
-  TreatmentPlan, Exercise, Assignment,
+  TreatmentPlan, Exercise, ExerciseDifficulty, ExerciseTemplate, Assignment,
   Session, ProgressSnapshot,
   ChatMessage, Conversation, MessageType, ExerciseFeedback,
   ScheduleItem, Notification, LibraryItem,
@@ -48,6 +48,9 @@ export {
   completeAssignment,
   getExerciseTemplates,
   createExerciseTemplate,
+  updateExerciseTemplate,
+  deleteExerciseTemplate,
+  getGlobalExercises,
 } from './assignmentService';
 
 // Progress & Sessions

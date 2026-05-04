@@ -31,6 +31,8 @@ export type DoctorStackParamList = {
   PatientDetail: { patientId: string; patientName: string };
   DoctorProfile: undefined;
   DoctorChat: undefined;
+  TemplateEditor: { templateId?: string };
+  AssignTemplate: { templateId: string; templateName: string };
 };
 
 export type DoctorTabParamList = {
@@ -61,4 +63,6 @@ export const SCREENS = {
   Patients: 'Patients',
   PatientDetail: 'PatientDetail',
   DoctorProfile: 'DoctorProfile',
+  TemplateEditor: 'TemplateEditor',
+  AssignTemplate: 'AssignTemplate',
 } as const;
