@@ -15,12 +15,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useTranslation } from "react-i18next";
 
 import { AppText } from "../../components/ui";
 import { colors, spacing } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
-import type { DoctorStackParamList } from "../../navigation/types";
+import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import { 
   getExerciseTemplates, 
   getDoctorAssignments,
@@ -29,9 +31,13 @@ import {
 } from "../../services/firebase";
 import type { Assignment, ExerciseTemplate } from "../../services/firebase/types";
 
+type AssignmentsNavProp = CompositeNavigationProp<
+  BottomTabNavigationProp<DoctorTabParamList, 'Assignments'>,
+  NativeStackNavigationProp<DoctorStackParamList>
+>;
+
 export const DoctorAssignmentsScreen: React.FC = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
+  const navigation = useNavigation<AssignmentsNavProp>();
   const { t } = useTranslation();
   const { uid } = useAuth();
   
@@ -145,7 +151,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             Assignments
           </AppText>
           <AppText variant="bodyMd" style={styles.pageSubtitle}>
-            Create and manage exercise protocols
+            Create exercise protocols and assign them to patients
           </AppText>
         </View>
 
@@ -158,11 +164,17 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             ]}
             onPress={() => setActiveTab("templates")}
           >
+            <Ionicons 
+              name={activeTab === "templates" ? "clipboard" : "clipboard-outline"} 
+              size={16} 
+              color={activeTab === "templates" ? "#fff" : "#475569"} 
+              style={{ marginRight: 6 }}
+            />
             <AppText
               variant="labelMd"
               style={{ color: activeTab === "templates" ? "#fff" : "#475569" }}
             >
-              Templates
+              Protocols
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -172,6 +184,12 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             ]}
             onPress={() => setActiveTab("assigned")}
           >
+            <Ionicons 
+              name={activeTab === "assigned" ? "people" : "people-outline"} 
+              size={16} 
+              color={activeTab === "assigned" ? "#fff" : "#475569"} 
+              style={{ marginRight: 6 }}
+            />
             <AppText
               variant="labelMd"
               style={{ color: activeTab === "assigned" ? "#fff" : "#475569" }}
@@ -179,6 +197,16 @@ export const DoctorAssignmentsScreen: React.FC = () => {
               Assigned
             </AppText>
           </TouchableOpacity>
+        </View>
+
+        {/* Tab Description */}
+        <View style={styles.tabDescContainer}>
+          <AppText variant="bodySm" style={styles.tabDescText}>
+            {activeTab === "templates" 
+              ? "Reusable exercise protocols you can assign to multiple patients"
+              : "Protocols currently assigned to specific patients"
+            }
+          </AppText>
         </View>
 
         {loading ? (
@@ -199,7 +227,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                 variant="labelMd"
                 style={{ color: colors.primary, fontWeight: "700" }}
               >
-                Create New Template
+                Create New Protocol
               </AppText>
             </TouchableOpacity>
 
@@ -382,11 +410,20 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
+    flexDirection: "row",
     paddingVertical: 10,
     alignItems: "center",
+    justifyContent: "center",
     borderRadius: 10,
   },
   tabBtnActive: { backgroundColor: colors.primary },
+  tabDescContainer: {
+    marginTop: -spacing.sm,
+  },
+  tabDescText: {
+    color: "#94a3b8",
+    fontStyle: "italic",
+  },
 
   createBtn: {
     flexDirection: "row",

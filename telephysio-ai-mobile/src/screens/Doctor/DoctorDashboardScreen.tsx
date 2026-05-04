@@ -8,12 +8,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useTranslation } from "react-i18next";
 
 import { AppText } from "../../components/ui";
 import { colors, spacing } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
-import type { DoctorStackParamList } from "../../navigation/types";
+import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import { 
   getPatients, 
   getDoctorTreatmentPlans, 
@@ -22,9 +24,13 @@ import {
 } from "../../services/firebase";
 import type { ScheduleItem, TreatmentPlan, UserProfile } from "../../services/firebase/types";
 
+type DashboardNavProp = CompositeNavigationProp<
+  BottomTabNavigationProp<DoctorTabParamList, 'Dashboard'>,
+  NativeStackNavigationProp<DoctorStackParamList>
+>;
+
 export const DoctorDashboardScreen: React.FC = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
+  const navigation = useNavigation<DashboardNavProp>();
   const { t } = useTranslation();
   const { userName, uid } = useAuth();
 

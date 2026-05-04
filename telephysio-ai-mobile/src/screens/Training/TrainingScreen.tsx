@@ -219,7 +219,7 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
             </AppText>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('Sessions' as any)}>
+          <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('MainTabs' as any)}>
             <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>

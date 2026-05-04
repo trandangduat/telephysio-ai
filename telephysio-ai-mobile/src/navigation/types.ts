@@ -21,7 +21,6 @@ export type RootStackParamList = {
 export type BottomTabParamList = {
   Home: undefined;
   Workout: undefined;
-  Sessions: undefined;
   Library: undefined;
   Progress: undefined;
 };
@@ -54,7 +53,6 @@ export const SCREENS = {
   Calibration: 'Calibration',
   Training: 'Training',
   Workout: 'Workout',
-  Sessions: 'Sessions',
   Profile: 'Profile',
   MyAssignments: 'MyAssignments',
   // Doctor

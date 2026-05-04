@@ -8,11 +8,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
-import type { DoctorStackParamList } from '../../navigation/types';
+import type { DoctorStackParamList, DoctorTabParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDoctorConversations } from '../../services/firebase/chatService';
 import type { Conversation } from '../../services/firebase/types';
@@ -30,8 +32,13 @@ const formatTimeAgo = (date?: Date) => {
   return `${days} days ago`;
 };
 
+type FeedbackNavProp = CompositeNavigationProp<
+  BottomTabNavigationProp<DoctorTabParamList, 'DoctorFeedback'>,
+  NativeStackNavigationProp<DoctorStackParamList>
+>;
+
 export const DoctorFeedbackScreen: React.FC = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
+  const navigation = useNavigation<FeedbackNavProp>();
   const { t } = useTranslation();
   const { uid } = useAuth();
 

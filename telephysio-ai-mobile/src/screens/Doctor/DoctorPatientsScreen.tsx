@@ -15,12 +15,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useTranslation } from "react-i18next";
 
 import { AppText } from "../../components/ui";
 import { colors, spacing } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
-import type { DoctorStackParamList } from "../../navigation/types";
+import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import { getPatients, getDoctorTreatmentPlans } from "../../services/firebase";
 import type { UserProfile, TreatmentPlan } from "../../services/firebase/types";
 
@@ -35,9 +37,13 @@ type MappedPatient = UserProfile & {
   status: 'on-track' | 'ahead' | 'at-risk';
 };
 
+type PatientsNavProp = CompositeNavigationProp<
+  BottomTabNavigationProp<DoctorTabParamList, 'Patients'>,
+  NativeStackNavigationProp<DoctorStackParamList>
+>;
+
 export const DoctorPatientsScreen: React.FC = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
+  const navigation = useNavigation<PatientsNavProp>();
   const { t } = useTranslation();
   const { uid } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
