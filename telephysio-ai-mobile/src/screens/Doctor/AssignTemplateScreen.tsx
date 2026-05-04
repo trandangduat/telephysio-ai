@@ -96,9 +96,10 @@ export const AssignTemplateScreen: React.FC = () => {
         status: 'active',
       });
       console.log('--- ASSIGN SUCCESS ---');
-      Alert.alert('Success', `Exercises assigned to ${selectedPatient.displayName}!`, [
-        { text: 'OK', onPress: () => navigation.popToTop() },
-      ]);
+      navigation.goBack();
+      setTimeout(() => {
+        Alert.alert('Success', `Exercises assigned to ${selectedPatient.displayName}!`);
+      }, 300);
     } catch (error) {
       console.error('Error assigning template:', error);
       Alert.alert('Error', 'Failed to assign template. Please try again.');
