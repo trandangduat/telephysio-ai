@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { HomeScreen } from '../screens/Home/HomeScreen';
 import { WorkoutScreen } from '../screens/Workout/WorkoutScreen';
+import { FeedbackScreen } from '../screens/Feedback/FeedbackScreen';
 import { LibraryScreen } from '../screens/Library/LibraryScreen';
 import { ProgressScreen } from '../screens/Progress/ProgressScreen';
 import { colors, typography } from '../theme';
@@ -24,6 +25,7 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 const TAB_ICONS: Record<keyof BottomTabParamList, { active: string; inactive: string }> = {
   Home:     { active: 'home',           inactive: 'home-outline' },
   Workout:  { active: 'barbell',        inactive: 'barbell-outline' },
+  Sessions: { active: 'checkmark-circle', inactive: 'checkmark-circle-outline' },
   Library:  { active: 'library',        inactive: 'library-outline' },
   Progress: { active: 'trending-up',    inactive: 'trending-up-outline' },
 };
@@ -74,6 +76,11 @@ export const BottomTabNavigator: React.FC = () => {
         name="Workout"
         component={WorkoutScreen}
         options={{ title: t('tabs.workout', 'Workout'), headerShown: false }}
+      />
+      <Tab.Screen
+        name="Sessions"
+        component={FeedbackScreen}
+        options={{ title: t('tabs.sessions', 'Sessions'), headerShown: false }}
       />
       <Tab.Screen
         name="Library"

@@ -31,6 +31,7 @@ export const AssignTemplateScreen: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
   const [patients, setPatients] = useState<UserProfile[]>([]);
   const [template, setTemplate] = useState<ExerciseTemplate | null>(null);
+  const [assignmentName, setAssignmentName] = useState(templateName);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -49,6 +50,9 @@ export const AssignTemplateScreen: React.FC = () => {
       setPatients(patientsData);
       const found = templatesData.find(t => t.id === templateId);
       setTemplate(found || null);
+      if (found) {
+        setAssignmentName(found.name);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -61,10 +65,24 @@ export const AssignTemplateScreen: React.FC = () => {
   );
 
   const handleAssign = async () => {
-    if (!uid || !selectedPatientId || !template) return;
+    if (!uid) {
+      Alert.alert('Error', 'Not authenticated');
+      return;
+    }
+    if (!selectedPatientId) {
+      Alert.alert('Error', 'Please select a patient first');
+      return;
+    }
+    if (!template) {
+      Alert.alert('Error', 'Template data is not loaded yet. Please try again.');
+      return;
+    }
 
     const selectedPatient = patients.find(p => p.uid === selectedPatientId);
-    if (!selectedPatient) return;
+    if (!selectedPatient) {
+      Alert.alert('Error', 'Selected patient not found');
+      return;
+    }
 
     Alert.alert(
       'Confirm Assignment',
@@ -79,7 +97,7 @@ export const AssignTemplateScreen: React.FC = () => {
               await createAssignment({
                 doctorId: uid,
                 patientId: selectedPatientId,
-                templateName: template.name,
+                templateName: assignmentName,
                 exercises: template.exercises,
                 totalDuration: template.totalDuration,
                 status: 'active',
@@ -130,6 +148,18 @@ export const AssignTemplateScreen: React.FC = () => {
               {template?.exercises.length || 0} exercises - {template?.totalDuration || '0 min'}
             </AppText>
           </View>
+        </View>
+
+        {/* Assignment Name Input */}
+        <View style={styles.section}>
+          <AppText variant="labelMd" style={styles.sectionLabel}>ASSIGNMENT NAME</AppText>
+          <TextInput
+            style={[styles.searchBox, { fontSize: 16, fontWeight: '500', color: '#0f172a' }]}
+            value={assignmentName}
+            onChangeText={setAssignmentName}
+            placeholder="e.g. Morning routine for John"
+            placeholderTextColor="#94a3b8"
+          />
         </View>
 
         {/* Select Patient */}
