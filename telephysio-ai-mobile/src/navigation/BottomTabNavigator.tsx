@@ -25,7 +25,7 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 const TAB_ICONS: Record<keyof BottomTabParamList, { active: string; inactive: string }> = {
   Home:     { active: 'home',           inactive: 'home-outline' },
   Workout:  { active: 'barbell',        inactive: 'barbell-outline' },
-  Feedback: { active: 'stats-chart',    inactive: 'stats-chart-outline' },
+  Sessions: { active: 'checkmark-circle', inactive: 'checkmark-circle-outline' },
   Library:  { active: 'library',        inactive: 'library-outline' },
   Progress: { active: 'trending-up',    inactive: 'trending-up-outline' },
 };
@@ -78,9 +78,9 @@ export const BottomTabNavigator: React.FC = () => {
         options={{ title: t('tabs.workout', 'Workout'), headerShown: false }}
       />
       <Tab.Screen
-        name="Feedback"
+        name="Sessions"
         component={FeedbackScreen}
-        options={{ title: t('tabs.feedback', 'Feedback'), headerShown: false }}
+        options={{ title: t('tabs.sessions', 'Sessions'), headerShown: false }}
       />
       <Tab.Screen
         name="Library"

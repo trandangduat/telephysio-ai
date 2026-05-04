@@ -15,12 +15,13 @@ export type RootStackParamList = {
   Training: undefined;
   DoctorChat: undefined;
   Profile: undefined;
+  MyAssignments: undefined;
 };
 
 export type BottomTabParamList = {
   Home: undefined;
   Workout: undefined;
-  Feedback: undefined;
+  Sessions: undefined;
   Library: undefined;
   Progress: undefined;
 };
@@ -53,8 +54,9 @@ export const SCREENS = {
   Calibration: 'Calibration',
   Training: 'Training',
   Workout: 'Workout',
-  Feedback: 'Feedback',
+  Sessions: 'Sessions',
   Profile: 'Profile',
+  MyAssignments: 'MyAssignments',
   // Doctor
   DoctorTabs: 'DoctorTabs',
   Dashboard: 'Dashboard',

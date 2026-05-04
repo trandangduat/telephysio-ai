@@ -124,9 +124,9 @@ export const FeedbackScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AppText variant="headlineLg" style={styles.pageTitle}>Exercise Feedback List</AppText>
+        <AppText variant="headlineLg" style={styles.pageTitle}>Session History</AppText>
         <AppText variant="bodyMd" style={styles.pageSubtitle}>
-          Review your recently completed sessions and provide feedback to help our AI adjust your recovery plan for better results.
+          Review your recently completed sessions and provide feedback to help your doctor adjust your recovery plan.
         </AppText>
 
         {prioritySession ? (
@@ -199,7 +199,7 @@ export const FeedbackScreen: React.FC = () => {
           </View>
           <AppText variant="labelMd" style={styles.infoTitle}>Why feedback matters</AppText>
           <AppText variant="bodySm" style={styles.infoDesc}>
-            Your subjective input on pain and difficulty levels is crucial for our AI to differentiate between "good muscle fatigue" and "injury-related pain," ensuring your plan remains safe and effective.
+            Your subjective input on pain and difficulty levels is crucial for your doctor to differentiate between "good muscle fatigue" and "injury-related pain," ensuring your plan remains safe and effective.
           </AppText>
         </View>
       </ScrollView>
@@ -210,7 +210,7 @@ export const FeedbackScreen: React.FC = () => {
           <View style={styles.modalContent}>
             <AppText style={styles.modalTitle}>Submit Feedback</AppText>
             <AppText variant="bodySm" style={styles.modalSubtitle}>
-              Great job finishing your set! Please let us know how you're feeling to help your AI therapist adjust your plan.
+              Great job finishing your set! Please let us know how you're feeling to help your doctor adjust your plan.
             </AppText>
 
             <View style={styles.inputGroup}>
