@@ -75,7 +75,7 @@ export default {
     subtitle: 'Week 6 of ACL Rehabilitation • Phase 2',
     weeklyConsistency: 'Weekly Consistency',
     score: 'Score',
-    greatJob: "Great job! You've hit your goals 5 out of 7 days this week.",
+    greatJob: "Great job! You've hit your goals 7 out of 7 days this week.",
     rom: 'Range of Motion (Knee Flexion)',
     romDesc: 'Measured in degrees via AI Analysis',
     flexion: 'Flexion',

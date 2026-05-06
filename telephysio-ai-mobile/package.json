@@ -7,8 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "docker:start": "expo start --tunnel",
-    "docker:start:clear": "expo start --tunnel --clear"
+    "docker:start": "expo start",
+    "docker:start:clear": "expo start --clear"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -24,6 +24,7 @@
     "expo-gl": "~55.0.13",
     "expo-localization": "~55.0.13",
     "expo-status-bar": "~55.0.5",
+    "expo-video": "~55.0.16",
     "firebase": "^10.14.1",
     "i18next": "^26.0.8",
     "react": "19.2.0",

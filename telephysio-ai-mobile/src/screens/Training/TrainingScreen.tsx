@@ -69,9 +69,7 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
         await completeAssignment(activeAssignment.id);
       }
 
-      Alert.alert('Great job!', 'Your workout session has been recorded.', [
-        { text: 'OK', onPress: () => navigation.navigate('MainTabs' as any) }
-      ]);
+      navigation.navigate('WorkoutResult' as any);
     } catch (error) {
       console.error('Failed to finish workout:', error);
       Alert.alert('Error', 'Failed to save session. Please try again.');
@@ -158,11 +156,11 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
               <Ionicons name={paused ? "play" : "pause"} size={32} color="#fff" />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.skipButton} onPress={handleFinishWorkout} disabled={isFinishing}>
+            <TouchableOpacity style={styles.endButton} onPress={handleFinishWorkout} disabled={isFinishing}>
               {isFinishing ? (
-                <ActivityIndicator size="small" color={colors.onSurfaceVariant} />
+                <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
+                <AppText variant="labelMd" style={{ color: '#fff', fontWeight: 'bold' }}>End</AppText>
               )}
             </TouchableOpacity>
           </View>
@@ -267,11 +265,11 @@ export const TrainingScreen: React.FC<Props> = ({ navigation }) => {
             </AppText>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.skipButton} onPress={handleFinishWorkout} disabled={isFinishing}>
+          <TouchableOpacity style={styles.endButton} onPress={handleFinishWorkout} disabled={isFinishing}>
             {isFinishing ? (
-              <ActivityIndicator size="small" color={colors.onSurfaceVariant} />
+              <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Ionicons name="play-skip-forward" size={20} color={colors.onSurfaceVariant} />
+              <AppText variant="labelMd" style={{ color: '#fff', fontWeight: 'bold' }}>End</AppText>
             )}
           </TouchableOpacity>
         </View>
@@ -300,6 +298,14 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  endButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#ef4444',
     alignItems: 'center',
     justifyContent: 'center',
   },

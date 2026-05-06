@@ -16,6 +16,7 @@ export type RootStackParamList = {
   DoctorChat: undefined;
   Profile: undefined;
   MyAssignments: undefined;
+  WorkoutResult: undefined;
 };
 
 export type BottomTabParamList = {
@@ -56,6 +57,7 @@ export const SCREENS = {
   Workout: 'Workout',
   Profile: 'Profile',
   MyAssignments: 'MyAssignments',
+  WorkoutResult: 'WorkoutResult',
   // Doctor
   DoctorTabs: 'DoctorTabs',
   Dashboard: 'Dashboard',

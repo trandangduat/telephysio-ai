@@ -26,6 +26,7 @@ import { TrainingScreen } from '../screens/Training/TrainingScreen';
 import { DoctorChatScreen } from '../screens/Feedback/DoctorChatScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { MyAssignmentsScreen } from '../screens/Workout/MyAssignmentsScreen';
+import { WorkoutResultScreen } from '../screens/Workout/WorkoutResultScreen';
 
 // Doctor screens
 import { DoctorTabNavigator } from './DoctorTabNavigator';
@@ -71,6 +72,7 @@ const PatientNavigator: React.FC = () => {
       <PatientStack.Screen name="DoctorChat" component={DoctorChatScreen} options={{ headerShown: false }} />
       <PatientStack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <PatientStack.Screen name="MyAssignments" component={MyAssignmentsScreen} options={{ headerShown: false }} />
+      <PatientStack.Screen name="WorkoutResult" component={WorkoutResultScreen} options={{ headerShown: false }} />
     </PatientStack.Navigator>
   );
 };
