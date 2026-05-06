@@ -73,13 +73,13 @@ export const BottomTabNavigator: React.FC = () => {
         },
       })}
     >
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{ title: t("tabs.home", "Home"), headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
-        name="Workout"
+        name="Home"
         component={WorkoutScreen}
         options={{ title: t("tabs.workout", "Workout"), headerShown: false }}
       />
@@ -93,11 +93,11 @@ export const BottomTabNavigator: React.FC = () => {
         component={LibraryScreen}
         options={{ title: t('tabs.library', 'Library'), headerShown: false }}
       /> */}
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Progress"
         component={ProgressScreen}
         options={{ title: t("tabs.progress", "Progress"), headerShown: false }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 };

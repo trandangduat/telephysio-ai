@@ -125,11 +125,19 @@ export const DoctorAssignmentsScreen: React.FC = () => {
           </AppText>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => navigation.navigate("DoctorChat")}
           >
             <Ionicons name="chatbubbles-outline" size={24} color="#475569" />
+          </TouchableOpacity> */}
+          <TouchableOpacity style={styles.iconBtn}>
+            <View style={styles.notifDot} />
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              color="#475569"
+            />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.avatarBtn}
@@ -496,4 +504,16 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
   statusActive: { backgroundColor: "#e0f2fe" },
   statusCompleted: { backgroundColor: "#dcfce7" },
+
+  notifDot: {
+    position: "absolute",
+    right: 4,
+    top: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ef4444",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
 });

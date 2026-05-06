@@ -109,12 +109,12 @@ export const DoctorDashboardScreen: React.FC = () => {
           </View>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => navigation.navigate("DoctorChat")}
           >
             <Ionicons name="chatbubbles-outline" size={24} color="#475569" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity style={styles.iconBtn}>
             <View style={styles.notifDot} />
             <Ionicons name="notifications-outline" size={24} color="#475569" />

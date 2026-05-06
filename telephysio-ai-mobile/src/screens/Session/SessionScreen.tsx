@@ -498,13 +498,14 @@ export const SessionScreen: React.FC = () => {
           </AppText>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => navigation.navigate("DoctorChat")}
             style={styles.iconBtn}
           >
             <Ionicons name="chatbubbles-outline" size={24} color="#475569" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity style={styles.iconBtn}>
+            <View style={styles.notifDot} />
             <Ionicons
               name="notifications-outline"
               size={24}
@@ -821,6 +822,18 @@ const styles = StyleSheet.create({
     padding: spacing.gutter,
     gap: spacing.lg,
     paddingBottom: spacing.xl * 2,
+  },
+
+  notifDot: {
+    position: "absolute",
+    right: 4,
+    top: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ef4444",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
 
   pageTitle: { color: "#0f172a", fontWeight: "800" },
