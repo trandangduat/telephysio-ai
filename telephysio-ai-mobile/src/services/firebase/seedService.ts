@@ -238,10 +238,23 @@ export const seedMockData = async () => {
           painLevel: Math.floor(Math.random() * 3), // 0 to 2
           averagePain: Math.floor(Math.random() * 3),
           date: Timestamp.fromDate(
-            getRandomDate(new Date(2025, 0, 1), new Date()),
+            getRandomDate(new Date(2026, 4, 1), new Date(2026, 4, 6)),
           ),
           reps: 10 * selectedExercises.length,
           sets: 3 * selectedExercises.length,
+          // NEW: Detail view data
+          videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", // Stable mock video
+          doctorFeedback: s % 2 === 0 
+            ? "Kỹ thuật thực hiện bài squat của bạn đã cải thiện rõ rệt, hãy chú ý giữ thẳng lưng hơn nữa nhé." 
+            : null,
+          doctorName: doctorName,
+          reviewedAt: Timestamp.fromDate(new Date()),
+          exerciseList: selectedExercises.map(ex => ex.name),
+          formBreakdown: {
+            "Góc khớp gối": Math.floor(Math.random() * 15) + 85,
+            "Độ thẳng lưng": Math.floor(Math.random() * 20) + 75,
+            "Thăng bằng": Math.floor(Math.random() * 10) + 90,
+          }
         };
         batch.set(sessionRef, sessionData);
         opCount++;

@@ -8,25 +8,28 @@
  *   - Patients (progress tracking)
  */
 
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
-import { DoctorDashboardScreen } from '../screens/Doctor/DoctorDashboardScreen';
-import { DoctorAssignmentsScreen } from '../screens/Doctor/DoctorAssignmentsScreen';
-import { DoctorFeedbackScreen } from '../screens/Doctor/DoctorFeedbackScreen';
-import { DoctorPatientsScreen } from '../screens/Doctor/DoctorPatientsScreen';
-import { colors, typography } from '../theme';
-import type { DoctorTabParamList } from './types';
+import { DoctorDashboardScreen } from "../screens/Doctor/DoctorDashboardScreen";
+import { DoctorAssignmentsScreen } from "../screens/Doctor/DoctorAssignmentsScreen";
+import { DoctorSessionScreen } from "../screens/Doctor/DoctorSessionScreen";
+import { DoctorPatientsScreen } from "../screens/Doctor/DoctorPatientsScreen";
+import { colors, typography } from "../theme";
+import type { DoctorTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<DoctorTabParamList>();
 
-const TAB_ICONS: Record<keyof DoctorTabParamList, { active: string; inactive: string }> = {
-  Dashboard:      { active: 'grid',              inactive: 'grid-outline' },
-  Assignments:    { active: 'clipboard',         inactive: 'clipboard-outline' },
-  DoctorFeedback: { active: 'chatbubbles',       inactive: 'chatbubbles-outline' },
-  Patients:       { active: 'people',            inactive: 'people-outline' },
+const TAB_ICONS: Record<
+  keyof DoctorTabParamList,
+  { active: string; inactive: string }
+> = {
+  Dashboard: { active: "grid", inactive: "grid-outline" },
+  Assignments: { active: "clipboard", inactive: "clipboard-outline" },
+  DoctorFeedback: { active: "chatbubbles", inactive: "chatbubbles-outline" },
+  Patients: { active: "people", inactive: "people-outline" },
 };
 
 export const DoctorTabNavigator: React.FC = () => {
@@ -35,7 +38,7 @@ export const DoctorTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: '#0f766e',
+        tabBarActiveTintColor: "#0f766e",
         tabBarInactiveTintColor: colors.onSurfaceVariant,
         tabBarStyle: {
           backgroundColor: colors.surfaceContainerLowest,
@@ -57,22 +60,22 @@ export const DoctorTabNavigator: React.FC = () => {
       <Tab.Screen
         name="Dashboard"
         component={DoctorDashboardScreen}
-        options={{ title: 'Dashboard', headerShown: false }}
+        options={{ title: "Dashboard", headerShown: false }}
       />
       <Tab.Screen
         name="Assignments"
         component={DoctorAssignmentsScreen}
-        options={{ title: 'Assignments', headerShown: false }}
+        options={{ title: "Assignments", headerShown: false }}
       />
       <Tab.Screen
         name="DoctorFeedback"
-        component={DoctorFeedbackScreen}
-        options={{ title: 'Chat', headerShown: false }}
+        component={DoctorSessionScreen}
+        options={{ title: "Chat", headerShown: false }}
       />
       <Tab.Screen
         name="Patients"
         component={DoctorPatientsScreen}
-        options={{ title: 'Patients', headerShown: false }}
+        options={{ title: "Patients", headerShown: false }}
       />
     </Tab.Navigator>
   );

@@ -5,21 +5,21 @@
  * that the UI screens already display or write.
  */
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "firebase/firestore";
 
 // ── User ────────────────────────────────────────────
 // Derived from: AuthContext (role, userName), ProfileScreen (email, phone, dob, avatarUrl)
-export type UserRole = 'patient' | 'doctor';
+export type UserRole = "patient" | "doctor";
 
 export interface UserProfile {
   uid: string;
   email: string;
-  displayName: string;       // "Cody Li" | "Dr. Sarah Nguyen"
+  displayName: string; // "Cody Li" | "Dr. Sarah Nguyen"
   role: UserRole;
-  phone?: string;            // ProfileScreen: "+1 (555) 123-4567"
-  dateOfBirth?: string;      // ProfileScreen: "Sept 12, 1994"
-  avatarUrl?: string;        // Firebase Storage path
-  specialty?: string;        // Doctor only: "Orthopedic Physiotherapist"
+  phone?: string; // ProfileScreen: "+1 (555) 123-4567"
+  dateOfBirth?: string; // ProfileScreen: "Sept 12, 1994"
+  avatarUrl?: string; // Firebase Storage path
+  specialty?: string; // Doctor only: "Orthopedic Physiotherapist"
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -30,33 +30,33 @@ export interface TreatmentPlan {
   id: string;
   patientId: string;
   doctorId: string;
-  condition: string;          // "ACL Recovery", "Rotator Cuff"
-  currentPhase: number;       // 1, 2, 3
-  currentWeek: number;        // 6
+  condition: string; // "ACL Recovery", "Rotator Cuff"
+  currentPhase: number; // 1, 2, 3
+  currentWeek: number; // 6
   totalWeeks: number;
-  status: 'on-track' | 'ahead' | 'at-risk';
-  progress: number;           // 0-100 percentage
+  status: "on-track" | "ahead" | "at-risk";
+  progress: number; // 0-100 percentage
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 // ── Exercise (Template) ─────────────────────────────
 // Derived from: WorkoutScreen mockExercises, DoctorAssignments templates
-export type ExerciseDifficulty = 'easy' | 'medium' | 'hard';
+export type ExerciseDifficulty = "easy" | "medium" | "hard";
 
 export interface Exercise {
   id: string;
-  name: string;               // "Squat", "Post-Op Knee Flexion"
+  name: string; // "Squat", "Post-Op Knee Flexion"
   sets: number;
   reps: number;
-  duration: string;           // "5 mins", "10 mins"
-  icon: string;               // Ionicons name: "barbell-outline"
-  color: string;              // hex color for UI
+  duration: string; // "5 mins", "10 mins"
+  icon: string; // Ionicons name: "barbell-outline"
+  color: string; // hex color for UI
   description?: string;
-  category?: string;          // "Upper Body", "Lower Body", "Core"
+  category?: string; // "Upper Body", "Lower Body", "Core"
   difficulty?: ExerciseDifficulty;
-  restBetweenSets?: number;   // seconds: 30, 60, 90, 120
-  notes?: string;             // doctor's notes for this exercise
+  restBetweenSets?: number; // seconds: 30, 60, 90, 120
+  notes?: string; // doctor's notes for this exercise
 }
 
 // ── Assignment (Doctor → Patient) ───────────────────
@@ -65,10 +65,10 @@ export interface Assignment {
   id: string;
   doctorId: string;
   patientId: string;
-  templateName: string;       // "ACL Recovery - Phase 2"
+  templateName: string; // "ACL Recovery - Phase 2"
   exercises: Exercise[];
-  totalDuration: string;      // "45 min"
-  status: 'active' | 'completed' | 'paused';
+  totalDuration: string; // "45 min"
+  status: "active" | "completed" | "paused";
   assignedAt: Timestamp;
   completedAt?: Timestamp;
 }
@@ -80,19 +80,25 @@ export interface Session {
   patientId: string;
   assignmentId: string;
   exercisesCompleted: number;
-  completedExercises?: number; // Added for UI compatibility
-  accuracy: number;           // 0-100, from formAccuracy
-  accuracyScore?: number;     // Added for UI compatibility
-  duration: string;           // "42 min"
-  totalDuration?: string;     // Added for UI compatibility
-  durationSeconds: number;    // elapsed in TrainingScreen
-  painLevel: number;          // 0-10, from FeedbackScreen
-  averagePain?: number;       // Added for UI compatibility
+  completedExercises?: number; // Alias for UI compatibility
+  accuracy: number; // 0-100, from formAccuracy
+  accuracyScore?: number; // Alias for UI compatibility
+  duration: string; // "42 min"
+  totalDuration?: string; // Alias for UI compatibility
+  durationSeconds: number; // elapsed in TrainingScreen
+  painLevel: number; // 0-10
+  averagePain?: number; // Alias for UI compatibility
   date: Timestamp;
   reps: number;
   sets: number;
-  doctorFeedback?: string;    // NEW: Doctor's note for this session
-  feedbackUpdatedAt?: Timestamp; // NEW: Timestamp when feedback was added
+  // NEW: Detail view support
+  videoUrl?: string; // Link to recorded session video in Storage
+  doctorFeedback?: string; // Doctor's note for this session
+  doctorName?: string; // Name of the doctor who reviewed
+  reviewedAt?: Timestamp; // When the doctor reviewed it
+  exerciseList?: string[]; // Names of exercises performed
+  formBreakdown?: Record<string, number>; // Per-joint/angle accuracy (e.g. {"Knee Angle": 85})
+  feedbackUpdatedAt?: Timestamp;
 }
 
 // ── Progress Snapshot ───────────────────────────────
@@ -100,40 +106,40 @@ export interface Session {
 export interface ProgressSnapshot {
   id: string;
   patientId: string;
-  movementScore: number;      // HomeScreen: 88 /100
-  timeActiveMinutes: number;  // HomeScreen: 45 min
-  dailyGoalPercent: number;   // HomeScreen: 75%
-  sessionsCompleted: number;  // HomeScreen: 2 /3
-  sessionsTarget: number;     // 3
+  movementScore: number; // HomeScreen: 88 /100
+  timeActiveMinutes: number; // HomeScreen: 45 min
+  dailyGoalPercent: number; // HomeScreen: 75%
+  sessionsCompleted: number; // HomeScreen: 2 /3
+  sessionsTarget: number; // 3
   // ProgressScreen data
-  weeklyConsistency: number;  // 85%
-  romFlexion: number;         // degrees
-  romExtension: number;       // degrees
+  weeklyConsistency: number; // 85%
+  romFlexion: number; // degrees
+  romExtension: number; // degrees
   quadricepsStrength: number; // percent
   hamstringStability: number; // percent
-  aiInsight?: string;         // ProgressScreen insight text
+  aiInsight?: string; // ProgressScreen insight text
   date: Timestamp;
 }
 
 // ── Chat Message ────────────────────────────────────
 // Derived from: DoctorChatScreen chatData (type, sender, text, tags, time)
-export type MessageType = 'text' | 'feedback' | 'patient_feedback';
+export type MessageType = "text" | "feedback" | "patient_feedback";
 
 export interface ChatMessage {
   id: string;
   conversationId: string;
-  sender: 'user' | 'doctor';
-  senderName: string;        // "You" | "Dr. Marcus Sterling"
-  senderTitle?: string;       // "Lateral Lunges • Session Feedback" | "Lead Physiotherapist"
+  sender: "user" | "doctor";
+  senderName: string; // "You" | "Dr. Marcus Sterling"
+  senderTitle?: string; // "Lateral Lunges • Session Feedback" | "Lead Physiotherapist"
   type: MessageType;
   text: string;
-  tags?: string[];            // ["12% Mobility Gain", "Pain: 5/10"]
-  attachmentUrl?: string;     // Firebase Storage
+  tags?: string[]; // ["12% Mobility Gain", "Pain: 5/10"]
+  attachmentUrl?: string; // Firebase Storage
   createdAt: Timestamp;
 }
 
 // ── Conversation ────────────────────────────────────
-// Derived from: DoctorFeedbackScreen (conversation list with unread, lastMessage)
+// Derived from: DoctorSessionScreen (conversation list with unread, lastMessage)
 export interface Conversation {
   id: string;
   patientId: string;
@@ -145,7 +151,7 @@ export interface Conversation {
   unreadByDoctor: number;
   unreadByPatient: number;
   hasFeedback: boolean;
-  feedbackSummary?: string;   // "Pain level: 3/10 | Improved ROM"
+  feedbackSummary?: string; // "Pain level: 3/10 | Improved ROM"
 }
 
 // ── Exercise Template (Doctor's Library) ────────────
@@ -162,16 +168,16 @@ export interface ExerciseTemplate {
 }
 
 // ── Feedback (Exercise feedback) ────────────────────
-// Derived from: FeedbackScreen (difficulty, notes, exercise name)
+// Derived from: SessionScreen (difficulty, notes, exercise name)
 export interface ExerciseFeedback {
   id: string;
   patientId: string;
   sessionId: string;
-  exerciseName: string;       // "Knee Extension"
-  difficulty: string;         // "Easy", "Medium", "Hard"
+  exerciseName: string; // "Knee Extension"
+  difficulty: string; // "Easy", "Medium", "Hard"
   painLevel: number;
   notes: string;
-  tags?: string[];             // ["Pain: 5/10", "Difficulty: Medium"]
+  tags?: string[]; // ["Pain: 5/10", "Difficulty: Medium"]
   createdAt: Timestamp;
 }
 
@@ -182,9 +188,9 @@ export interface ScheduleItem {
   doctorId: string;
   patientId: string;
   patientName: string;
-  time: string;               // "09:00"
-  type: string;               // "Virtual Session", "Progress Review"
-  status: 'upcoming' | 'completed' | 'cancelled';
+  time: string; // "09:00"
+  type: string; // "Virtual Session", "Progress Review"
+  status: "upcoming" | "completed" | "cancelled";
   date: Timestamp;
 }
 
@@ -196,7 +202,7 @@ export interface Notification {
   title: string;
   body: string;
   read: boolean;
-  type: 'alert' | 'reminder' | 'feedback' | 'system';
+  type: "alert" | "reminder" | "feedback" | "system";
   createdAt: Timestamp;
 }
 
@@ -206,10 +212,10 @@ export interface LibraryItem {
   id: string;
   title: string;
   description: string;
-  category: 'Videos' | 'PDFs' | 'Articles';
-  tag: string;                // "Knee Health", "Instructional Video"
+  category: "Videos" | "PDFs" | "Articles";
+  tag: string; // "Knee Health", "Instructional Video"
   tagColor: string;
-  imageUrl?: string;          // Firebase Storage
-  duration?: string;          // "12 min" for videos
+  imageUrl?: string; // Firebase Storage
+  duration?: string; // "12 min" for videos
   createdAt: Timestamp;
 }

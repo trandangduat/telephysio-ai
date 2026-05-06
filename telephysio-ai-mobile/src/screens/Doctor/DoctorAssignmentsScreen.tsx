@@ -148,10 +148,10 @@ export const DoctorAssignmentsScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <AppText variant="headlineLg" style={styles.pageTitle}>
-            Assignments
+            Exercise Templates
           </AppText>
           <AppText variant="bodyMd" style={styles.pageSubtitle}>
-            Create exercise protocols and assign them to patients
+            Create groups of exercises and assign them to your patients
           </AppText>
         </View>
 
@@ -165,7 +165,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             onPress={() => setActiveTab("templates")}
           >
             <Ionicons 
-              name={activeTab === "templates" ? "clipboard" : "clipboard-outline"} 
+              name={activeTab === "templates" ? "layers" : "layers-outline"} 
               size={16} 
               color={activeTab === "templates" ? "#fff" : "#475569"} 
               style={{ marginRight: 6 }}
@@ -174,7 +174,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
               variant="labelMd"
               style={{ color: activeTab === "templates" ? "#fff" : "#475569" }}
             >
-              Protocols
+              Templates
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -185,7 +185,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             onPress={() => setActiveTab("assigned")}
           >
             <Ionicons 
-              name={activeTab === "assigned" ? "people" : "people-outline"} 
+              name={activeTab === "assigned" ? "checkbox" : "checkbox-outline"} 
               size={16} 
               color={activeTab === "assigned" ? "#fff" : "#475569"} 
               style={{ marginRight: 6 }}
@@ -194,7 +194,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
               variant="labelMd"
               style={{ color: activeTab === "assigned" ? "#fff" : "#475569" }}
             >
-              Assigned
+              Assignments
             </AppText>
           </TouchableOpacity>
         </View>
@@ -203,8 +203,8 @@ export const DoctorAssignmentsScreen: React.FC = () => {
         <View style={styles.tabDescContainer}>
           <AppText variant="bodySm" style={styles.tabDescText}>
             {activeTab === "templates" 
-              ? "Reusable exercise protocols you can assign to multiple patients"
-              : "Protocols currently assigned to specific patients"
+              ? "Customized exercise groups that can be reused across patients"
+              : "Review exercises currently assigned to patients and their progress"
             }
           </AppText>
         </View>
@@ -227,7 +227,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                 variant="labelMd"
                 style={{ color: colors.primary, fontWeight: "700" }}
               >
-                Create New Protocol
+                Create New Template
               </AppText>
             </TouchableOpacity>
 

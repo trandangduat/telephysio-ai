@@ -10,12 +10,22 @@
  */
 
 import {
-  collection, doc, addDoc, getDoc, getDocs, updateDoc,
-  query, where, orderBy, limit, serverTimestamp, Timestamp,
-} from 'firebase/firestore';
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 
-import { db } from './config';
-import type { Session, ProgressSnapshot, ExerciseFeedback } from './types';
+import { db } from "./config";
+import type { Session, ProgressSnapshot, ExerciseFeedback } from "./types";
 
 // ═══════════════════════════════════════════════════
 // SESSIONS
@@ -24,9 +34,9 @@ import type { Session, ProgressSnapshot, ExerciseFeedback } from './types';
 // ── Record Session ──────────────────────────────────
 // Called after TrainingScreen completes (skip-forward or finish)
 export async function recordSession(
-  data: Omit<Session, 'id' | 'date'>
+  data: Omit<Session, "id" | "date">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'sessions'), {
+  const ref = await addDoc(collection(db, "sessions"), {
     ...data,
     date: serverTimestamp(),
   });
@@ -37,25 +47,26 @@ export async function recordSession(
 // Called by PatientDetailScreen (session history table)
 export async function getPatientSessions(
   patientId: string,
-  maxResults: number = 10
+  maxResults: number = 10,
 ): Promise<Session[]> {
   const snap = await getDocs(
-    query(
-      collection(db, 'sessions'),
-      where('patientId', '==', patientId)
-    )
+    query(collection(db, "sessions"), where("patientId", "==", patientId)),
   );
-  const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() } as Session));
-  return sessions.sort((a, b) => {
-    const aTime = (a.date as any)?.toMillis?.() || 0;
-    const bTime = (b.date as any)?.toMillis?.() || 0;
-    return bTime - aTime;
-  }).slice(0, maxResults);
+  const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Session);
+  return sessions
+    .sort((a, b) => {
+      const aTime = (a.date as any)?.toMillis?.() || 0;
+      const bTime = (b.date as any)?.toMillis?.() || 0;
+      return bTime - aTime;
+    })
+    .slice(0, maxResults);
 }
 
 // ── Get Session Count This Week ─────────────────────
 // Called by HomeScreen (SESSIONS card: "2 /3 this week")
-export async function getWeeklySessionCount(patientId: string): Promise<number> {
+export async function getWeeklySessionCount(
+  patientId: string,
+): Promise<number> {
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
@@ -63,10 +74,10 @@ export async function getWeeklySessionCount(patientId: string): Promise<number> 
 
   const snap = await getDocs(
     query(
-      collection(db, 'sessions'),
-      where('patientId', '==', patientId),
-      where('date', '>=', Timestamp.fromDate(startOfWeek))
-    )
+      collection(db, "sessions"),
+      where("patientId", "==", patientId),
+      where("date", ">=", Timestamp.fromDate(startOfWeek)),
+    ),
   );
   return snap.size;
 }
@@ -74,9 +85,13 @@ export async function getWeeklySessionCount(patientId: string): Promise<number> 
 // ── Submit Doctor Feedback for Session ──────────────
 export async function submitDoctorFeedback(
   sessionId: string,
-  feedback: string
+  feedback: string,
 ): Promise<void> {
-  await updateDoc(doc(db, 'sessions', sessionId), {
+  console.log('[submitDoctorFeedback] Updating session:', sessionId, 'with feedback:', feedback);
+  if (!sessionId) {
+    throw new Error('Session ID is required to submit feedback');
+  }
+  await updateDoc(doc(db, "sessions", sessionId), {
     doctorFeedback: feedback,
     feedbackUpdatedAt: serverTimestamp(),
   });
@@ -88,15 +103,19 @@ export async function submitDoctorFeedback(
 
 // ── Get Latest Progress ─────────────────────────────
 // Called by HomeScreen (movementScore, timeActive), ProgressScreen (ROM, strength)
-export async function getLatestProgress(patientId: string): Promise<ProgressSnapshot | null> {
+export async function getLatestProgress(
+  patientId: string,
+): Promise<ProgressSnapshot | null> {
   const snap = await getDocs(
     query(
-      collection(db, 'progress_snapshots'),
-      where('patientId', '==', patientId)
-    )
+      collection(db, "progress_snapshots"),
+      where("patientId", "==", patientId),
+    ),
   );
   if (snap.empty) return null;
-  const snapshots = snap.docs.map(d => ({ id: d.id, ...d.data() } as ProgressSnapshot));
+  const snapshots = snap.docs.map(
+    (d) => ({ id: d.id, ...d.data() }) as ProgressSnapshot,
+  );
   snapshots.sort((a, b) => {
     const aTime = (a.date as any)?.toMillis?.() || 0;
     const bTime = (b.date as any)?.toMillis?.() || 0;
@@ -108,9 +127,9 @@ export async function getLatestProgress(patientId: string): Promise<ProgressSnap
 // ── Save Progress Snapshot ──────────────────────────
 // Called after AI analysis processes a completed session
 export async function saveProgressSnapshot(
-  data: Omit<ProgressSnapshot, 'id' | 'date'>
+  data: Omit<ProgressSnapshot, "id" | "date">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'progress_snapshots'), {
+  const ref = await addDoc(collection(db, "progress_snapshots"), {
     ...data,
     date: serverTimestamp(),
   });
@@ -121,20 +140,24 @@ export async function saveProgressSnapshot(
 // Called by ProgressScreen chart (ROM over weeks)
 export async function getProgressHistory(
   patientId: string,
-  maxResults: number = 12
+  maxResults: number = 12,
 ): Promise<ProgressSnapshot[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'progress_snapshots'),
-      where('patientId', '==', patientId)
-    )
+      collection(db, "progress_snapshots"),
+      where("patientId", "==", patientId),
+    ),
   );
-  const snapshots = snap.docs.map(d => ({ id: d.id, ...d.data() } as ProgressSnapshot));
-  return snapshots.sort((a, b) => {
-    const aTime = (a.date as any)?.toMillis?.() || 0;
-    const bTime = (b.date as any)?.toMillis?.() || 0;
-    return bTime - aTime;
-  }).slice(0, maxResults);
+  const snapshots = snap.docs.map(
+    (d) => ({ id: d.id, ...d.data() }) as ProgressSnapshot,
+  );
+  return snapshots
+    .sort((a, b) => {
+      const aTime = (a.date as any)?.toMillis?.() || 0;
+      const bTime = (b.date as any)?.toMillis?.() || 0;
+      return bTime - aTime;
+    })
+    .slice(0, maxResults);
 }
 
 // ═══════════════════════════════════════════════════
@@ -142,11 +165,11 @@ export async function getProgressHistory(
 // ═══════════════════════════════════════════════════
 
 // ── Submit Feedback ─────────────────────────────────
-// Called by FeedbackScreen "Give Feedback" → modal submit
+// Called by SessionScreen "Give Feedback" → modal submit
 export async function submitFeedback(
-  data: Omit<ExerciseFeedback, 'id' | 'createdAt'>
+  data: Omit<ExerciseFeedback, "id" | "createdAt">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'exercise_feedback'), {
+  const ref = await addDoc(collection(db, "exercise_feedback"), {
     ...data,
     createdAt: serverTimestamp(),
   });
@@ -154,23 +177,27 @@ export async function submitFeedback(
 }
 
 // ── Get Feedback for Patient ────────────────────────
-// Called by FeedbackScreen (exercise feedback list)
+// Called by SessionScreen (exercise feedback list)
 export async function getPatientFeedback(
   patientId: string,
-  maxResults: number = 20
+  maxResults: number = 20,
 ): Promise<ExerciseFeedback[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'exercise_feedback'),
-      where('patientId', '==', patientId)
-    )
+      collection(db, "exercise_feedback"),
+      where("patientId", "==", patientId),
+    ),
   );
-  const feedbacks = snap.docs.map(d => ({ id: d.id, ...d.data() } as ExerciseFeedback));
-  return feedbacks.sort((a, b) => {
-    const aTime = (a.createdAt as any)?.toMillis?.() || 0;
-    const bTime = (b.createdAt as any)?.toMillis?.() || 0;
-    return bTime - aTime;
-  }).slice(0, maxResults);
+  const feedbacks = snap.docs.map(
+    (d) => ({ id: d.id, ...d.data() }) as ExerciseFeedback,
+  );
+  return feedbacks
+    .sort((a, b) => {
+      const aTime = (a.createdAt as any)?.toMillis?.() || 0;
+      const bTime = (b.createdAt as any)?.toMillis?.() || 0;
+      return bTime - aTime;
+    })
+    .slice(0, maxResults);
 }
 
 // ── Get Avg Stats for Doctor Dashboard ──────────────
@@ -178,9 +205,11 @@ export async function getPatientFeedback(
 export async function getAverageAccuracy(doctorId: string): Promise<number> {
   // Get all patient IDs for this doctor
   const plansSnap = await getDocs(
-    query(collection(db, 'treatment_plans'), where('doctorId', '==', doctorId))
+    query(collection(db, "treatment_plans"), where("doctorId", "==", doctorId)),
   );
-  const patientIds = [...new Set(plansSnap.docs.map(d => d.data().patientId))];
+  const patientIds = [
+    ...new Set(plansSnap.docs.map((d) => d.data().patientId)),
+  ];
 
   if (patientIds.length === 0) return 0;
 
@@ -189,19 +218,16 @@ export async function getAverageAccuracy(doctorId: string): Promise<number> {
 
   for (const pid of patientIds) {
     const sessSnap = await getDocs(
-      query(
-        collection(db, 'sessions'),
-        where('patientId', '==', pid)
-      )
+      query(collection(db, "sessions"), where("patientId", "==", pid)),
     );
-    const sessions = sessSnap.docs.map(d => d.data() as Session);
+    const sessions = sessSnap.docs.map((d) => d.data() as Session);
     sessions.sort((a, b) => {
       const aTime = (a.date as any)?.toMillis?.() || 0;
       const bTime = (b.date as any)?.toMillis?.() || 0;
       return bTime - aTime;
     });
-    
-    sessions.slice(0, 5).forEach(d => {
+
+    sessions.slice(0, 5).forEach((d) => {
       totalAccuracy += d.accuracy;
       count++;
     });

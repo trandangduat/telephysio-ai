@@ -1,3 +1,4 @@
+import type { Session } from '../services/firebase/types';
 /**
  * Navigation — central type definitions & param lists.
  */
@@ -34,6 +35,7 @@ export type DoctorStackParamList = {
   DoctorChat: undefined;
   TemplateEditor: { templateId?: string };
   AssignTemplate: { templateId: string; templateName: string };
+  DoctorSessionDetail: { session: Session; patientName: string };
 };
 
 export type DoctorTabParamList = {
@@ -66,4 +68,5 @@ export const SCREENS = {
   DoctorProfile: 'DoctorProfile',
   TemplateEditor: 'TemplateEditor',
   AssignTemplate: 'AssignTemplate',
+  DoctorSessionDetail: 'DoctorSessionDetail',
 } as const;

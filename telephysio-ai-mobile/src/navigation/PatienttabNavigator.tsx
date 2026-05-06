@@ -7,27 +7,33 @@
  * - Label: typography.labelSm (Inter 11px/500)
  */
 
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
-import { HomeScreen } from '../screens/Home/HomeScreen';
-import { WorkoutScreen } from '../screens/Workout/WorkoutScreen';
-import { FeedbackScreen } from '../screens/Feedback/FeedbackScreen';
-import { LibraryScreen } from '../screens/Library/LibraryScreen';
-import { ProgressScreen } from '../screens/Progress/ProgressScreen';
-import { colors, typography } from '../theme';
-import type { BottomTabParamList } from './types';
+import { HomeScreen } from "../screens/Home/HomeScreen";
+import { WorkoutScreen } from "../screens/Workout/WorkoutScreen";
+import { SessionScreen } from "../screens/Session/SessionScreen";
+// import { LibraryScreen } from "../screens/Library/LibraryScreen";
+import { ProgressScreen } from "../screens/Progress/ProgressScreen";
+import { colors, typography } from "../theme";
+import type { BottomTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
-const TAB_ICONS: Record<keyof BottomTabParamList, { active: string; inactive: string }> = {
-  Home:     { active: 'home',           inactive: 'home-outline' },
-  Workout:  { active: 'barbell',        inactive: 'barbell-outline' },
-  Sessions: { active: 'checkmark-circle', inactive: 'checkmark-circle-outline' },
-  Library:  { active: 'library',        inactive: 'library-outline' },
-  Progress: { active: 'trending-up',    inactive: 'trending-up-outline' },
+const TAB_ICONS: Record<
+  keyof BottomTabParamList,
+  { active: string; inactive: string }
+> = {
+  Home: { active: "home", inactive: "home-outline" },
+  Workout: { active: "barbell", inactive: "barbell-outline" },
+  Sessions: {
+    active: "checkmark-circle",
+    inactive: "checkmark-circle-outline",
+  },
+  Library: { active: "library", inactive: "library-outline" },
+  Progress: { active: "trending-up", inactive: "trending-up-outline" },
 };
 
 export const BottomTabNavigator: React.FC = () => {
@@ -70,27 +76,27 @@ export const BottomTabNavigator: React.FC = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: t('tabs.home', 'Home'), headerShown: false }}
+        options={{ title: t("tabs.home", "Home"), headerShown: false }}
       />
       <Tab.Screen
         name="Workout"
         component={WorkoutScreen}
-        options={{ title: t('tabs.workout', 'Workout'), headerShown: false }}
+        options={{ title: t("tabs.workout", "Workout"), headerShown: false }}
       />
       <Tab.Screen
         name="Sessions"
-        component={FeedbackScreen}
-        options={{ title: t('tabs.sessions', 'Sessions'), headerShown: false }}
+        component={SessionScreen}
+        options={{ title: t("tabs.sessions", "Sessions"), headerShown: false }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Library"
         component={LibraryScreen}
         options={{ title: t('tabs.library', 'Library'), headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
         name="Progress"
         component={ProgressScreen}
-        options={{ title: t('tabs.progress', 'Progress'), headerShown: false }}
+        options={{ title: t("tabs.progress", "Progress"), headerShown: false }}
       />
     </Tab.Navigator>
   );
