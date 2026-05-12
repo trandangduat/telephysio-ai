@@ -26,7 +26,7 @@ import { updateUserProfile } from "../../services/firebase";
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t, i18n } = useTranslation();
-  const { user, userName, uid, role, logout } = useAuth();
+  const { user, userName, uid, role, logout, setUser } = useAuth();
 
   const [isDark, setIsDark] = useState(false);
 
@@ -57,13 +57,17 @@ export const ProfileScreen: React.FC = () => {
     }
     setSaving(true);
     try {
-      await updateUserProfile(uid, {
+      const updates = {
         displayName: editName.trim(),
         phone: editPhone.trim(),
         dateOfBirth: editDOB.trim(),
-      });
+      };
+      await updateUserProfile(uid, updates);
+      // Update AuthContext immediately so the display reflects changes
+      if (user) {
+        setUser({ ...user, ...updates });
+      }
       setEditModal(false);
-      Alert.alert("Saved", "Profile updated successfully.");
     } catch (e) {
       console.error("Profile save error:", e);
       Alert.alert("Error", "Failed to save profile.");
