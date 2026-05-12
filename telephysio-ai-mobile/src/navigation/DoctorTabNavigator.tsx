@@ -16,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import { DoctorDashboardScreen } from "../screens/Doctor/DoctorDashboardScreen";
 import { DoctorAssignmentsScreen } from "../screens/Doctor/DoctorAssignmentsScreen";
 import { DoctorSessionScreen } from "../screens/Doctor/DoctorSessionScreen";
-import { DoctorPatientsScreen } from "../screens/Doctor/DoctorPatientsScreen";
 import { colors, typography } from "../theme";
 import type { DoctorTabParamList } from "./types";
 
@@ -29,7 +28,6 @@ const TAB_ICONS: Record<
   Dashboard: { active: "grid", inactive: "grid-outline" },
   Assignments: { active: "clipboard", inactive: "clipboard-outline" },
   DoctorFeedback: { active: "chatbubbles", inactive: "chatbubbles-outline" },
-  Patients: { active: "people", inactive: "people-outline" },
 };
 
 export const DoctorTabNavigator: React.FC = () => {
@@ -71,11 +69,6 @@ export const DoctorTabNavigator: React.FC = () => {
         name="DoctorFeedback"
         component={DoctorSessionScreen}
         options={{ title: "Chat", headerShown: false }}
-      />
-      <Tab.Screen
-        name="Patients"
-        component={DoctorPatientsScreen}
-        options={{ title: "Patients", headerShown: false }}
       />
     </Tab.Navigator>
   );

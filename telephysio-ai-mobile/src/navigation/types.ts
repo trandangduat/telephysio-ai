@@ -42,7 +42,6 @@ export type DoctorTabParamList = {
   Dashboard: undefined;
   Assignments: undefined;
   DoctorFeedback: undefined;
-  Patients: undefined;
 };
 
 // Screen names as constants to avoid typo
