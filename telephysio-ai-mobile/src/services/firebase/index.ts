@@ -34,6 +34,7 @@ export {
   uploadAvatar,
   getPatients,
   getPatientDoctor,
+  getAllPatients,
 } from './userService';
 
 // Assignments & Treatment Plans

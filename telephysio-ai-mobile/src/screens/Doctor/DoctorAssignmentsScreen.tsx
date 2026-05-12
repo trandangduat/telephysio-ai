@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -91,27 +92,32 @@ export const DoctorAssignmentsScreen: React.FC = () => {
   }, [navigation, uid]);
 
   const handleDeleteTemplate = (tpl: ExerciseTemplate) => {
-    Alert.alert(
-      'Delete Template',
-      `Are you sure you want to delete "${tpl.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteExerciseTemplate(tpl.id);
-              setTemplates(prev => prev.filter(t => t.id !== tpl.id));
-              Alert.alert('Deleted', 'Template deleted successfully.');
-            } catch (error) {
-              console.error('Error deleting template:', error);
-              Alert.alert('Error', 'Failed to delete template.');
-            }
-          },
-        },
-      ]
-    );
+    const doDelete = async () => {
+      try {
+        await deleteExerciseTemplate(tpl.id);
+        setTemplates(prev => prev.filter(t => t.id !== tpl.id));
+        if (Platform.OS !== 'web') Alert.alert('Deleted', 'Template deleted successfully.');
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        if (Platform.OS !== 'web') Alert.alert('Error', 'Failed to delete template.');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      if (window.confirm(`Delete "${tpl.name}"? This cannot be undone.`)) {
+        doDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Template',
+        `Are you sure you want to delete "${tpl.name}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: doDelete },
+        ]
+      );
+    }
   };
 
   return (
@@ -125,20 +131,6 @@ export const DoctorAssignmentsScreen: React.FC = () => {
           </AppText>
         </View>
         <View style={styles.topBarIcons}>
-          {/* <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => navigation.navigate("DoctorChat")}
-          >
-            <Ionicons name="chatbubbles-outline" size={24} color="#475569" />
-          </TouchableOpacity> */}
-          <TouchableOpacity style={styles.iconBtn}>
-            <View style={styles.notifDot} />
-            <Ionicons
-              name="notifications-outline"
-              size={24}
-              color="#475569"
-            />
-          </TouchableOpacity>
           <TouchableOpacity
             style={styles.avatarBtn}
             onPress={() => navigation.navigate("DoctorProfile")}

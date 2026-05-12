@@ -195,10 +195,6 @@ export const DoctorDashboardScreen: React.FC = () => {
           </View>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <View style={styles.notifDot} />
-            <Ionicons name="notifications-outline" size={24} color="#475569" />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate("DoctorProfile")}>
             <Ionicons name="person" size={14} color="#fff" />
           </TouchableOpacity>

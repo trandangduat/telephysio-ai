@@ -86,3 +86,11 @@ export async function getPatientDoctor(patientId: string): Promise<UserProfile |
   const doctorId = plansSnap.docs[0].data().doctorId;
   return getUser(doctorId);
 }
+
+// ── Get All Patients in DB (for doctor's assign search) ──────────────────────
+export async function getAllPatients(): Promise<UserProfile[]> {
+  const snap = await getDocs(
+    query(collection(db, 'users'), where('role', '==', 'patient'))
+  );
+  return snap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
+}
