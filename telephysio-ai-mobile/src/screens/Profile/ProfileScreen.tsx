@@ -5,8 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Switch,
+  TextInput,
+  Modal,
+  KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,61 +21,76 @@ import { AppText } from "../../components/ui";
 import { colors, spacing } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
 import type { RootStackParamList } from "../../navigation/types";
-import { getActiveTreatmentPlan } from "../../services/firebase";
-import type { TreatmentPlan } from "../../services/firebase/types";
+import { updateUserProfile } from "../../services/firebase";
 
 export const ProfileScreen: React.FC = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t, i18n } = useTranslation();
   const { user, userName, uid, role, logout } = useAuth();
 
   const [isDark, setIsDark] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [plan, setPlan] = useState<TreatmentPlan | null>(null);
 
+  // Edit modal state
+  const [editModal, setEditModal] = useState(false);
+  const [editName, setEditName] = useState(userName || "");
+  const [editPhone, setEditPhone] = useState((user as any)?.phone || "");
+  const [editDOB, setEditDOB] = useState((user as any)?.dateOfBirth || "");
+  const [saving, setSaving] = useState(false);
+
+  // Sync when user/userName changes
   useEffect(() => {
-    async function loadPlan() {
-      if (uid && role === "patient") {
-        const activePlan = await getActiveTreatmentPlan(uid);
-        setPlan(activePlan);
-      }
-    }
-    loadPlan();
-  }, [uid, role]);
+    setEditName(userName || "");
+    setEditPhone((user as any)?.phone || "");
+    setEditDOB((user as any)?.dateOfBirth || "");
+  }, [userName, user]);
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === "vi" ? "en" : "vi";
     i18n.changeLanguage(nextLang);
   };
 
-  // Dynamic Theme Colors
+  const handleSaveProfile = async () => {
+    if (!uid) return;
+    if (!editName.trim()) {
+      Alert.alert("Error", "Display name cannot be empty.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateUserProfile(uid, {
+        displayName: editName.trim(),
+        phone: editPhone.trim(),
+        dateOfBirth: editDOB.trim(),
+      });
+      setEditModal(false);
+      Alert.alert("Saved", "Profile updated successfully.");
+    } catch (e) {
+      console.error("Profile save error:", e);
+      Alert.alert("Error", "Failed to save profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Theme
   const bgTheme = isDark ? "#0f172a" : "#f8fafd";
   const cardTheme = isDark ? "#1e293b" : "#fff";
   const textTheme = isDark ? "#f8fafc" : "#0f172a";
-  const textSubTheme = isDark ? "#94a3b8" : "#64748b";
+  const textSub = isDark ? "#94a3b8" : "#64748b";
   const borderColor = isDark ? "#334155" : "#e2e8f0";
+  const inputBg = isDark ? "#0f172a" : "#f8fafc";
 
   return (
-    <SafeAreaView
-      style={[styles.safe, { backgroundColor: bgTheme }]}
-      edges={["top"]}
-    >
-      {/* Navbar with Back Button */}
+    <SafeAreaView style={[styles.safe, { backgroundColor: bgTheme }]} edges={["top"]}>
+      {/* Nav */}
       <View style={[styles.navBar, { backgroundColor: bgTheme }]}>
-        <TouchableOpacity
-          style={styles.navBackBtn}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.navBackBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <AppText
-          variant="headlineMd"
-          style={[styles.navTitle, { color: textTheme }]}
-        >
-          {t("profile.navTitle", "Profile & Settings")}
+        <AppText variant="headlineMd" style={[styles.navTitle, { color: textTheme }]}>
+          Profile & Settings
         </AppText>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 32 }} />
       </View>
 
       <ScrollView
@@ -83,681 +101,329 @@ export const ProfileScreen: React.FC = () => {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <View
-              style={[
-                styles.avatarLarge,
-                { backgroundColor: isDark ? "#334155" : "#f1f5f9" },
-              ]}
-            >
-              <Ionicons
-                name="person"
-                size={48}
-                color={isDark ? "#64748b" : "#94a3b8"}
-              />
+            <View style={[styles.avatarLarge, { backgroundColor: isDark ? "#334155" : "#dbeafe" }]}>
+              <AppText style={{ fontSize: 40, fontWeight: "800", color: colors.primary }}>
+                {(userName || "U")[0].toUpperCase()}
+              </AppText>
             </View>
             <TouchableOpacity
               style={[styles.editAvatarBtn, { borderColor: bgTheme }]}
-              onPress={() =>
-                Alert.alert(
-                  t("profile.edit", "Edit"),
-                  t("profile.edit", "Edit Avatar"),
-                )
-              }
+              onPress={() => setEditModal(true)}
             >
               <Ionicons name="pencil" size={14} color="#fff" />
             </TouchableOpacity>
           </View>
-          <AppText
-            variant="headlineMd"
-            style={[styles.profileName, { color: textTheme }]}
-          >
+          <AppText variant="headlineMd" style={[styles.profileName, { color: textTheme }]}>
             {userName || "User"}
           </AppText>
           <View style={styles.badgeRow}>
-            <View style={styles.proBadge}>
-              <AppText
-                variant="labelSm"
-                style={{ color: "#fff", fontWeight: "700" }}
-              >
-                {role === "doctor"
-                  ? "Doctor Profile"
-                  : plan
-                    ? `${plan.condition} - Week ${plan.currentWeek}`
-                    : "No Active Plan"}
+            <View style={styles.roleBadge}>
+              <Ionicons
+                name={role === "doctor" ? "medical-outline" : "person-outline"}
+                size={12}
+                color="#fff"
+              />
+              <AppText variant="labelSm" style={{ color: "#fff", fontWeight: "700" }}>
+                {role === "doctor" ? "Doctor" : "Patient"}
               </AppText>
             </View>
           </View>
         </View>
 
-        {/* Activity */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardTheme, borderColor: borderColor },
-          ]}
-        >
+        {/* ─── Personal Information ─── */}
+        <View style={[styles.card, { backgroundColor: cardTheme, borderColor }]}>
           <View style={styles.cardHeader}>
-            <AppText
-              variant="labelMd"
-              style={[styles.cardTitle, { color: textTheme }]}
-            >
-              {t("profile.activity", "Activity")}
+            <AppText variant="labelMd" style={[styles.cardTitle, { color: textTheme }]}>
+              Personal Information
             </AppText>
             <TouchableOpacity
-              onPress={() => navigation.navigate("Workout" as any)}
-            >
-              <AppText variant="labelSm" style={styles.viewAllText}>
-                {t("profile.viewAll", "View All")}
-              </AppText>
-            </TouchableOpacity>
-          </View>
-
-          {/* Calendar Row */}
-          <View style={styles.calendarRow}>
-            {[12, 13, 14, 15, 16].map((day, i) => {
-              const isToday = day === 14;
-              const isPast = day < 14;
-              return (
-                <View
-                  key={day}
-                  style={[styles.calItem, isToday && styles.calItemToday]}
-                >
-                  <AppText
-                    variant="labelSm"
-                    style={{ color: isToday ? colors.primary : textSubTheme }}
-                  >
-                    {["M", "T", "W", "T", "F"][i]}
-                  </AppText>
-                  <View
-                    style={[
-                      styles.calDateBox,
-                      isToday
-                        ? { backgroundColor: colors.primary }
-                        : isPast
-                          ? { backgroundColor: isDark ? "#334155" : "#f1f5f9" }
-                          : {},
-                    ]}
-                  >
-                    <AppText
-                      variant="labelMd"
-                      style={{ color: isToday ? "#fff" : textTheme }}
-                    >
-                      {day}
-                    </AppText>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-
-          {/* Tasks */}
-          <View style={styles.taskList}>
-            <View
-              style={[
-                styles.taskItem,
-                { backgroundColor: isDark ? "#064e3b" : "#f0fdf4" },
-              ]}
-            >
-              <View
-                style={[styles.taskIconBox, { backgroundColor: "#dcfce7" }]}
-              >
-                <Ionicons name="checkmark" size={16} color="#16a34a" />
-              </View>
-              <View style={styles.taskInfo}>
-                <AppText
-                  variant="labelMd"
-                  style={[
-                    styles.taskName,
-                    { color: isDark ? "#a7f3d0" : "#166534" },
-                  ]}
-                >
-                  Morning Stretch
-                </AppText>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: isDark ? "#6ee7b7" : "#15803d" }}
-                >
-                  {t("profile.completed", "Completed")}
-                </AppText>
-              </View>
-            </View>
-
-            <View
-              style={[
-                styles.taskItem,
-                { backgroundColor: isDark ? "#1e3a8a" : "#f0f9ff" },
-              ]}
-            >
-              <View
-                style={[styles.taskIconBox, { backgroundColor: "#e0f2fe" }]}
-              >
-                <Ionicons name="time" size={16} color={colors.primary} />
-              </View>
-              <View style={styles.taskInfo}>
-                <AppText
-                  variant="labelMd"
-                  style={[
-                    styles.taskName,
-                    { color: isDark ? "#bfdbfe" : "#0369a1" },
-                  ]}
-                >
-                  Knee Strengthening
-                </AppText>
-                <AppText
-                  variant="bodySm"
-                  style={{ color: isDark ? "#93c5fd" : "#0284c7" }}
-                >
-                  {t("profile.scheduled", "Scheduled for")} 04:00 PM
-                </AppText>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* My Library */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardTheme, borderColor: borderColor },
-          ]}
-        >
-          <AppText
-            variant="labelMd"
-            style={[
-              styles.cardTitle,
-              { color: textTheme, marginBottom: spacing.md },
-            ]}
-          >
-            {t("profile.myLibrary", "My Library")}
-          </AppText>
-          <View style={styles.libraryGrid}>
-            <TouchableOpacity
-              style={[
-                styles.libraryBox,
-                {
-                  backgroundColor: isDark ? "#0f172a" : "#f8fafc",
-                  borderColor,
-                },
-              ]}
-              onPress={() => navigation.navigate("Library" as any)}
-            >
-              <Ionicons
-                name="bookmark-outline"
-                size={24}
-                color={colors.primary}
-              />
-              <AppText
-                variant="labelMd"
-                style={[styles.libraryBoxTitle, { color: textTheme }]}
-              >
-                {t("profile.savedExercises", "Saved Exercises")}
-              </AppText>
-              <AppText variant="bodySm" style={{ color: textSubTheme }}>
-                12 {t("profile.items", "items")}
-              </AppText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.libraryBox,
-                {
-                  backgroundColor: isDark ? "#0f172a" : "#f8fafc",
-                  borderColor,
-                },
-              ]}
-              onPress={() => navigation.navigate("Library" as any)}
-            >
-              <Ionicons
-                name="document-text-outline"
-                size={24}
-                color="#10b981"
-              />
-              <AppText
-                variant="labelMd"
-                style={[styles.libraryBoxTitle, { color: textTheme }]}
-              >
-                {t("profile.guidesTips", "Guides & Tips")}
-              </AppText>
-              <AppText variant="bodySm" style={{ color: textSubTheme }}>
-                8 {t("profile.articles", "articles")}
-              </AppText>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={styles.bannerCard}
-            onPress={() => navigation.navigate("Library" as any)}
-          >
-            <View style={styles.bannerOverlay} />
-            <View style={styles.bannerContent}>
-              <AppText variant="labelMd" style={{ color: "#fff" }}>
-                {t("profile.dailyTip", "Daily Recovery Tip")}
-              </AppText>
-              <AppText
-                variant="headlineMd"
-                style={{ color: "#fff", fontSize: 18, marginTop: 4 }}
-              >
-                {t("profile.hydration", "Hydration & Healing")}
-              </AppText>
-              <AppText
-                variant="bodySm"
-                style={{ color: "#e2e8f0", marginTop: 4 }}
-              >
-                {t(
-                  "profile.hydrationDesc",
-                  "Drinking enough water improves joint lubrication.",
-                )}
-              </AppText>
-            </View>
-            <Ionicons
-              name="water-outline"
-              size={60}
-              color="rgba(255,255,255,0.2)"
-              style={styles.bannerIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Personal Info */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardTheme, borderColor: borderColor },
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <AppText
-              variant="labelMd"
-              style={[styles.cardTitle, { color: textTheme }]}
-            >
-              {t("profile.personalInfo", "Personal Information")}
-            </AppText>
-            <TouchableOpacity
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-              onPress={() =>
-                Alert.alert(
-                  t("profile.edit", "Edit"),
-                  t("profile.personalInfo", "Personal Information"),
-                )
-              }
+              style={styles.editBtn}
+              onPress={() => setEditModal(true)}
             >
               <Ionicons name="pencil" size={14} color={colors.primary} />
-              <AppText variant="labelSm" style={styles.viewAllText}>
-                {t("profile.edit", "Edit")}
+              <AppText variant="labelSm" style={{ color: colors.primary, fontWeight: "600" }}>
+                Edit
               </AppText>
             </TouchableOpacity>
           </View>
 
+          {/* Email — read-only */}
           <View style={[styles.infoRow, { borderBottomColor: borderColor }]}>
-            <Ionicons name="mail-outline" size={20} color={textSubTheme} />
-            <AppText
-              variant="bodyMd"
-              style={[styles.infoLabel, { color: textSubTheme }]}
-            >
-              Email
-            </AppText>
-            <AppText
-              variant="bodyMd"
-              style={[styles.infoValue, { color: textTheme }]}
-            >
-              {user?.email || "N/A"}
-            </AppText>
+            <View style={[styles.infoIcon, { backgroundColor: "#dbeafe" }]}>
+              <Ionicons name="mail-outline" size={16} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText variant="bodySm" style={{ color: textSub, marginBottom: 2 }}>Email</AppText>
+              <AppText variant="bodyMd" style={{ color: textTheme, fontWeight: "500" }}>
+                {user?.email || "N/A"}
+              </AppText>
+            </View>
+            <View style={styles.lockedBadge}>
+              <Ionicons name="lock-closed" size={11} color="#94a3b8" />
+            </View>
           </View>
 
+          {/* Phone */}
           <View style={[styles.infoRow, { borderBottomColor: borderColor }]}>
-            <Ionicons name="call-outline" size={20} color={textSubTheme} />
-            <AppText
-              variant="bodyMd"
-              style={[styles.infoLabel, { color: textSubTheme }]}
-            >
-              Phone
-            </AppText>
-            <AppText
-              variant="bodyMd"
-              style={[styles.infoValue, { color: textTheme }]}
-            >
-              {user?.phone || "+1 (555) 000-0000"}
-            </AppText>
+            <View style={[styles.infoIcon, { backgroundColor: "#dcfce7" }]}>
+              <Ionicons name="call-outline" size={16} color="#16a34a" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText variant="bodySm" style={{ color: textSub, marginBottom: 2 }}>Phone</AppText>
+              <AppText variant="bodyMd" style={{ color: textTheme, fontWeight: "500" }}>
+                {(user as any)?.phone || "Not set"}
+              </AppText>
+            </View>
           </View>
 
+          {/* Date of Birth */}
           <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-            <Ionicons name="calendar-outline" size={20} color={textSubTheme} />
-            <AppText
-              variant="bodyMd"
-              style={[styles.infoLabel, { color: textSubTheme }]}
-            >
-              Date of Birth
-            </AppText>
-            <AppText
-              variant="bodyMd"
-              style={[styles.infoValue, { color: textTheme }]}
-            >
-              {user?.dateOfBirth || "Not set"}
-            </AppText>
+            <View style={[styles.infoIcon, { backgroundColor: "#fef3c7" }]}>
+              <Ionicons name="calendar-outline" size={16} color="#d97706" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText variant="bodySm" style={{ color: textSub, marginBottom: 2 }}>Date of Birth</AppText>
+              <AppText variant="bodyMd" style={{ color: textTheme, fontWeight: "500" }}>
+                {(user as any)?.dateOfBirth || "Not set"}
+              </AppText>
+            </View>
           </View>
         </View>
 
-        {/* Settings */}
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: cardTheme, borderColor: borderColor },
-          ]}
-        >
-          <AppText
-            variant="labelMd"
-            style={[
-              styles.cardTitle,
-              { color: textTheme, marginBottom: spacing.sm },
-            ]}
-          >
-            {t("profile.settings", "Settings")}
+        {/* ─── Settings ─── */}
+        <View style={[styles.card, { backgroundColor: cardTheme, borderColor }]}>
+          <AppText variant="labelMd" style={[styles.cardTitle, { color: textTheme, marginBottom: spacing.sm }]}>
+            Settings
           </AppText>
 
+          {/* Appearance */}
           <TouchableOpacity
             style={[styles.settingRow, { borderBottomColor: borderColor }]}
             onPress={() => setIsDark(!isDark)}
           >
-            <Ionicons
-              name={isDark ? "sunny-outline" : "moon-outline"}
-              size={20}
-              color={textSubTheme}
-            />
-            <AppText
-              variant="bodyMd"
-              style={[styles.settingLabel, { color: textTheme }]}
-            >
-              {t("profile.appearance", "Appearance")}
+            <View style={[styles.settingIcon, { backgroundColor: isDark ? "#1e3a5f" : "#e0f2fe" }]}>
+              <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={isDark ? "#38bdf8" : "#0284c7"} />
+            </View>
+            <AppText variant="bodyMd" style={[styles.settingLabel, { color: textTheme }]}>
+              Appearance
             </AppText>
-            <AppText variant="bodySm" style={{ color: textSubTheme }}>
-              {isDark ? t("profile.dark", "Dark") : t("profile.light", "Light")}
-            </AppText>
+            <View style={[styles.settingValuePill, { backgroundColor: isDark ? "#334155" : "#f1f5f9" }]}>
+              <AppText variant="labelSm" style={{ color: textSub, fontSize: 12 }}>
+                {isDark ? "Dark" : "Light"}
+              </AppText>
+            </View>
             <Ionicons name="chevron-forward" size={16} color={borderColor} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.settingRow, { borderBottomColor: borderColor }]}
-            onPress={toggleLanguage}
-          >
-            <Ionicons name="globe-outline" size={20} color={textSubTheme} />
-            <AppText
-              variant="bodyMd"
-              style={[styles.settingLabel, { color: textTheme }]}
-            >
-              {t("profile.language", "Language")}
-            </AppText>
-            <AppText variant="bodySm" style={{ color: textSubTheme }}>
-              {i18n.language === "vi" ? "Tiếng Việt" : "English (US)"}
-            </AppText>
-            <Ionicons name="chevron-forward" size={16} color={borderColor} />
-          </TouchableOpacity>
-
-          <View style={[styles.settingRow, { borderBottomColor: borderColor }]}>
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={textSubTheme}
-            />
-            <AppText
-              variant="bodyMd"
-              style={[styles.settingLabel, { color: textTheme }]}
-            >
-              {t("profile.notifications", "Notifications")}
-            </AppText>
-            <View style={{ flex: 1 }} />
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{
-                false: isDark ? "#334155" : "#cbd5e1",
-                true: colors.primary,
-              }}
-            />
-          </View>
-
+          {/* Language */}
           <TouchableOpacity
             style={[styles.settingRow, { borderBottomWidth: 0 }]}
-            onPress={() =>
-              Alert.alert(
-                t("profile.privacy", "Privacy & Data"),
-                t("profile.privacy", "Privacy & Data"),
-              )
-            }
+            onPress={toggleLanguage}
           >
-            <Ionicons
-              name="shield-checkmark-outline"
-              size={20}
-              color={textSubTheme}
-            />
-            <AppText
-              variant="bodyMd"
-              style={[styles.settingLabel, { color: textTheme }]}
-            >
-              {t("profile.privacy", "Privacy & Data")}
+            <View style={[styles.settingIcon, { backgroundColor: "#f0fdf4" }]}>
+              <Ionicons name="globe-outline" size={18} color="#16a34a" />
+            </View>
+            <AppText variant="bodyMd" style={[styles.settingLabel, { color: textTheme }]}>
+              Language
             </AppText>
-            <View style={{ flex: 1 }} />
+            <View style={[styles.settingValuePill, { backgroundColor: isDark ? "#334155" : "#f1f5f9" }]}>
+              <AppText variant="labelSm" style={{ color: textSub, fontSize: 12 }}>
+                {i18n.language === "vi" ? "Tiếng Việt" : "English"}
+              </AppText>
+            </View>
             <Ionicons name="chevron-forward" size={16} color={borderColor} />
           </TouchableOpacity>
         </View>
 
-        {/* Footer Buttons */}
-        <TouchableOpacity
-          style={styles.supportBtn}
-          onPress={() =>
-            Alert.alert(
-              t("profile.support", "Contact Support"),
-              t("profile.support", "Contacting support center..."),
-            )
-          }
-        >
-          <Ionicons name="help-buoy-outline" size={20} color={textSubTheme} />
-          <AppText
-            variant="labelMd"
-            style={[styles.supportText, { color: textSubTheme }]}
-          >
-            {t("profile.support", "Contact Support Center")}
-          </AppText>
-        </TouchableOpacity>
-
+        {/* Logout */}
         <TouchableOpacity
           style={styles.logoutBtn}
           onPress={() => {
+            const doLogout = () => logout();
             if (Platform.OS === "web") {
-              const confirmed = window.confirm(
-                t("profile.logoutConfirm", "Are you sure you want to log out?"),
-              );
-              if (confirmed) {
-                logout();
-              }
+              if (window.confirm("Are you sure you want to log out?")) doLogout();
             } else {
-              Alert.alert(
-                t("profile.logout", "Log Out"),
-                t("profile.logoutConfirm", "Are you sure you want to log out?"),
-                [
-                  { text: t("common.cancel", "Cancel"), style: "cancel" },
-                  {
-                    text: t("profile.logout", "Log Out"),
-                    style: "destructive",
-                    onPress: () => {
-                      logout();
-                    },
-                  },
-                ],
-              );
+              Alert.alert("Log Out", "Are you sure you want to log out?", [
+                { text: "Cancel", style: "cancel" },
+                { text: "Log Out", style: "destructive", onPress: doLogout },
+              ]);
             }
           }}
         >
           <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-          <AppText variant="labelMd" style={styles.logoutText}>
-            {t("profile.logout", "Log Out")}
-          </AppText>
+          <AppText variant="labelMd" style={styles.logoutText}>Log Out</AppText>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* ─── Edit Profile Modal ─── */}
+      <Modal visible={editModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditModal(false)}>
+        <SafeAreaView style={[styles.modalSafe, { backgroundColor: bgTheme }]} edges={["top"]}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+            {/* Modal Header */}
+            <View style={[styles.modalHeader, { borderBottomColor: borderColor, backgroundColor: cardTheme }]}>
+              <TouchableOpacity onPress={() => setEditModal(false)} style={{ padding: 4 }}>
+                <Ionicons name="close" size={22} color={textSub} />
+              </TouchableOpacity>
+              <AppText variant="headlineMd" style={{ fontWeight: "700", color: textTheme, fontSize: 17 }}>
+                Edit Profile
+              </AppText>
+              <TouchableOpacity
+                onPress={handleSaveProfile}
+                disabled={saving}
+                style={[styles.saveBtn, saving && { opacity: 0.6 }]}
+              >
+                {saving
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <AppText variant="labelMd" style={{ color: "#fff", fontWeight: "700" }}>Save</AppText>
+                }
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={[styles.modalContent, { backgroundColor: bgTheme }]} showsVerticalScrollIndicator={false}>
+              {/* Email — display-only */}
+              <View style={styles.fieldGroup}>
+                <View style={styles.fieldLabelRow}>
+                  <AppText variant="labelSm" style={[styles.fieldLabel, { color: textSub }]}>EMAIL</AppText>
+                  <View style={styles.lockedBadge}>
+                    <Ionicons name="lock-closed" size={11} color="#94a3b8" />
+                    <AppText style={{ fontSize: 10, color: "#94a3b8", marginLeft: 3 }}>Read-only</AppText>
+                  </View>
+                </View>
+                <View style={[styles.fieldInput, { backgroundColor: isDark ? "#1e293b" : "#f1f5f9", borderColor }]}>
+                  <AppText style={{ color: textSub, fontSize: 15 }}>{user?.email || "—"}</AppText>
+                </View>
+              </View>
+
+              {/* Display Name */}
+              <View style={styles.fieldGroup}>
+                <AppText variant="labelSm" style={[styles.fieldLabel, { color: textSub }]}>DISPLAY NAME</AppText>
+                <TextInput
+                  style={[styles.fieldInput, { backgroundColor: inputBg, borderColor, color: textTheme }]}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Your name"
+                  placeholderTextColor={textSub}
+                />
+              </View>
+
+              {/* Phone */}
+              <View style={styles.fieldGroup}>
+                <AppText variant="labelSm" style={[styles.fieldLabel, { color: textSub }]}>PHONE NUMBER</AppText>
+                <TextInput
+                  style={[styles.fieldInput, { backgroundColor: inputBg, borderColor, color: textTheme }]}
+                  value={editPhone}
+                  onChangeText={setEditPhone}
+                  placeholder="+84 xxx xxx xxx"
+                  placeholderTextColor={textSub}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              {/* Date of Birth */}
+              <View style={styles.fieldGroup}>
+                <AppText variant="labelSm" style={[styles.fieldLabel, { color: textSub }]}>DATE OF BIRTH</AppText>
+                <TextInput
+                  style={[styles.fieldInput, { backgroundColor: inputBg, borderColor, color: textTheme }]}
+                  value={editDOB}
+                  onChangeText={setEditDOB}
+                  placeholder="DD/MM/YYYY"
+                  placeholderTextColor={textSub}
+                />
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+
   navBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.sm,
   },
-  navBackBtn: { padding: 4, marginLeft: -4 },
+  navBackBtn: { padding: 4 },
   navTitle: { fontWeight: "700", fontSize: 18 },
 
   scroll: { flex: 1 },
-  content: {
-    padding: spacing.gutter,
-    gap: spacing.lg,
-    paddingBottom: spacing.xl * 2,
-  },
+  content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: 60 },
 
-  profileHeader: { alignItems: "center", marginTop: spacing.sm },
+  // Profile header
+  profileHeader: { alignItems: "center", paddingVertical: spacing.md },
   avatarContainer: { position: "relative", marginBottom: spacing.md },
   avatarLarge: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 96, height: 96, borderRadius: 48,
+    alignItems: "center", justifyContent: "center",
   },
   editAvatarBtn: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.primary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
+    position: "absolute", bottom: 0, right: 0,
+    backgroundColor: colors.primary, width: 32, height: 32,
+    borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 3,
   },
   profileName: { fontSize: 24, fontWeight: "800", marginBottom: 8 },
   badgeRow: { flexDirection: "row", gap: 8 },
-  proBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 100,
+  roleBadge: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 100,
   },
 
+  // Card
   card: { borderRadius: 24, padding: spacing.lg, borderWidth: 1 },
   cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.md,
+    flexDirection: "row", justifyContent: "space-between",
+    alignItems: "center", marginBottom: spacing.md,
   },
-  cardTitle: { fontSize: 18, fontWeight: "700" },
-  viewAllText: { color: colors.primary, fontWeight: "600" },
+  cardTitle: { fontSize: 17, fontWeight: "700" },
+  editBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
 
-  calendarRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg,
-  },
-  calItem: { alignItems: "center", gap: 8 },
-  calItemToday: {},
-  calDateBox: {
-    width: 36,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  taskList: { gap: spacing.sm },
-  taskItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: spacing.md,
-    borderRadius: 16,
-    gap: 12,
-  },
-  taskIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  taskInfo: { flex: 1 },
-  taskName: { fontWeight: "700", marginBottom: 2 },
-  taskTime: { fontSize: 12 },
-
-  libraryGrid: {
-    flexDirection: "row",
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  libraryBox: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  libraryBoxTitle: {
-    fontWeight: "700",
-    marginTop: spacing.sm,
-    marginBottom: 2,
-  },
-  libraryBoxSub: {},
-
-  bannerCard: {
-    backgroundColor: "#1e293b",
-    borderRadius: 16,
-    padding: spacing.lg,
-    overflow: "hidden",
-    position: "relative",
-  },
-  bannerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.primary,
-    opacity: 0.9,
-  },
-  bannerContent: { position: "relative", zIndex: 1 },
-  bannerIcon: { position: "absolute", right: -10, bottom: -10, zIndex: 0 },
-
+  // Info rows
   infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    flexDirection: "row", alignItems: "center", gap: 12,
+    paddingVertical: spacing.md, borderBottomWidth: 1,
   },
-  infoLabel: { flex: 1, marginLeft: 12 },
-  infoValue: { fontWeight: "500" },
+  infoIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  lockedBadge: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#f1f5f9", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 100,
+  },
 
+  // Setting rows
   settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    flexDirection: "row", alignItems: "center", gap: 12,
+    paddingVertical: spacing.md, borderBottomWidth: 1,
   },
-  settingLabel: { flex: 1, fontWeight: "500", marginLeft: 12 },
+  settingIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  settingLabel: { flex: 1, fontWeight: "500" },
+  settingValuePill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, marginRight: 4 },
 
-  supportBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "transparent",
-    paddingVertical: spacing.md,
-  },
-  supportText: { fontWeight: "600" },
-
+  // Logout
   logoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#fef2f2",
-    paddingVertical: spacing.md,
-    borderRadius: 16,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    backgroundColor: "#fef2f2", paddingVertical: spacing.md, borderRadius: 16,
   },
   logoutText: { color: "#ef4444", fontWeight: "700" },
+
+  // Edit Modal
+  modalSafe: { flex: 1 },
+  modalHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: spacing.gutter, paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+  },
+  saveBtn: {
+    backgroundColor: colors.primary, paddingHorizontal: 16,
+    paddingVertical: 8, borderRadius: 10,
+  },
+  modalContent: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: 60 },
+
+  fieldGroup: { gap: 8 },
+  fieldLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  fieldLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
+  fieldInput: {
+    borderWidth: 1.5, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 13,
+    fontSize: 15,
+  },
 });
