@@ -28,7 +28,8 @@ import { colors, spacing } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
 import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import {
-  getPatients,
+  getAllPatients,
+  getUser,
   getDoctorAssignments,
   getPatientSessions,
   submitDoctorFeedback,
@@ -71,15 +72,19 @@ export const DoctorDashboardScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     if (!uid) { setLoading(false); return; }
     try {
-      const [profiles, allAssignments] = await Promise.all([
-        getPatients(uid),
-        getDoctorAssignments(uid),
-      ]);
+      // Derive patients from assignments (not treatment_plans)
+      // so any newly-assigned patient shows up immediately
+      const allAssignments = await getDoctorAssignments(uid);
+      const uniquePatientIds = [...new Set(allAssignments.map(a => a.patientId))];
+
+      // Fetch profiles for all those patient IDs in parallel
+      const profiles = await Promise.all(uniquePatientIds.map(id => getUser(id)));
+      const validProfiles = profiles.filter(Boolean) as UserProfile[];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const cards: PatientCard[] = profiles.map((profile) => {
+      const cards: PatientCard[] = validProfiles.map((profile) => {
         const patientAssignments = allAssignments.filter(
           (a) => a.patientId === profile.uid
         );
@@ -94,6 +99,11 @@ export const DoctorDashboardScreen: React.FC = () => {
           todayCompleted: completed,
           todayTotal: todayAssignments.length,
         };
+      });
+      // Sort: patients with today's tasks first, then alphabetically
+      cards.sort((a, b) => {
+        if (b.todayTotal !== a.todayTotal) return b.todayTotal - a.todayTotal;
+        return (a.profile.displayName || '').localeCompare(b.profile.displayName || '');
       });
       setPatients(cards);
     } catch (e) {
@@ -148,11 +158,26 @@ export const DoctorDashboardScreen: React.FC = () => {
     }
   };
 
-  const filtered = patients.filter((p) =>
-    searchText.trim() === "" ||
-    p.profile.email?.toLowerCase().includes(searchText.toLowerCase()) ||
-    p.profile.displayName?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filtered = (() => {
+    const raw = searchText.trim();
+    if (!raw) return patients;
+    // Split query into tokens so "nguyen lta" matches both independently
+    const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    return patients.filter((p) => {
+      const email = (p.profile.email || '').toLowerCase();
+      const name = (p.profile.displayName || '').toLowerCase();
+      // Also search inside assignment template names
+      const templateNames = p.assignments.map(a => (a.templateName || '').toLowerCase()).join(' ');
+      // Email prefix (before @) for quick typing
+      const emailLocal = email.split('@')[0];
+      return tokens.every(token =>
+        email.includes(token) ||
+        name.includes(token) ||
+        emailLocal.includes(token) ||
+        templateNames.includes(token)
+      );
+    });
+  })();
 
   const getGreeting = () => {
     const h = new Date().getHours();
