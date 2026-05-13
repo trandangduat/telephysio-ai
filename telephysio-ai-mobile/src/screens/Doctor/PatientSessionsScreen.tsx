@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -29,7 +30,22 @@ type DayOption = {
 const getSessionDate = (session: Session) =>
   (session.date as any)?.toDate?.() ?? new Date();
 
-const getDayKey = (date: Date) => date.toISOString().slice(0, 10);
+const startOfDay = (date: Date) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+const addDays = (date: Date, days: number) => {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+};
+const getDayKey = (date: Date) => {
+  const local = startOfDay(date);
+  return `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, "0")}-${String(local.getDate()).padStart(2, "0")}`;
+};
 
 export const PatientSessionsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
@@ -38,19 +54,15 @@ export const PatientSessionsScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [selectedDay, setSelectedDay] = useState("all");
+  const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
+  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(new Date()));
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
     try {
       const fetchedSessions = await getPatientSessions(patientId, 100);
       setSessions(fetchedSessions);
-      setSelectedDay((current) => {
-        if (current === "all") return current;
-        return fetchedSessions.some((session) => getDayKey(getSessionDate(session)) === current)
-          ? current
-          : "all";
-      });
     } catch (error) {
       console.error("Error loading patient sessions:", error);
     } finally {
@@ -64,40 +76,47 @@ export const PatientSessionsScreen: React.FC = () => {
     }, [loadSessions]),
   );
 
-  const dayOptions = useMemo<DayOption[]>(() => {
+  const sessionsByDay = useMemo(() => {
     const grouped = new Map<string, { date: Date; count: number }>();
-
     sessions.forEach((session) => {
       const date = getSessionDate(session);
       const key = getDayKey(date);
       const existing = grouped.get(key);
       grouped.set(key, { date, count: (existing?.count ?? 0) + 1 });
     });
-
-    const days = [...grouped.entries()]
-      .sort((a, b) => b[1].date.getTime() - a[1].date.getTime())
-      .map(([key, value]) => ({
-        key,
-        label: value.date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-        weekday: value.date.toLocaleDateString(undefined, { weekday: "short" }),
-        date: value.date,
-        count: value.count,
-      }));
-
-    return [
-      { key: "all", label: "All", weekday: "Days", date: null, count: sessions.length },
-      ...days,
-    ];
+    return grouped;
   }, [sessions]);
+
+  const sliderDays = useMemo<DayOption[]>(() => {
+    const anchor = selectedDate;
+    return Array.from({ length: 21 }, (_, index) => {
+      const date = addDays(anchor, index - 7);
+      const key = getDayKey(date);
+      return {
+        key,
+        label: date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        weekday: date.toLocaleDateString(undefined, { weekday: "short" }),
+        date,
+        count: sessionsByDay.get(key)?.count ?? 0,
+      };
+    });
+  }, [selectedDate, sessionsByDay]);
 
   const visibleSessions = useMemo(() => {
     const sorted = [...sessions].sort(
       (a, b) => getSessionDate(b).getTime() - getSessionDate(a).getTime(),
     );
+    const selectedKey = getDayKey(selectedDate);
+    return sorted.filter((session) => getDayKey(getSessionDate(session)) === selectedKey);
+  }, [selectedDate, sessions]);
 
-    if (selectedDay === "all") return sorted;
-    return sorted.filter((session) => getDayKey(getSessionDate(session)) === selectedDay);
-  }, [selectedDay, sessions]);
+  const selectedKey = getDayKey(selectedDate);
+  const calendarLead = startOfMonth(visibleMonth).getDay();
+  const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
+  const calendarCells = [
+    ...Array.from({ length: calendarLead }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), index + 1)),
+  ];
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -122,29 +141,47 @@ export const PatientSessionsScreen: React.FC = () => {
         </View>
       ) : (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daySlider}>
-            {dayOptions.map((day) => {
-              const active = selectedDay === day.key;
-              return (
-                <TouchableOpacity
-                  key={day.key}
-                  style={[styles.dayChip, active && styles.dayChipActive]}
-                  onPress={() => setSelectedDay(day.key)}
-                  activeOpacity={0.85}
-                >
-                  <AppText variant="labelSm" style={[styles.dayWeekday, active && styles.dayTextActive]}>
-                    {day.weekday}
-                  </AppText>
-                  <AppText variant="labelMd" style={[styles.dayLabel, active && styles.dayTextActive]}>
-                    {day.label}
-                  </AppText>
-                  <AppText variant="bodySm" style={[styles.dayCount, active && styles.dayTextActive]}>
-                    {day.count} session{day.count !== 1 ? "s" : ""}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <View style={styles.timelineCard}>
+            <View style={styles.timelineHeader}>
+              <View>
+                <AppText variant="headlineMd" style={styles.timelineDate}>
+                  {selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+                </AppText>
+                <AppText variant="bodySm" style={styles.timelineSubtitle}>
+                  Slide the timeline, or jump to any month.
+                </AppText>
+              </View>
+              <TouchableOpacity style={styles.jumpButton} onPress={() => setShowDatePicker(true)}>
+                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                <AppText variant="labelSm" style={{ color: colors.primary, fontWeight: "800" }}>Pick</AppText>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daySlider}>
+              {sliderDays.map((day, index) => {
+                const active = selectedKey === day.key;
+                const hasSessions = day.count > 0;
+                return (
+                  <TouchableOpacity
+                    key={`${day.key}-${index}`}
+                    style={[styles.timelineNode, active && styles.timelineNodeActive]}
+                    onPress={() => setSelectedDate(startOfDay(day.date!))}
+                    activeOpacity={0.85}
+                  >
+                    <View style={[styles.timelineStem, hasSessions && styles.timelineStemFilled, active && styles.timelineStemActive]} />
+                    <AppText variant="labelSm" style={[styles.dayWeekday, active && styles.dayTextActive]}>
+                      {day.weekday}
+                    </AppText>
+                    <AppText variant="headlineMd" style={[styles.dayLabel, active && styles.dayTextActive]}>
+                      {day.date!.getDate()}
+                    </AppText>
+                    <AppText variant="bodySm" style={[styles.dayCount, active && styles.dayTextActive]}>
+                      {day.count || ""}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
 
           {visibleSessions.length > 0 ? (
             visibleSessions.map((session) => {
@@ -184,12 +221,59 @@ export const PatientSessionsScreen: React.FC = () => {
             <View style={styles.emptyState}>
               <Ionicons name="calendar-outline" size={48} color="#cbd5e1" />
               <AppText variant="bodyMd" style={{ color: "#94a3b8", marginTop: 12 }}>
-                No sessions recorded for this day.
+                No sessions recorded on this date.
               </AppText>
             </View>
           )}
         </ScrollView>
       )}
+
+      <Modal visible={showDatePicker} animationType="slide" transparent onRequestClose={() => setShowDatePicker(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarSheet}>
+            <View style={styles.calendarHeader}>
+              <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>
+                <Ionicons name="chevron-back" size={22} color={colors.primary} />
+              </TouchableOpacity>
+              <AppText variant="headlineMd" style={styles.calendarTitle}>
+                {visibleMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </AppText>
+              <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>
+                <Ionicons name="chevron-forward" size={22} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.weekHeader}>
+              {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                <AppText key={`${day}-${index}`} variant="labelSm" style={styles.weekHeaderText}>{day}</AppText>
+              ))}
+            </View>
+            <View style={styles.calendarGrid}>
+              {calendarCells.map((date, index) => {
+                if (!date) return <View key={`empty-${index}`} style={styles.calendarDay} />;
+                const key = getDayKey(date);
+                const active = key === selectedKey;
+                const count = sessionsByDay.get(key)?.count ?? 0;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.calendarDay, active && styles.calendarDayActive]}
+                    onPress={() => setSelectedDate(startOfDay(date))}
+                    activeOpacity={0.85}
+                  >
+                    <AppText variant="labelMd" style={[styles.calendarDayText, active && styles.calendarDayTextActive]}>
+                      {date.getDate()}
+                    </AppText>
+                    {count > 0 && <View style={[styles.calendarSessionPill, active && { backgroundColor: "#fff" }]} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <TouchableOpacity style={styles.calendarDoneBtn} onPress={() => setShowDatePicker(false)}>
+              <AppText variant="labelMd" style={{ color: "#fff", fontWeight: "800" }}>Show this date</AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -216,19 +300,34 @@ const styles = StyleSheet.create({
   loadingState: { flex: 1, alignItems: "center", justifyContent: "center" },
   scroll: { flex: 1 },
   content: { padding: spacing.gutter, gap: spacing.md, paddingBottom: spacing.xl * 2 },
-  daySlider: { gap: spacing.sm, paddingRight: spacing.gutter },
-  dayChip: {
-    minWidth: 104,
-    backgroundColor: "#fff",
-    borderRadius: 18,
+  timelineCard: {
+    backgroundColor: "#0f172a",
+    borderRadius: 26,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    gap: spacing.md,
   },
-  dayChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  dayWeekday: { color: "#94a3b8", fontSize: 11, marginBottom: 4 },
-  dayLabel: { color: "#0f172a", fontWeight: "800" },
-  dayCount: { color: "#64748b", fontSize: 11, marginTop: 4 },
+  timelineHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  timelineDate: { color: "#fff", fontWeight: "800", fontSize: 18 },
+  timelineSubtitle: { color: "#94a3b8", marginTop: 2 },
+  jumpButton: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "#ecfeff", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
+  },
+  daySlider: { gap: 6, paddingRight: spacing.gutter, alignItems: "flex-end" },
+  timelineNode: {
+    width: 54,
+    alignItems: "center",
+    borderRadius: 18,
+    paddingVertical: 8,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  timelineNodeActive: { backgroundColor: colors.primary },
+  timelineStem: { width: 3, height: 18, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.18)", marginBottom: 6 },
+  timelineStemFilled: { height: 30, backgroundColor: "#f59e0b" },
+  timelineStemActive: { backgroundColor: "#fff" },
+  dayWeekday: { color: "#94a3b8", fontSize: 10, marginBottom: 2 },
+  dayLabel: { color: "#fff", fontWeight: "800", fontSize: 20 },
+  dayCount: { color: "#94a3b8", fontSize: 10, marginTop: 2, minHeight: 12 },
   dayTextActive: { color: "#fff" },
   sessionCard: {
     flexDirection: "row",
@@ -260,4 +359,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   emptyState: { alignItems: "center", paddingVertical: 48 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.35)", justifyContent: "flex-end" },
+  calendarSheet: {
+    backgroundColor: "#fff", borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: spacing.lg, paddingBottom: 32,
+  },
+  calendarHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.md },
+  calendarTitle: { color: "#0f172a", fontWeight: "800", fontSize: 18 },
+  weekHeader: { flexDirection: "row", marginBottom: spacing.sm },
+  weekHeaderText: { flex: 1, textAlign: "center", color: "#94a3b8", fontWeight: "800" },
+  calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
+  calendarDay: {
+    width: `${100 / 7}%`, height: 46, alignItems: "center", justifyContent: "center",
+    borderRadius: 14, marginBottom: 4,
+  },
+  calendarDayActive: { backgroundColor: colors.primary },
+  calendarDayText: { color: "#0f172a", fontWeight: "700" },
+  calendarDayTextActive: { color: "#fff" },
+  calendarSessionPill: { width: 16, height: 4, borderRadius: 99, backgroundColor: "#f59e0b", marginTop: 3 },
+  calendarDoneBtn: {
+    backgroundColor: colors.primary, alignItems: "center", justifyContent: "center",
+    paddingVertical: 14, borderRadius: 16, marginTop: spacing.md,
+  },
 });
