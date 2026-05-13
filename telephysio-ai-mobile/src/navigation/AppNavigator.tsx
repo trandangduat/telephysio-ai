@@ -36,6 +36,7 @@ import { PatientDetailScreen } from "../screens/Doctor/PatientDetailScreen";
 import { TemplateEditorScreen } from "../screens/Doctor/TemplateEditorScreen";
 import { AssignTemplateScreen } from "../screens/Doctor/AssignTemplateScreen";
 import { DoctorSessionDetailScreen } from "../screens/Doctor/DoctorSessionDetailScreen";
+import { PatientSessionsScreen } from "../screens/Doctor/PatientSessionsScreen";
 
 import { colors, typography } from "../theme";
 import type {
@@ -169,6 +170,11 @@ const DoctorNavigator: React.FC = () => {
       <DoctorStack.Screen
         name="AssignTemplate"
         component={AssignTemplateScreen}
+        options={{ headerShown: false }}
+      />
+      <DoctorStack.Screen
+        name="PatientSessions"
+        component={PatientSessionsScreen}
         options={{ headerShown: false }}
       />
       <DoctorStack.Screen

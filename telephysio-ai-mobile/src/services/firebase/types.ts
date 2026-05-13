@@ -70,6 +70,7 @@ export interface Assignment {
   totalDuration: string; // "45 min"
   status: "active" | "completed" | "paused";
   assignedAt: Timestamp;
+  scheduledDate?: Timestamp;
   completedAt?: Timestamp;
 }
 
