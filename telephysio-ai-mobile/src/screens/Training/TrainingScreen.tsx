@@ -2,6 +2,7 @@
  * TrainingScreen — Live Workout Session
  *
  * Supports toggling between Full-Screen (Compact) and Normal (Detailed) modes.
+ * Integrates real-time human pose estimation via MediaPipe BlazePose (WebView).
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -16,6 +17,8 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPatientAssignments } from '../../services/firebase';
 import type { Assignment, Exercise } from '../../services/firebase/types';
+import { PoseEstimationView } from '../../components/PoseEstimationView';
+import type { PoseLandmark } from '../../components/PoseEstimationView';
 
 type TrainingProps = NativeStackScreenProps<RootStackParamList, 'Training'>;
 
@@ -34,6 +37,22 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
 
     const [assignment, setAssignment] = useState<Assignment | null>(null);
     const [exercise, setExercise] = useState<Exercise | null>(null);
+
+    // ── Pose estimation state ─────────────────────────────────────────────────
+    const [poseDetected, setPoseDetected] = useState(false);
+    const [liveFps, setLiveFps] = useState(0);
+    const [poseError, setPoseError] = useState<string | null>(null);
+
+    const handlePoseDetected = useCallback((landmarks: PoseLandmark[], fps: number) => {
+        setPoseDetected(true);
+        setLiveFps(fps);
+        // Future: analyse landmarks for rep counting and form scoring
+    }, []);
+
+    const handlePoseError = useCallback((msg: string) => {
+        setPoseError(msg);
+        console.warn('[PoseEstimation] error:', msg);
+    }, []);
 
     useEffect(() => {
         async function loadData() {
@@ -122,14 +141,31 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     if (isFullScreen) {
         return (
             <View style={styles.fsContainer}>
-                {/* CAMERA VIEW (Background) */}
-                <View style={styles.cameraBackground}>
-                    <View style={styles.skeletonCenter}>
+                {/* REAL CAMERA VIEW + POSE ESTIMATION (Background) */}
+                <PoseEstimationView
+                    style={StyleSheet.absoluteFillObject}
+                    onPoseDetected={handlePoseDetected}
+                    onError={handlePoseError}
+                />
+
+                {/* Pose detection status badge */}
+                <View style={styles.skeletonCenter}>
+                    {poseError ? (
+                        <View style={[styles.poseBadge, styles.poseBadgeError]}>
+                            <Ionicons name="warning-outline" size={14} color="#fca5a5" />
+                            <AppText variant="labelMd" style={{ color: '#fca5a5', marginLeft: 4 }}>Camera Unavailable</AppText>
+                        </View>
+                    ) : poseDetected ? (
                         <View style={styles.poseBadge}>
                             <Ionicons name="checkmark-circle" size={14} color="#a7f3d0" />
-                            <AppText variant="labelMd" style={{ color: '#fff', marginLeft: 4 }}>Excellent Depth</AppText>
+                            <AppText variant="labelMd" style={{ color: '#fff', marginLeft: 4 }}>Pose Detected · {liveFps} fps</AppText>
                         </View>
-                    </View>
+                    ) : (
+                        <View style={[styles.poseBadge, styles.poseBadgeLoading]}>
+                            <ActivityIndicator size="small" color="#fde68a" />
+                            <AppText variant="labelMd" style={{ color: '#fde68a', marginLeft: 6 }}>Starting AI…</AppText>
+                        </View>
+                    )}
                 </View>
 
                 {/* TOP OVERLAY (Controls & Timer) */}
@@ -262,9 +298,14 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
 
             <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-                {/* VIDEO CONTAINER */}
+                {/* REAL CAMERA VIEW + POSE ESTIMATION */}
                 <View style={styles.videoContainer}>
-                    <View style={styles.videoBackground} />
+                    {/* Pose estimation WebView fills the container */}
+                    <PoseEstimationView
+                        style={StyleSheet.absoluteFillObject}
+                        onPoseDetected={handlePoseDetected}
+                        onError={handlePoseError}
+                    />
 
                     {/* Top Row: Badges & Expand Button */}
                     <View style={styles.videoTopRow}>
@@ -273,10 +314,17 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                                 <View style={styles.liveDot} />
                                 <AppText variant="labelSm" style={styles.badgeText}>LIVE</AppText>
                             </View>
-                            <View style={styles.trackingBadge}>
-                                <Ionicons name="radio-outline" size={14} color="#fff" />
-                                <AppText variant="labelSm" style={styles.badgeText}>Tracking Active</AppText>
-                            </View>
+                            {poseDetected ? (
+                                <View style={styles.trackingBadge}>
+                                    <Ionicons name="radio-outline" size={14} color="#fff" />
+                                    <AppText variant="labelSm" style={styles.badgeText}>AI Active · {liveFps} fps</AppText>
+                                </View>
+                            ) : (
+                                <View style={[styles.trackingBadge, { backgroundColor: 'rgba(245,158,11,0.8)' }]}>
+                                    <ActivityIndicator size="small" color="#fff" />
+                                    <AppText variant="labelSm" style={[styles.badgeText, { marginLeft: 6 }]}>Loading AI…</AppText>
+                                </View>
+                            )}
                         </View>
                         <TouchableOpacity style={styles.expandButton} onPress={() => setIsFullScreen(true)}>
                             <Ionicons name="expand" size={16} color="#fff" />
@@ -286,11 +334,13 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                     {/* Form Analysis Overlay */}
                     <View style={styles.analysisCard}>
                         <View style={styles.checkCircle}>
-                            <Ionicons name="checkmark" size={16} color="#047857" />
+                            <Ionicons name={poseDetected ? "checkmark" : "hourglass-outline"} size={16} color={poseDetected ? '#047857' : '#d97706'} />
                         </View>
                         <View style={styles.analysisTextCol}>
-                            <AppText variant="labelMd" style={styles.analysisLabel}>FORM ANALYSIS</AppText>
-                            <AppText variant="bodySm" style={styles.analysisText}>Excellent depth. Keep chest up.</AppText>
+                            <AppText variant="labelMd" style={styles.analysisLabel}>POSE ANALYSIS</AppText>
+                            <AppText variant="bodySm" style={styles.analysisText}>
+                                {poseError ? 'Camera access required for AI tracking' : poseDetected ? 'Pose detected — keep moving!' : 'Waiting for AI model to load…'}
+                            </AppText>
                         </View>
                     </View>
                 </View>
@@ -422,9 +472,10 @@ const styles = StyleSheet.create({
 
     // === FULL SCREEN STYLES ===
     fsContainer: { flex: 1, backgroundColor: '#111827' },
-    cameraBackground: { ...StyleSheet.absoluteFillObject, backgroundColor: '#1f2937', alignItems: 'center', justifyContent: 'center' },
-    skeletonCenter: { alignItems: 'center', top: -50 },
+    skeletonCenter: { position: 'absolute', top: '35%', left: 0, right: 0, alignItems: 'center' },
     poseBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+    poseBadgeLoading: { backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: 'rgba(245, 158, 11, 0.5)' },
+    poseBadgeError: { backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.5)' },
     topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
     topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: spacing.gutter, paddingTop: Platform.OS === 'android' ? spacing.xl : spacing.md },
     iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.1)', alignItems: 'center', justifyContent: 'center' },
@@ -454,7 +505,6 @@ const styles = StyleSheet.create({
     scroll: { flex: 1 },
     content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: spacing.xl * 2 },
     videoContainer: { height: 380, borderRadius: 20, backgroundColor: '#1f2937', overflow: 'hidden', position: 'relative', justifyContent: 'space-between', padding: spacing.md },
-    videoBackground: { ...StyleSheet.absoluteFillObject, backgroundColor: '#1a1c23' },
     videoTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 10 },
     badgeGroup: { flexDirection: 'row', gap: 8 },
     liveBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, gap: 6 },
