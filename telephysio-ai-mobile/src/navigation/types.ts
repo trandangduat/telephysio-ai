@@ -34,7 +34,8 @@ export type DoctorStackParamList = {
   DoctorProfile: undefined;
   DoctorChat: undefined;
   TemplateEditor: { templateId?: string };
-  AssignTemplate: { templateId: string; templateName: string };
+  AssignTemplate: { templateId?: string; templateName?: string; patientId?: string; patientName?: string };
+  PatientSessions: { patientId: string; patientName: string };
   DoctorSessionDetail: { session: Session; patientName: string };
 };
 

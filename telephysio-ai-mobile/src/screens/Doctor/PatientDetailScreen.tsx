@@ -4,11 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +24,6 @@ import {
   getActiveTreatmentPlan,
   getLatestProgress,
   getPatientSessions,
-  submitDoctorFeedback,
 } from "../../services/firebase";
 import type {
   TreatmentPlan,
@@ -52,13 +47,6 @@ export const PatientDetailScreen: React.FC = () => {
   const [plan, setPlan] = useState<TreatmentPlan | null>(null);
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
-
-  // Feedback modal/inline state
-  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
-    null,
-  );
-  const [feedbackText, setFeedbackText] = useState<string>("");
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -85,24 +73,12 @@ export const PatientDetailScreen: React.FC = () => {
     }, [loadData]),
   );
 
-  const handleOpenSessionDetail = (session: Session) => {
-    navigation.navigate("DoctorSessionDetail", { session, patientName });
+  const handleAssign = () => {
+    navigation.navigate("AssignTemplate", { patientId, patientName });
   };
 
-  const handleSaveFeedback = async (sessionId: string) => {
-    if (!feedbackText.trim()) return;
-    setSubmittingFeedback(true);
-    try {
-      await submitDoctorFeedback(sessionId, feedbackText.trim());
-      Alert.alert("Success", "Feedback saved successfully.");
-      setExpandedSessionId(null);
-      loadData(); // Reload sessions to get the new feedback
-    } catch (error) {
-      console.error("Failed to save feedback", error);
-      Alert.alert("Error", "Failed to save feedback. Please try again.");
-    } finally {
-      setSubmittingFeedback(false);
-    }
+  const handleViewSessions = () => {
+    navigation.navigate("PatientSessions", { patientId, patientName });
   };
 
   if (loading) {
@@ -275,122 +251,26 @@ export const PatientDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Session History */}
-        <View style={styles.card}>
-          <AppText
-            variant="headlineMd"
-            style={[styles.cardTitle, { marginBottom: spacing.md }]}
-          >
-            Session History
-          </AppText>
-
-          {sessions.length > 0 ? (
-            sessions.map((session, i) => {
-              const dateStr =
-                (session.date as any)?.toDate?.().toLocaleDateString() ||
-                "Recent";
-              return (
-                <View
-                  key={session.id || i.toString()}
-                  style={styles.sessionRowContainer}
-                >
-                  <TouchableOpacity
-                    style={styles.sessionRow}
-                    onPress={() => handleOpenSessionDetail(session)}
-                  >
-                    <View style={styles.sessionDate}>
-                      <AppText
-                        variant="labelMd"
-                        style={{ color: colors.primary, fontWeight: "700" }}
-                      >
-                        {dateStr}
-                      </AppText>
-                    </View>
-                    <View style={styles.sessionStats}>
-                      <View style={styles.sessionStat}>
-                        <Ionicons
-                          name="barbell-outline"
-                          size={12}
-                          color="#64748b"
-                        />
-                        <AppText
-                          variant="bodySm"
-                          style={styles.sessionStatText}
-                        >
-                          {session.completedExercises ||
-                            session.exercisesCompleted ||
-                            0}{" "}
-                          exercises
-                        </AppText>
-                      </View>
-                      <View style={styles.sessionStat}>
-                        <Ionicons
-                          name="analytics-outline"
-                          size={12}
-                          color="#64748b"
-                        />
-                        <AppText
-                          variant="bodySm"
-                          style={styles.sessionStatText}
-                        >
-                          {Math.round(session.accuracyScore ?? session.accuracy ?? 0)}%
-                        </AppText>
-                      </View>
-                      <View style={styles.sessionStat}>
-                        <Ionicons
-                          name="time-outline"
-                          size={12}
-                          color="#64748b"
-                        />
-                        <AppText
-                          variant="bodySm"
-                          style={styles.sessionStatText}
-                        >
-                          {session.totalDuration || session.duration || "0 min"}
-                        </AppText>
-                      </View>
-                    </View>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={20}
-                      color="#cbd5e1"
-                    />
-                  </TouchableOpacity>
-                </View>
-              );
-            })
-          ) : (
-            <AppText
-              variant="bodySm"
-              style={{ color: colors.onSurfaceVariant, textAlign: "center" }}
-            >
-              No sessions recorded yet.
-            </AppText>
-          )}
-        </View>
-
         {/* Actions */}
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={styles.actionPrimary}
-            onPress={() =>
-              Alert.alert("Assign", `Assign new exercises to ${patientName}`)
-            }
+            onPress={handleAssign}
           >
             <Ionicons name="add-circle-outline" size={20} color="#fff" />
             <AppText
               variant="labelMd"
               style={{ color: "#fff", fontWeight: "700" }}
             >
-              Assign Exercises
+              Assign
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionSecondary}
-            onPress={() => navigation.navigate("DoctorChat")}
+            onPress={handleViewSessions}
           >
             <Ionicons
-              name="chatbubble-outline"
+              name="calendar-outline"
               size={20}
               color={colors.primary}
             />
@@ -398,7 +278,7 @@ export const PatientDetailScreen: React.FC = () => {
               variant="labelMd"
               style={{ color: colors.primary, fontWeight: "700" }}
             >
-              Send Message
+              View Sessions
             </AppText>
           </TouchableOpacity>
         </View>
@@ -505,71 +385,6 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   chartLabelText: { color: "#94a3b8", fontSize: 10 },
-
-  sessionRowContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-  },
-  sessionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    gap: 12,
-  },
-  sessionDate: {
-    backgroundColor: "#f1f5f9",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  sessionStats: { flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  sessionStat: { flexDirection: "row", alignItems: "center", gap: 4 },
-  sessionStatText: { color: "#64748b", fontSize: 12 },
-
-  feedbackContainer: {
-    backgroundColor: "#f8fafc",
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  feedbackLabel: {
-    color: "#475569",
-    fontWeight: "700",
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  feedbackInput: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
-    padding: 12,
-    minHeight: 80,
-    textAlignVertical: "top",
-    fontSize: 14,
-    color: "#0f172a",
-    marginBottom: spacing.md,
-  },
-  feedbackActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-  },
-  btnCancel: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    justifyContent: "center",
-  },
-  btnSave: {
-    backgroundColor: colors.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    justifyContent: "center",
-  },
 
   actionsRow: { flexDirection: "row", gap: spacing.md },
   actionPrimary: {

@@ -35,6 +35,7 @@ export const AssignTemplateScreen: React.FC = () => {
   const { uid } = useAuth();
 
   const initialTemplateId = route.params?.templateId;
+  const initialPatientId = route.params?.patientId;
 
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
@@ -44,7 +45,9 @@ export const AssignTemplateScreen: React.FC = () => {
     initialTemplateId ? [initialTemplateId] : []
   );
   // Multi-select patients
-  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
+  const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(
+    initialPatientId ? [initialPatientId] : []
+  );
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => { loadData(); }, [uid]);
