@@ -105,7 +105,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
             </View>
             <View style={styles.statBox}>
               <AppText variant="labelSm" style={styles.statLabel}>PAIN LVL</AppText>
-              <AppText variant="headlineMd" style={[styles.statValue, { color: (session.averagePain || 0) > 5 ? '#ef4444' : '#0f172a' }]}>
+              <AppText variant="headlineMd" style={[styles.statValue, { color: (session.averagePain || 0) > 5 ? colors.error : colors.onSurface }]}>
                 {session.averagePain || session.painLevel || 0}/10
               </AppText>
             </View>
@@ -131,8 +131,8 @@ export const DoctorSessionDetailScreen: React.FC = () => {
               </View>
             ) : (
               <View style={styles.noVideo}>
-                <Ionicons name="videocam-off-outline" size={48} color="#94a3b8" />
-                <AppText variant="bodyMd" style={{ color: '#64748b', marginTop: 8 }}>No video recorded for this session</AppText>
+                <Ionicons name="videocam-off-outline" size={48} color={colors.outline} />
+                <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, marginTop: 8 }}>No video recorded for this session</AppText>
               </View>
             )}
           </View>
@@ -140,7 +140,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           {/* Analysis & Exercises */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="analytics" size={20} color="#6366f1" />
+              <Ionicons name="analytics" size={20} color={colors.primary} />
               <AppText variant="labelMd" style={styles.cardTitle}>Exercise Breakdown</AppText>
             </View>
             <View style={styles.exerciseList}>
@@ -159,7 +159,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
                   <View key={key} style={styles.breakdownItem}>
                     <AppText variant="bodySm" style={styles.breakdownKey}>{key}</AppText>
                     <View style={styles.barBg}>
-                      <View style={[styles.barFill, { width: `${val}%`, backgroundColor: (val as number) > 80 ? '#10b981' : '#f59e0b' }]} />
+                      <View style={[styles.barFill, { width: `${val}%`, backgroundColor: (val as number) > 80 ? colors.tertiary : colors.secondary }]} />
                     </View>
                     <AppText variant="labelSm" style={styles.breakdownVal}>{val}%</AppText>
                   </View>
@@ -171,14 +171,14 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           {/* Feedback Input */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="chatbox-ellipses" size={20} color="#0f766e" />
+              <Ionicons name="chatbox-ellipses" size={20} color={colors.primary} />
               <AppText variant="labelMd" style={styles.cardTitle}>Clinical Feedback</AppText>
             </View>
             <TextInput
               style={styles.feedbackInput}
               multiline
               placeholder="Write your advice, corrections, or encouragement here..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={colors.outline}
               value={feedback}
               onChangeText={setFeedback}
             />
@@ -188,10 +188,10 @@ export const DoctorSessionDetailScreen: React.FC = () => {
               disabled={submitting}
             >
               {submitting ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.onPrimary} />
               ) : (
                 <>
-                  <Ionicons name="send" size={18} color="#fff" />
+                  <Ionicons name="send" size={18} color={colors.onPrimary} />
                   <AppText variant="labelMd" style={styles.submitBtnText}>Share Feedback</AppText>
                 </>
               )}
@@ -204,36 +204,90 @@ export const DoctorSessionDetailScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f8fafd" },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.gutter, paddingVertical: spacing.md, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  safe: { flex: 1, backgroundColor: colors.background },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: spacing.gutter, 
+    paddingVertical: spacing.md, 
+    backgroundColor: colors.surfaceContainerLowest, 
+  },
   backBtn: { padding: 4 },
   headerTitleContainer: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
-  headerSubtitle: { color: '#64748b', fontSize: 12 },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: colors.onSurface },
+  headerSubtitle: { color: colors.onSurfaceVariant, fontSize: 12, marginTop: 2 },
   scroll: { flex: 1 },
   content: { padding: spacing.gutter, gap: spacing.md, paddingBottom: 40 },
   statsRow: { flexDirection: 'row', gap: spacing.sm },
-  statBox: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
-  statLabel: { color: '#64748b', fontSize: 10, fontWeight: '700', marginBottom: 4 },
-  statValue: { fontSize: 18, fontWeight: '800' },
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: spacing.lg, borderWidth: 1, borderColor: '#e2e8f0' },
+  statBox: { 
+    flex: 1, 
+    backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, 
+    padding: spacing.md, 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: colors.surfaceContainerHighest 
+  },
+  statLabel: { color: colors.onSurfaceVariant, fontSize: 11, fontWeight: '600', marginBottom: 6 },
+  statValue: { fontSize: 18, fontWeight: '700' },
+  card: { 
+    backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, 
+    padding: spacing.lg, 
+    borderWidth: 1, 
+    borderColor: colors.surfaceContainerHighest 
+  },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md },
-  cardTitle: { fontWeight: '700', fontSize: 15, color: '#1e293b' },
+  cardTitle: { fontWeight: '600', fontSize: 16, color: colors.onSurface },
   videoContainer: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#000', height: 200 },
   video: { width: '100%', height: '100%' },
-  noVideo: { height: 160, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9', borderRadius: 12, borderStyle: 'dashed', borderWidth: 1, borderColor: '#cbd5e1' },
+  noVideo: { 
+    height: 160, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: colors.surfaceContainerLow, 
+    borderRadius: 12, 
+    borderStyle: 'dashed', 
+    borderWidth: 1, 
+    borderColor: colors.outlineVariant 
+  },
   exerciseList: { gap: 12 },
   exerciseItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   exDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
-  exName: { flex: 1, fontWeight: '600', color: '#334155' },
-  exMeta: { color: '#10b981', fontWeight: '700', fontSize: 10 },
-  breakdown: { marginTop: spacing.lg, gap: 12, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  exName: { flex: 1, fontWeight: '500', color: colors.onSurface, fontSize: 14 },
+  exMeta: { color: colors.primary, fontWeight: '600', fontSize: 11 },
+  breakdown: { 
+    marginTop: spacing.lg, 
+    gap: 12, 
+    paddingTop: spacing.md, 
+    borderTopWidth: 1, 
+    borderTopColor: colors.surfaceContainerHighest 
+  },
   breakdownItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  breakdownKey: { flex: 1.5, color: '#64748b', fontSize: 12 },
-  barBg: { flex: 3, height: 6, backgroundColor: '#f1f5f9', borderRadius: 3, overflow: 'hidden' },
+  breakdownKey: { flex: 1.5, color: colors.onSurfaceVariant, fontSize: 12 },
+  barBg: { flex: 3, height: 6, backgroundColor: colors.surfaceContainerHighest, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 3 },
-  breakdownVal: { flex: 0.8, textAlign: 'right', fontWeight: '700', fontSize: 12, color: '#1e293b' },
-  feedbackInput: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 16, minHeight: 120, textAlignVertical: 'top', fontSize: 14, color: '#0f172a', marginBottom: spacing.md },
-  submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12 },
-  submitBtnText: { color: '#fff', fontWeight: '700' },
+  breakdownVal: { flex: 0.8, textAlign: 'right', fontWeight: '600', fontSize: 12, color: colors.onSurface },
+  feedbackInput: { 
+    backgroundColor: colors.surfaceContainerLow, 
+    borderWidth: 1, 
+    borderColor: colors.surfaceContainerHighest, 
+    borderRadius: 12, 
+    padding: 16, 
+    minHeight: 120, 
+    textAlignVertical: 'top', 
+    fontSize: 14, 
+    color: colors.onSurface, 
+    marginBottom: spacing.md 
+  },
+  submitBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8, 
+    backgroundColor: colors.primary, 
+    paddingVertical: 14, 
+    borderRadius: 16 
+  },
+  submitBtnText: { color: colors.onPrimary, fontWeight: '600', fontSize: 15 },
 });
