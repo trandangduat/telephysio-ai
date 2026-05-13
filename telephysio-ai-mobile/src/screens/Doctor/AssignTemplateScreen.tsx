@@ -8,7 +8,6 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
-  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,12 +39,6 @@ const startOfDay = (date: Date) => {
 
 const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
 
-const addDays = (date: Date, days: number) => {
-  const copy = new Date(date);
-  copy.setDate(copy.getDate() + days);
-  return copy;
-};
-
 const dateKey = (date: Date) => {
   const local = startOfDay(date);
   return `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`;
@@ -61,24 +54,26 @@ export const AssignTemplateScreen: React.FC = () => {
 
   const initialTemplateId = route.params?.templateId;
   const initialPatientId = route.params?.patientId;
-  const initialPatientName = route.params?.patientName;
   const isPatientScoped = !!initialPatientId;
 
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [allPatients, setAllPatients] = useState<UserProfile[]>([]);
   const [allTemplates, setAllTemplates] = useState<ExerciseTemplate[]>([]);
   const [patientAssignments, setPatientAssignments] = useState<Assignment[]>([]);
+  
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>(
     initialTemplateId ? [initialTemplateId] : []
   );
-  // Multi-select patients
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>(
     initialPatientId ? [initialPatientId] : []
   );
+  
   const [searchQuery, setSearchQuery] = useState('');
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+  
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(new Date()));
 
   useEffect(() => { loadData(); }, [uid]);
@@ -134,7 +129,6 @@ export const AssignTemplateScreen: React.FC = () => {
     };
   };
 
-  // Smart search: match email OR name, case-insensitive, partial match
   const filteredPatients = searchQuery.trim()
     ? allPatients.filter(p => {
         const q = searchQuery.toLowerCase();
@@ -147,20 +141,11 @@ export const AssignTemplateScreen: React.FC = () => {
 
   const handleAssign = async () => {
     if (!uid) return;
-    if (selectedTemplateIds.length === 0) {
-      Alert.alert('Error', 'Please select at least one template');
-      return;
-    }
-    if (selectedPatientIds.length === 0) {
-      Alert.alert('Error', 'Please select at least one patient');
-      return;
-    }
+    if (selectedTemplateIds.length === 0 || selectedPatientIds.length === 0) return;
 
     const { exercises, duration, names } = getCombinedDetails();
-
     setAssigning(true);
     try {
-      // Create one assignment per selected patient
       await Promise.all(
         selectedPatientIds.map(patientId =>
           createAssignment({
@@ -174,17 +159,13 @@ export const AssignTemplateScreen: React.FC = () => {
           })
         )
       );
-
       const patientNames = allPatients
         .filter(p => selectedPatientIds.includes(p.uid))
         .map(p => p.displayName || p.email)
         .join(', ');
-
       navigation.goBack();
       setTimeout(() => {
-        if (Platform.OS !== 'web') {
-          Alert.alert('Success', `Assigned to: ${patientNames}`);
-        }
+        if (Platform.OS !== 'web') Alert.alert('Success', `Assigned to: ${patientNames}`);
       }, 300);
     } catch (error) {
       console.error('Error assigning:', error);
@@ -202,7 +183,6 @@ export const AssignTemplateScreen: React.FC = () => {
     return acc;
   }, {});
 
-  const quickDates = Array.from({ length: 14 }, (_, index) => addDays(new Date(), index));
   const selectedDateKey = dateKey(selectedDate);
   const calendarLead = startOfMonth(visibleMonth).getDay();
   const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
@@ -210,8 +190,6 @@ export const AssignTemplateScreen: React.FC = () => {
     ...Array.from({ length: calendarLead }, () => null),
     ...Array.from({ length: daysInMonth }, (_, index) => new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), index + 1)),
   ];
-
-  const selectedPatientLabel = initialPatientName || allPatients.find(p => p.uid === initialPatientId)?.displayName || 'Selected patient';
 
   if (loading) {
     return (
@@ -222,168 +200,161 @@ export const AssignTemplateScreen: React.FC = () => {
   }
 
   const { exercises, duration } = getCombinedDetails();
+  const totalSteps = isPatientScoped ? 3 : 4;
+  const isLastStep = step === totalSteps;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => step > 1 ? setStep(step - 1) : navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <AppText variant="headlineMd" style={styles.headerTitle}>Assign Session</AppText>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Step 1: Select Templates */}
-        <View style={styles.section}>
-          <AppText variant="labelMd" style={styles.sectionLabel}>
-            STEP 1: SELECT TEMPLATES ({selectedTemplateIds.length})
-          </AppText>
-          <View style={styles.listBox}>
-            {allTemplates.map(tpl => {
-              const isSelected = selectedTemplateIds.includes(tpl.id);
-              return (
-                <TouchableOpacity
-                  key={tpl.id}
-                  style={[styles.rowItem, isSelected && styles.rowItemActive]}
-                  onPress={() => toggleTemplate(tpl.id)}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
-                    {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <AppText variant="labelMd" style={[styles.rowName, isSelected && { color: colors.primary }]}>
-                      {tpl.name}
-                    </AppText>
-                    <AppText variant="bodySm" style={styles.rowMeta}>
-                      {tpl.exercises?.length || 0} exercises · {tpl.totalDuration}
-                    </AppText>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBarFill, { width: `${(step / totalSteps) * 100}%` }]} />
+      </View>
 
-        {/* Summary Box */}
-        {selectedTemplateIds.length > 0 && (
-          <View style={styles.summaryBox}>
-            <View style={styles.summaryStat}>
-              <AppText variant="labelSm" style={styles.summaryLabel}>TOTAL EXERCISES</AppText>
-              <AppText variant="headlineMd" style={styles.summaryValue}>{exercises.length}</AppText>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        
+        {step === 1 && (
+          <View style={styles.stepContainer}>
+            <View style={styles.stepHeaderRow}>
+              <AppText variant="headlineMd" style={styles.stepTitle}>Select Templates</AppText>
+              <AppText variant="labelMd" style={styles.stepCount}>Step 1 of {totalSteps}</AppText>
             </View>
-            <View style={styles.summaryDivider} />
-            <View style={styles.summaryStat}>
-              <AppText variant="labelSm" style={styles.summaryLabel}>TOTAL DURATION</AppText>
-              <AppText variant="headlineMd" style={styles.summaryValue}>{duration}</AppText>
+
+            <View style={styles.searchBox}>
+              <Ionicons name="search-outline" size={20} color={colors.outline} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search templates..."
+                placeholderTextColor={colors.outline}
+                value={templateSearchQuery}
+                onChangeText={setTemplateSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.listBox}>
+              {allTemplates
+                .filter(t => !templateSearchQuery.trim() || t.name.toLowerCase().includes(templateSearchQuery.toLowerCase()))
+                .map(tpl => {
+                const isSelected = selectedTemplateIds.includes(tpl.id);
+                const exerciseNames = (tpl.exercises || []).map(ex => ex.name || 'Unnamed Exercise').join(', ');
+                return (
+                  <TouchableOpacity
+                    key={tpl.id}
+                    style={[styles.rowItem, isSelected && styles.rowItemActive]}
+                    onPress={() => toggleTemplate(tpl.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={{ flex: 1, paddingRight: 12 }}>
+                      <AppText variant="headlineMd" style={[styles.rowName, isSelected && { color: colors.primary }]}>{tpl.name}</AppText>
+                      <AppText variant="bodySm" style={styles.rowMeta}>{tpl.exercises?.length || 0} exercises • {tpl.totalDuration}</AppText>
+                      {exerciseNames ? (
+                        <AppText variant="labelSm" style={{ color: colors.outline, marginTop: 6 }} numberOfLines={2}>
+                          {exerciseNames}
+                        </AppText>
+                      ) : null}
+                    </View>
+                    <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
+                      {isSelected && <Ionicons name="checkmark" size={16} color={colors.onPrimary} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         )}
 
-        {/* Schedule */}
-        <View style={styles.section}>
-          <View style={styles.sectionLabelRow}>
-            <AppText variant="labelMd" style={styles.sectionLabel}>
-              STEP 2: SCHEDULE SESSION
-            </AppText>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <AppText variant="labelSm" style={{ color: colors.primary, fontWeight: '800' }}>
-                Open calendar
-              </AppText>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.scheduleCard}>
-            <View style={styles.scheduleHeader}>
-              <View>
-                <AppText variant="labelMd" style={styles.scheduleDate}>
-                  {selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+        {step === 2 && (
+          <View style={styles.stepContainer}>
+            <View style={styles.stepHeaderRow}>
+              <AppText variant="headlineMd" style={styles.stepTitle}>Schedule Session</AppText>
+              <AppText variant="labelMd" style={styles.stepCount}>Step 2 of {totalSteps}</AppText>
+            </View>
+
+            <View style={[styles.calendarSheet, { padding: spacing.md, borderWidth: 1, borderColor: colors.surfaceContainerHighest }]}>
+              <View style={styles.calendarHeader}>
+                <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>
+                  <Ionicons name="chevron-back" size={24} color={colors.primary} />
+                </TouchableOpacity>
+                <AppText variant="headlineMd" style={styles.calendarTitle}>
+                  {visibleMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                 </AppText>
-                <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2 }}>
-                  {assignedDayCounts[selectedDateKey]
-                    ? `${assignedDayCounts[selectedDateKey]} existing assignment${assignedDayCounts[selectedDateKey] > 1 ? 's' : ''} on this day`
-                    : 'No assignments scheduled on this day'}
+                <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>
+                  <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.weekHeader}>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <AppText key={i} variant="labelMd" style={styles.weekHeaderText}>{day}</AppText>
+                ))}
+              </View>
+              <View style={styles.calendarGrid}>
+                {calendarCells.map((date, index) => {
+                  if (!date) return <View key={`empty-${index}`} style={styles.calendarDay} />;
+                  const key = dateKey(date);
+                  const active = key === selectedDateKey;
+                  const count = assignedDayCounts[key] || 0;
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={[styles.calendarDay, active && styles.calendarDayActive]}
+                      onPress={() => setSelectedDate(startOfDay(date))}
+                    >
+                      <AppText variant="labelMd" style={[styles.calendarDayText, active && styles.calendarDayTextActive]}>
+                        {date.getDate()}
+                      </AppText>
+                      {count > 0 && (
+                        <View style={[styles.calendarCountBadge, active && styles.calendarCountBadgeActive]}>
+                          <AppText style={[styles.calendarCountText, active && styles.calendarCountTextActive]}>{count}</AppText>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <View style={styles.calendarLegend}>
+                <View style={styles.calendarLegendIcon}>
+                  <View style={styles.calendarCountBadgeLegend}>
+                    <AppText style={styles.calendarCountTextLegend}>1</AppText>
+                  </View>
+                </View>
+                <AppText variant="labelSm" style={styles.calendarLegendText}>
+                  Number of sessions already assigned to {isPatientScoped ? 'this patient' : 'patients'} on this date
                 </AppText>
               </View>
-              <Ionicons name="calendar" size={24} color={colors.primary} />
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickDateRail}>
-              {quickDates.map((date) => {
-                const key = dateKey(date);
-                const active = key === selectedDateKey;
-                const count = assignedDayCounts[key] || 0;
-                return (
-                  <TouchableOpacity
-                    key={key}
-                    style={[styles.quickDate, active && styles.quickDateActive]}
-                    onPress={() => setSelectedDate(startOfDay(date))}
-                    activeOpacity={0.85}
-                  >
-                    <AppText variant="labelSm" style={[styles.quickWeekday, active && styles.quickTextActive]}>
-                      {date.toLocaleDateString(undefined, { weekday: 'short' })}
-                    </AppText>
-                    <AppText variant="headlineMd" style={[styles.quickDay, active && styles.quickTextActive]}>
-                      {date.getDate()}
-                    </AppText>
-                    <View style={[styles.assignmentDot, count > 0 && styles.assignmentDotFilled, active && { backgroundColor: '#fff' }]} />
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
           </View>
-        </View>
+        )}
 
-        {/* Step 2: Select Patients */}
-        {!isPatientScoped ? <View style={styles.section}>
-          <View style={styles.sectionLabelRow}>
-            <AppText variant="labelMd" style={styles.sectionLabel}>
-              STEP 3: SELECT PATIENTS ({selectedPatientIds.length} selected)
-            </AppText>
-            {selectedPatientIds.length > 0 && (
-              <TouchableOpacity onPress={() => setSelectedPatientIds([])}>
-                <AppText variant="labelSm" style={{ color: '#ef4444', fontSize: 11 }}>Clear all</AppText>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Search box */}
-          <View style={styles.searchBox}>
-            <Ionicons name="search-outline" size={18} color="#94a3b8" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by email or name..."
-              placeholderTextColor="#94a3b8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color="#94a3b8" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Patient list */}
-          {filteredPatients.length === 0 ? (
-            <View style={styles.emptySearch}>
-              <Ionicons name="person-outline" size={36} color="#cbd5e1" />
-              <AppText variant="bodySm" style={{ color: '#94a3b8', marginTop: 8 }}>
-                {searchQuery ? 'No patients match your search.' : 'No patients found in database.'}
-              </AppText>
+        {step === 3 && !isPatientScoped && (
+          <View style={styles.stepContainer}>
+            <View style={styles.stepHeaderRow}>
+              <AppText variant="headlineMd" style={styles.stepTitle}>Select Patients</AppText>
+              <AppText variant="labelMd" style={styles.stepCount}>Step 3 of {totalSteps}</AppText>
             </View>
-          ) : (
+            
+            <View style={styles.searchBox}>
+              <Ionicons name="search-outline" size={20} color={colors.outline} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search patients..."
+                placeholderTextColor={colors.outline}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
             <View style={styles.listBox}>
               {filteredPatients.map(patient => {
                 const isSelected = selectedPatientIds.includes(patient.uid);
-                const initial = (patient.displayName || patient.email || '?')[0].toUpperCase();
                 return (
                   <TouchableOpacity
                     key={patient.uid}
@@ -391,254 +362,275 @@ export const AssignTemplateScreen: React.FC = () => {
                     onPress={() => togglePatient(patient.uid)}
                     activeOpacity={0.8}
                   >
-                    {/* Avatar */}
-                    <View style={[styles.patientAvatar, isSelected && { backgroundColor: colors.primary + '22' }]}>
-                      <AppText style={{ fontSize: 16, fontWeight: '700', color: isSelected ? colors.primary : '#94a3b8' }}>
-                        {initial}
-                      </AppText>
+                    <View style={styles.patientAvatar}>
+                      <Ionicons name="person" size={20} color={colors.surfaceTint} />
                     </View>
-                    {/* Info */}
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                      <AppText variant="labelMd" style={[styles.patientName, isSelected && { color: colors.primary }]}>
-                        {patient.displayName || '—'}
-                      </AppText>
-                      <AppText variant="bodySm" style={styles.patientEmail}>
-                        {patient.email}
-                      </AppText>
+                    <View style={{ flex: 1, marginLeft: 16 }}>
+                      <AppText variant="headlineMd" style={[styles.patientName, isSelected && { color: colors.primary }]}>{patient.displayName || '—'}</AppText>
+                      <AppText variant="bodySm" style={styles.patientEmail}>{patient.email}</AppText>
                     </View>
-                    {/* Checkbox */}
                     <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
-                      {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                      {isSelected && <Ionicons name="checkmark" size={16} color={colors.onPrimary} />}
                     </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          )}
-        </View> : (
-          <View style={styles.lockedPatientCard}>
-            <Ionicons name="person-circle-outline" size={24} color={colors.primary} />
-            <View style={{ flex: 1 }}>
-              <AppText variant="labelMd" style={{ color: '#0f172a', fontWeight: '800' }}>
-                Assigning to {selectedPatientLabel}
-              </AppText>
-              <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2 }}>
-                Patient is locked from Patient Details.
-              </AppText>
+          </View>
+        )}
+
+        {((step === 4 && !isPatientScoped) || (step === 3 && isPatientScoped)) && (
+          <View style={styles.stepContainer}>
+            <View style={styles.stepHeaderRow}>
+              <AppText variant="headlineMd" style={styles.stepTitle}>Confirm Assignment</AppText>
+              <AppText variant="labelMd" style={styles.stepCount}>Step {totalSteps} of {totalSteps}</AppText>
             </View>
+
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryStat}>
+                <Ionicons name="fitness-outline" size={24} color={colors.primary} style={{marginBottom: 8}} />
+                <AppText variant="headlineMd" style={styles.summaryValue}>{exercises.length}</AppText>
+                <AppText variant="labelSm" style={styles.summaryLabel}>Exercises</AppText>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryStat}>
+                <Ionicons name="time-outline" size={24} color={colors.tertiary} style={{marginBottom: 8}} />
+                <AppText variant="headlineMd" style={[styles.summaryValue, {color: colors.tertiary}]}>{duration}</AppText>
+                <AppText variant="labelSm" style={styles.summaryLabel}>Duration</AppText>
+              </View>
+            </View>
+
+            <View style={[styles.card, { marginTop: spacing.md }]}>
+               <View style={styles.cardHeader}>
+                 <Ionicons name="folder-open" size={20} color={colors.primary} />
+                 <AppText variant="labelMd" style={styles.cardTitle}>SELECTED TEMPLATES</AppText>
+               </View>
+               <View style={{gap: 8}}>
+                 {allTemplates.filter(t => selectedTemplateIds.includes(t.id)).map(t => (
+                   <View key={t.id} style={styles.confirmListItem}>
+                     <Ionicons name="document-text-outline" size={24} color={colors.primary} />
+                     <AppText variant="bodyMd" style={styles.confirmListText}>{t.name}</AppText>
+                   </View>
+                 ))}
+               </View>
+            </View>
+
+            <View style={[styles.card, { marginTop: spacing.md }]}>
+               <View style={styles.cardHeader}>
+                 <Ionicons name="calendar" size={20} color={colors.primary} />
+                 <AppText variant="labelMd" style={styles.cardTitle}>SCHEDULED DATE</AppText>
+               </View>
+               <View style={styles.dateBox}>
+                 <View style={styles.dateIconWrapper}>
+                   <AppText variant="labelSm" style={{ color: colors.primary, fontWeight: '700', fontSize: 10 }}>{selectedDate.toLocaleDateString(undefined, { month: 'short' }).toUpperCase()}</AppText>
+                   <AppText variant="headlineMd" style={{ color: colors.onSurface, fontSize: 20 }}>{selectedDate.getDate()}</AppText>
+                 </View>
+                 <View>
+                   <AppText variant="bodyMd" style={{ color: colors.onSurface, fontWeight: '600', fontSize: 16 }}>
+                     {selectedDate.toLocaleDateString(undefined, { weekday: 'long' })}
+                   </AppText>
+                   <AppText variant="bodySm" style={{ color: colors.onSurfaceVariant }}>
+                     {selectedDate.toLocaleDateString(undefined, { year: 'numeric' })}
+                   </AppText>
+                 </View>
+               </View>
+            </View>
+
+            <View style={[styles.card, { marginTop: spacing.md }]}>
+               <View style={styles.cardHeader}>
+                 <Ionicons name="people" size={20} color={colors.primary} />
+                 <AppText variant="labelMd" style={styles.cardTitle}>ASSIGNED PATIENTS</AppText>
+               </View>
+               <View style={{gap: 8}}>
+                 {allPatients.filter(p => selectedPatientIds.includes(p.uid)).map(p => (
+                   <View key={p.uid} style={styles.confirmListItem}>
+                     <View style={styles.patientAvatarSmall}>
+                       <Ionicons name="person" size={16} color={colors.surfaceTint} />
+                     </View>
+                     <View>
+                       <AppText variant="bodyMd" style={styles.confirmListText}>{p.displayName || p.email}</AppText>
+                       {!!p.displayName && <AppText variant="labelSm" style={{ color: colors.onSurfaceVariant }}>{p.email}</AppText>}
+                     </View>
+                   </View>
+                 ))}
+               </View>
+            </View>
+
           </View>
         )}
       </ScrollView>
 
-      <Modal visible={showDatePicker} animationType="slide" transparent onRequestClose={() => setShowDatePicker(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.calendarSheet}>
-            <View style={styles.calendarHeader}>
-              <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>
-                <Ionicons name="chevron-back" size={22} color={colors.primary} />
-              </TouchableOpacity>
-              <AppText variant="headlineMd" style={styles.calendarTitle}>
-                {visibleMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-              </AppText>
-              <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>
-                <Ionicons name="chevron-forward" size={22} color={colors.primary} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.weekHeader}>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                <AppText key={`${day}-${index}`} variant="labelSm" style={styles.weekHeaderText}>{day}</AppText>
-              ))}
-            </View>
-            <View style={styles.calendarGrid}>
-              {calendarCells.map((date, index) => {
-                if (!date) return <View key={`empty-${index}`} style={styles.calendarDay} />;
-                const key = dateKey(date);
-                const active = key === selectedDateKey;
-                const count = assignedDayCounts[key] || 0;
-                return (
-                  <TouchableOpacity
-                    key={key}
-                    style={[styles.calendarDay, active && styles.calendarDayActive]}
-                    onPress={() => setSelectedDate(startOfDay(date))}
-                    activeOpacity={0.85}
-                  >
-                    <AppText variant="labelMd" style={[styles.calendarDayText, active && styles.calendarDayTextActive]}>
-                      {date.getDate()}
-                    </AppText>
-                    {count > 0 && <View style={[styles.calendarAssignedPill, active && { backgroundColor: '#fff' }]} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <TouchableOpacity style={styles.calendarDoneBtn} onPress={() => setShowDatePicker(false)}>
-              <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '800' }}>Use this date</AppText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Bottom action bar */}
       <View style={styles.bottomBar}>
-        {selectedPatientIds.length > 0 && !isPatientScoped && (
-          <AppText variant="bodySm" style={styles.selectedCount}>
-            {selectedPatientIds.length} patient{selectedPatientIds.length > 1 ? 's' : ''} selected
-          </AppText>
+        {isLastStep ? (
+          <TouchableOpacity
+            style={[styles.primaryBtn, (!selectedPatientIds.length || !selectedTemplateIds.length) && styles.primaryBtnDisabled]}
+            onPress={handleAssign}
+            disabled={!selectedPatientIds.length || !selectedTemplateIds.length || assigning}
+          >
+            {assigning ? <ActivityIndicator color={colors.onPrimary} /> : (
+               <View style={styles.btnContent}>
+                  <Ionicons name="checkmark-circle-outline" size={20} color={colors.onPrimary} style={{marginRight: 8}} />
+                  <AppText variant="labelMd" style={styles.primaryBtnText}>Confirm & Assign</AppText>
+               </View>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.primaryBtn, 
+              (step === 1 && selectedTemplateIds.length === 0) && styles.primaryBtnDisabled,
+              (step === 3 && !isPatientScoped && selectedPatientIds.length === 0) && styles.primaryBtnDisabled,
+            ]}
+            onPress={() => setStep(step + 1)}
+            disabled={
+              (step === 1 && selectedTemplateIds.length === 0) || 
+              (step === 3 && !isPatientScoped && selectedPatientIds.length === 0)
+            }
+          >
+            <AppText variant="labelMd" style={styles.primaryBtnText}>Next Step</AppText>
+          </TouchableOpacity>
         )}
-        <TouchableOpacity
-          style={[
-            styles.assignBtn,
-            (!selectedPatientIds.length || !selectedTemplateIds.length) && styles.assignBtnDisabled,
-          ]}
-          onPress={handleAssign}
-          disabled={!selectedPatientIds.length || !selectedTemplateIds.length || assigning}
-        >
-          {assigning ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="person-add-outline" size={18} color="#fff" />
-              <AppText variant="labelMd" style={styles.assignBtnText}>
-                {isPatientScoped
-                  ? `Assign to ${selectedPatientLabel}`
-                  : `Assign to ${selectedPatientIds.length > 0 ? `${selectedPatientIds.length} Patient${selectedPatientIds.length > 1 ? 's' : ''}` : 'Patients'}`}
-              </AppText>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafd' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.gutter, paddingVertical: spacing.md,
-    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    backgroundColor: colors.surfaceContainerLowest,
   },
-  backBtn: { width: 40 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
+  backBtn: { width: 40, alignItems: 'flex-start' },
+  headerTitle: { fontSize: 18, color: colors.onSurface, fontWeight: '600' },
+  
+  progressBarContainer: {
+    height: 3,
+    backgroundColor: colors.surfaceContainerHighest,
+    width: '100%',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+  },
 
   scroll: { flex: 1 },
-  content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: 120 },
-
-  section: { gap: spacing.sm },
-  sectionLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: '#64748b', letterSpacing: 1 },
-
-  listBox: { gap: spacing.sm },
-
-  // Template / generic rows
-  rowItem: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: spacing.md, backgroundColor: '#fff',
-    borderRadius: 16, borderWidth: 1.5, borderColor: '#e2e8f0',
+  content: { padding: spacing.gutter, paddingBottom: 120 },
+  stepContainer: { gap: spacing.md },
+  
+  stepHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: spacing.sm,
   },
-  rowItemActive: { borderColor: colors.primary, backgroundColor: '#f0f7ff' },
-  rowName: { fontWeight: '700', fontSize: 14, marginBottom: 2, color: '#0f172a' },
-  rowMeta: { color: '#64748b', fontSize: 12 },
-
-  // Checkbox
-  checkbox: {
-    width: 22, height: 22, borderRadius: 6,
-    borderWidth: 2, borderColor: '#cbd5e1',
-    alignItems: 'center', justifyContent: 'center',
+  stepTitle: { fontSize: 18, color: colors.onSurface, fontWeight: '600' },
+  stepCount: { color: colors.outline, fontSize: 13 },
+  
+  listBox: { gap: spacing.md },
+  
+  rowItem: {
+    flexDirection: 'row', alignItems: 'center', padding: spacing.lg,
+    backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, 
+    borderWidth: 1, 
+    borderColor: colors.surfaceContainerHighest,
+  },
+  rowItemActive: { 
+    borderColor: colors.primary, 
+    backgroundColor: colors.surfaceContainerLowest,
+  },
+  rowName: { fontSize: 16, marginBottom: 4, color: colors.onSurface, fontWeight: '600' },
+  rowMeta: { color: colors.onSurfaceVariant, fontSize: 13 },
+  
+  checkbox: { 
+    width: 24, height: 24, borderRadius: 8, 
+    borderWidth: 1.5, borderColor: colors.outlineVariant, 
+    alignItems: 'center', justifyContent: 'center' 
   },
   checkboxActive: { backgroundColor: colors.primary, borderColor: colors.primary },
 
-  // Summary
-  summaryBox: {
-    flexDirection: 'row', backgroundColor: '#1e293b',
-    borderRadius: 20, padding: spacing.lg, alignItems: 'center',
+  searchBox: { 
+    flexDirection: 'row', alignItems: 'center', gap: 12, 
+    backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, 
+    borderWidth: 1, borderColor: colors.surfaceContainerHighest 
+  },
+  searchInput: { flex: 1, fontSize: 15, color: colors.onSurface },
+
+  patientRow: { 
+    flexDirection: 'row', alignItems: 'center', padding: spacing.md, 
+    backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, borderWidth: 1, borderColor: colors.surfaceContainerHighest 
+  },
+  patientRowActive: { borderColor: colors.primary },
+  patientAvatar: { 
+    width: 44, height: 44, borderRadius: 22, 
+    backgroundColor: colors.surfaceContainerLow, 
+    alignItems: 'center', justifyContent: 'center' 
+  },
+  patientName: { fontSize: 16, color: colors.onSurface, marginBottom: 2, fontWeight: '600' },
+  patientEmail: { color: colors.onSurfaceVariant, fontSize: 13 },
+
+  calendarSheet: { backgroundColor: colors.surfaceContainerLowest, borderRadius: 16 },
+  calendarHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  calendarTitle: { color: colors.onSurface, fontSize: 16, fontWeight: '600' },
+  weekHeader: { flexDirection: 'row', marginBottom: spacing.md },
+  weekHeaderText: { flex: 1, textAlign: 'center', color: colors.outline, fontSize: 13 },
+  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  calendarDay: { width: `${100 / 7}%`, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12, marginBottom: 8, position: 'relative' },
+  calendarDayActive: { backgroundColor: colors.primary },
+  calendarDayText: { color: colors.onSurface, fontSize: 15 },
+  calendarDayTextActive: { color: colors.onPrimary },
+  calendarCountBadge: { position: 'absolute', top: 4, right: 4, backgroundColor: colors.tertiaryContainer, minWidth: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  calendarCountBadgeActive: { backgroundColor: colors.onPrimary },
+  calendarCountText: { color: colors.onTertiaryContainer, fontSize: 9, fontWeight: 'bold' },
+  calendarCountTextActive: { color: colors.primary },
+  calendarLegend: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.surfaceContainerHighest, gap: 8 },
+  calendarLegendIcon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  calendarCountBadgeLegend: { backgroundColor: colors.tertiaryContainer, minWidth: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  calendarCountTextLegend: { color: colors.onTertiaryContainer, fontSize: 9, fontWeight: 'bold' },
+  calendarLegendText: { flex: 1, color: colors.outline, fontSize: 12 },
+
+  summaryCard: {
+    flexDirection: 'row', backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, padding: spacing.lg, alignItems: 'center',
+    borderWidth: 1, borderColor: colors.surfaceContainerHighest, 
   },
   summaryStat: { flex: 1, alignItems: 'center' },
-  summaryLabel: { color: '#94a3b8', fontSize: 10, fontWeight: '700', marginBottom: 4 },
-  summaryValue: { color: '#fff', fontWeight: '800' },
-  summaryDivider: { width: 1, height: 40, backgroundColor: '#334155' },
+  summaryLabel: { color: colors.onSurfaceVariant, fontSize: 12, marginTop: 4 },
+  summaryValue: { color: colors.primary, fontSize: 24, fontWeight: '600' },
+  summaryDivider: { width: 1, height: 60, backgroundColor: colors.surfaceContainerHighest },
 
-  scheduleCard: {
-    backgroundColor: '#fff', borderRadius: 20, padding: spacing.md,
-    borderWidth: 1.5, borderColor: '#dbeafe', gap: spacing.md,
+  card: { 
+    backgroundColor: colors.surfaceContainerLowest, 
+    borderRadius: 16, 
+    padding: spacing.lg, 
+    borderWidth: 1, 
+    borderColor: colors.surfaceContainerHighest 
   },
-  scheduleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  scheduleDate: { color: '#0f172a', fontSize: 16, fontWeight: '800' },
-  quickDateRail: { gap: spacing.sm, paddingRight: spacing.md },
-  quickDate: {
-    width: 68, alignItems: 'center', borderRadius: 18, paddingVertical: 12,
-    backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0',
-  },
-  quickDateActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  quickWeekday: { color: '#64748b', fontSize: 11, fontWeight: '700' },
-  quickDay: { color: '#0f172a', fontSize: 22, fontWeight: '800', marginTop: 2 },
-  quickTextActive: { color: '#fff' },
-  assignmentDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent', marginTop: 6 },
-  assignmentDotFilled: { backgroundColor: '#f59e0b' },
-  lockedPatientCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#ecfeff', borderRadius: 18, padding: spacing.md,
-    borderWidth: 1, borderColor: '#bae6fd',
-  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md },
+  cardTitle: { fontWeight: '700', fontSize: 13, color: colors.onSurfaceVariant, letterSpacing: 0.5 },
+  confirmListItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: colors.surfaceContainerLow, borderRadius: 12, borderWidth: 1, borderColor: colors.surfaceContainerHighest },
+  confirmListText: { color: colors.onSurface, fontWeight: '600' },
+  dateBox: { flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: colors.surfaceContainerLow, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.surfaceContainerHighest },
+  dateIconWrapper: { width: 56, height: 56, borderRadius: 12, backgroundColor: colors.surfaceContainerLowest, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceContainerHighest },
+  patientAvatarSmall: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surfaceContainerHighest, alignItems: 'center', justifyContent: 'center' },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.35)', justifyContent: 'flex-end' },
-  calendarSheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    padding: spacing.lg, paddingBottom: 32,
+  bottomBar: { 
+    position: 'absolute', bottom: 0, left: 0, right: 0, 
+    padding: spacing.gutter, paddingBottom: Platform.OS === 'ios' ? 32 : 24, 
+    backgroundColor: colors.background 
   },
-  calendarHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  calendarTitle: { color: '#0f172a', fontWeight: '800', fontSize: 18 },
-  weekHeader: { flexDirection: 'row', marginBottom: spacing.sm },
-  weekHeaderText: { flex: 1, textAlign: 'center', color: '#94a3b8', fontWeight: '800' },
-  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  calendarDay: {
-    width: `${100 / 7}%`, height: 46, alignItems: 'center', justifyContent: 'center',
-    borderRadius: 14, marginBottom: 4,
+  primaryBtn: { 
+    backgroundColor: colors.primary, 
+    paddingVertical: 16, 
+    borderRadius: 16, 
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  calendarDayActive: { backgroundColor: colors.primary },
-  calendarDayText: { color: '#0f172a', fontWeight: '700' },
-  calendarDayTextActive: { color: '#fff' },
-  calendarAssignedPill: { width: 16, height: 4, borderRadius: 99, backgroundColor: '#f59e0b', marginTop: 3 },
-  calendarDoneBtn: {
-    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 14, borderRadius: 16, marginTop: spacing.md,
-  },
-
-  // Search
-  searchBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11,
-    borderWidth: 1.5, borderColor: '#e2e8f0',
-  },
-  searchInput: { flex: 1, fontSize: 14, color: '#0f172a', fontFamily: 'Inter' },
-
-  emptySearch: { alignItems: 'center', paddingVertical: 32 },
-
-  // Patient rows
-  patientRow: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: spacing.md, backgroundColor: '#fff',
-    borderRadius: 16, borderWidth: 1.5, borderColor: '#e2e8f0',
-  },
-  patientRowActive: { borderColor: colors.primary, backgroundColor: '#f0f7ff' },
-  patientAvatar: {
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center',
-  },
-  patientName: { fontWeight: '700', fontSize: 14, color: '#0f172a', marginBottom: 2 },
-  patientEmail: { color: '#64748b', fontSize: 12 },
-
-  // Bottom bar
-  bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    padding: spacing.gutter, paddingBottom: 28,
-    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e2e8f0',
-    gap: 8,
-  },
-  selectedCount: { color: '#64748b', textAlign: 'center', fontSize: 12 },
-  assignBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.primary, paddingVertical: 15, borderRadius: 16,
-  },
-  assignBtnDisabled: { backgroundColor: '#cbd5e1' },
-  assignBtnText: { color: '#fff', fontWeight: '700' },
+  primaryBtnDisabled: { backgroundColor: colors.outlineVariant },
+  primaryBtnText: { color: colors.onPrimary, fontSize: 15, fontWeight: '600' },
+  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
 });
