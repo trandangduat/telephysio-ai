@@ -73,7 +73,7 @@ export async function getPatients(doctorId: string): Promise<UserProfile[]> {
 }
 
 // ── Get Doctor for Patient ──────────────────────────
-// Called by DoctorChatScreen (to display doctor name/title)
+// Called by various screens (to display doctor/user name)
 export async function getPatientDoctor(patientId: string): Promise<UserProfile | null> {
   const plansSnap = await getDocs(
     query(

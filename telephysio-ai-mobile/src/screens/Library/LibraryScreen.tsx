@@ -10,6 +10,7 @@ import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import { getLibraryItems, type LibraryItem } from '../../services/firebase';
+import { NotificationBell } from '../../components/NotificationBell';
 
 export const LibraryScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -57,12 +58,7 @@ export const LibraryScreen: React.FC = () => {
           <AppText variant="labelMd" style={styles.logoText}>TelePhysioAI</AppText>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('DoctorChat' as any)}>
-            <Ionicons name="chatbubbles-outline" size={24} color={'#475569'} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={24} color={'#475569'} />
-          </TouchableOpacity>
+          <NotificationBell />
           <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile' as any)}>
             <Ionicons name="person" size={14} color="#fff" />
           </TouchableOpacity>

@@ -118,13 +118,7 @@ export const PatientDetailScreen: React.FC = () => {
         <AppText variant="headlineMd" style={styles.navTitle}>
           Patient Details
         </AppText>
-        <TouchableOpacity onPress={() => navigation.navigate("DoctorChat")}>
-          <Ionicons
-            name="chatbubble-outline"
-            size={22}
-            color={colors.primary}
-          />
-        </TouchableOpacity>
+        <View style={{ width: 28 }} />
       </View>
 
       <ScrollView

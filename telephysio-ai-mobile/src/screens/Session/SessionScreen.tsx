@@ -24,6 +24,7 @@ import {
   getActiveTreatmentPlan,
 } from "../../services/firebase";
 import type { Session, TreatmentPlan } from "../../services/firebase/types";
+import { NotificationBell } from "../../components/NotificationBell";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -498,20 +499,7 @@ export const SessionScreen: React.FC = () => {
           </AppText>
         </View>
         <View style={styles.topBarIcons}>
-          {/* <TouchableOpacity
-            onPress={() => navigation.navigate("DoctorChat")}
-            style={styles.iconBtn}
-          >
-            <Ionicons name="chatbubbles-outline" size={24} color="#475569" />
-          </TouchableOpacity> */}
-          <TouchableOpacity style={styles.iconBtn}>
-            <View style={styles.notifDot} />
-            <Ionicons
-              name="notifications-outline"
-              size={24}
-              color="#475569"
-            />
-          </TouchableOpacity>
+          <NotificationBell />
           <TouchableOpacity
             style={styles.avatarBtn}
             onPress={() => navigation.navigate("Profile")}

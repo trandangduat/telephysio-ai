@@ -27,6 +27,7 @@ import {
   getDoctorAssignments,
 } from "../../services/firebase";
 import type { UserProfile, Assignment } from "../../services/firebase/types";
+import { NotificationBell } from "../../components/NotificationBell";
 
 type DashboardNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<DoctorTabParamList, "Dashboard">,
@@ -163,6 +164,7 @@ export const DoctorDashboardScreen: React.FC = () => {
           </View>
         </View>
         <View style={styles.topBarIcons}>
+          <NotificationBell />
           <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate("DoctorProfile")}>
             <Ionicons name="person" size={14} color="#fff" />
           </TouchableOpacity>

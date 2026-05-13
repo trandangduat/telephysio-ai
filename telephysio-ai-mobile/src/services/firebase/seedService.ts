@@ -15,8 +15,6 @@ import {
   Assignment,
   Session,
   ProgressSnapshot,
-  Conversation,
-  ChatMessage,
   LibraryItem,
 } from "./types";
 
@@ -293,57 +291,7 @@ export const seedMockData = async () => {
       await commitBatchIfNeeded();
     }
 
-    // --- Create Conversation (Doctor <-> Patient) ---
-    console.log("Creating conversation...");
-    const conversationId = `conv-${doctorId}-${patientId}`;
-    const convRef = doc(collection(db, "conversations"), conversationId);
-    const convData: Conversation = {
-      id: conversationId,
-      patientId: patientId,
-      doctorId: doctorId,
-      patientName: patientName,
-      doctorName: doctorName,
-      lastMessage: "Nhớ duy trì bài tập tập squat nhé em.",
-      lastMessageAt: Timestamp.fromDate(new Date()),
-      unreadByDoctor: 0,
-      unreadByPatient: 1,
-      hasFeedback: true,
-      feedbackSummary: "Bệnh nhân báo cáo giảm đau đáng kể.",
-    };
-    batch.set(convRef, convData);
-    opCount++;
-    await commitBatchIfNeeded();
 
-    // Add some ChatMessages
-    const messages = [
-      { sender: "doctor", text: "Chào em, kết quả bài tập tuần này khá tốt." },
-      {
-        sender: "user",
-        text: "Dạ em cảm ơn bác sĩ, đầu gối em đỡ đau hơn nhiều rồi ạ.",
-      },
-      { sender: "doctor", text: "Nhớ duy trì bài tập tập squat nhé em." },
-    ];
-
-    for (let m = 0; m < messages.length; m++) {
-      const messageId = `msg-${conversationId}-${m}`;
-      const msgRef = doc(collection(db, "messages"), messageId);
-      const msgData: ChatMessage = {
-        id: messageId,
-        conversationId: conversationId,
-        sender: messages[m].sender as "user" | "doctor",
-        senderName: messages[m].sender === "doctor" ? doctorName : patientName,
-        type: "text",
-        text: messages[m].text,
-        createdAt: Timestamp.fromDate(
-          new Date(
-            new Date().getTime() - (messages.length - m) * 60 * 60 * 1000,
-          ),
-        ),
-      };
-      batch.set(msgRef, msgData);
-      opCount++;
-      await commitBatchIfNeeded();
-    }
 
     // --- Create Library Items (Global) ---
     console.log("Creating library items...");

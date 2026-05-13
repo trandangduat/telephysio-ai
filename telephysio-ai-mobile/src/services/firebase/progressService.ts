@@ -26,6 +26,7 @@ import {
 
 import { db } from "./config";
 import type { Session, ProgressSnapshot, ExerciseFeedback, IncompleteSession } from "./types";
+import { createNotification } from "./notificationService";
 
 // ═══════════════════════════════════════════════════
 // INCOMPLETE SESSIONS (Active Workout State)
@@ -86,6 +87,42 @@ export async function recordSession(
     ...data,
     date: serverTimestamp(),
   });
+
+  // Best-effort: notify the doctor that the patient finished this session
+  try {
+    // Fetch assignment to get doctorId and templateName
+    const assignSnap = await getDoc(doc(db, "assignments", data.assignmentId));
+    if (assignSnap.exists()) {
+      const assignment = assignSnap.data();
+      // Fetch patient name
+      const patientSnap = await getDoc(doc(db, "users", data.patientId));
+      const patientName = patientSnap.exists()
+        ? patientSnap.data().displayName || "A patient"
+        : "A patient";
+      const templateName = assignment.templateName || "a session";
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      await createNotification({
+        userId: assignment.doctorId,
+        title: "Session Completed",
+        body: `${patientName} finished "${templateName}" at ${timeStr}`,
+        type: "session_completed",
+        data: {
+          sessionId: ref.id,
+          patientId: data.patientId,
+          patientName,
+          templateName,
+        },
+      });
+    }
+  } catch (err) {
+    console.warn("Failed to send session-completed notification:", err);
+  }
+
   return ref.id;
 }
 

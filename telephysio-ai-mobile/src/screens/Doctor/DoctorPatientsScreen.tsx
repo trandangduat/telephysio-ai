@@ -25,6 +25,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import { getPatients, getDoctorTreatmentPlans } from "../../services/firebase";
 import type { UserProfile, TreatmentPlan } from "../../services/firebase/types";
+import { NotificationBell } from "../../components/NotificationBell";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   "on-track": { label: "On Track", color: "#166534", bg: "#dcfce7" },
@@ -99,12 +100,7 @@ export const DoctorPatientsScreen: React.FC = () => {
           </AppText>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => navigation.navigate("DoctorChat")}
-          >
-            <Ionicons name="chatbubbles-outline" size={24} color="#475569" />
-          </TouchableOpacity>
+          <NotificationBell />
           <TouchableOpacity
             style={styles.avatarBtn}
             onPress={() => navigation.navigate("DoctorProfile")}

@@ -25,10 +25,10 @@ import { CalibrationScreen } from "../screens/Calibration/CalibrationScreen";
 import { TrainingScreen } from "../screens/Training/TrainingScreen";
 import { ExerciseResultScreen } from "../screens/Training/ExerciseResultScreen";
 import { WorkoutSummaryScreen } from "../screens/Training/WorkoutSummaryScreen";
-import { DoctorChatScreen } from "../screens/Session/DoctorChatScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 import { MyAssignmentsScreen } from "../screens/Workout/MyAssignmentsScreen";
 import { WorkoutDetailScreen } from "../screens/Workout/WorkoutDetailScreen";
+import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
 
 // Doctor screens
 import { DoctorTabNavigator } from "./DoctorTabNavigator";
@@ -100,11 +100,6 @@ const PatientNavigator: React.FC = () => {
         options={{ headerShown: false }}
       />
       <PatientStack.Screen
-        name="DoctorChat"
-        component={DoctorChatScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
         name="Profile"
         component={ProfileScreen}
         options={{ headerShown: false }}
@@ -117,6 +112,11 @@ const PatientNavigator: React.FC = () => {
       <PatientStack.Screen
         name="WorkoutDetail"
         component={WorkoutDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <PatientStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
         options={{ headerShown: false }}
       />
     </PatientStack.Navigator>
@@ -158,11 +158,6 @@ const DoctorNavigator: React.FC = () => {
         options={{ headerShown: false }}
       />
       <DoctorStack.Screen
-        name="DoctorChat"
-        component={DoctorChatScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
         name="TemplateEditor"
         component={TemplateEditorScreen}
         options={{ headerShown: false }}
@@ -180,6 +175,11 @@ const DoctorNavigator: React.FC = () => {
       <DoctorStack.Screen
         name="DoctorSessionDetail"
         component={DoctorSessionDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <DoctorStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
         options={{ headerShown: false }}
       />
     </DoctorStack.Navigator>

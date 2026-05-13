@@ -15,6 +15,7 @@ import {
 
 import { db } from './config';
 import type { Assignment, Exercise, TreatmentPlan, ExerciseTemplate } from './types';
+import { createNotification } from './notificationService';
 
 // ═══════════════════════════════════════════════════
 // TREATMENT PLANS
@@ -134,6 +135,30 @@ export async function createAssignment(
     ...data,
     assignedAt: serverTimestamp(),
   });
+
+  // Best-effort: notify the patient about the new assignment
+  try {
+    // Fetch doctor name
+    const doctorSnap = await getDoc(doc(db, 'users', data.doctorId));
+    const doctorName = doctorSnap.exists()
+      ? doctorSnap.data().displayName || 'Your doctor'
+      : 'Your doctor';
+    const templateName = data.templateName || 'a session';
+
+    await createNotification({
+      userId: data.patientId,
+      title: 'New Assignment',
+      body: `Dr. ${doctorName} assigned you "${templateName}"`,
+      type: 'session_assigned',
+      data: {
+        assignmentId: ref.id,
+        templateName,
+      },
+    });
+  } catch (err) {
+    console.warn('Failed to send session-assigned notification:', err);
+  }
+
   return ref.id;
 }
 

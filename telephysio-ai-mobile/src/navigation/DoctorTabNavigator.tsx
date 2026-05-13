@@ -2,10 +2,8 @@
  * DoctorTabNavigator — Bottom tabs for Doctor role.
  *
  * Tabs:
- *   - Dashboard (overview)
+ *   - Dashboard (patient overview)
  *   - Assignments (exercise protocols)
- *   - Chat/Feedback (patient messages)
- *   - Patients (progress tracking)
  */
 
 import React from "react";
@@ -15,7 +13,6 @@ import { useTranslation } from "react-i18next";
 
 import { DoctorDashboardScreen } from "../screens/Doctor/DoctorDashboardScreen";
 import { DoctorAssignmentsScreen } from "../screens/Doctor/DoctorAssignmentsScreen";
-import { DoctorSessionScreen } from "../screens/Doctor/DoctorSessionScreen";
 import { colors, typography } from "../theme";
 import type { DoctorTabParamList } from "./types";
 
@@ -27,7 +24,6 @@ const TAB_ICONS: Record<
 > = {
   Dashboard: { active: "grid", inactive: "grid-outline" },
   Assignments: { active: "clipboard", inactive: "clipboard-outline" },
-  DoctorFeedback: { active: "chatbubbles", inactive: "chatbubbles-outline" },
 };
 
 export const DoctorTabNavigator: React.FC = () => {
@@ -64,11 +60,6 @@ export const DoctorTabNavigator: React.FC = () => {
         name="Assignments"
         component={DoctorAssignmentsScreen}
         options={{ title: "Assignments", headerShown: false }}
-      />
-      <Tab.Screen
-        name="DoctorFeedback"
-        component={DoctorSessionScreen}
-        options={{ title: "Chat", headerShown: false }}
       />
     </Tab.Navigator>
   );

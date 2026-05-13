@@ -36,6 +36,7 @@ import type {
   IncompleteSession,
 } from "../../services/firebase/types";
 import { getIncompleteSession } from "../../services/firebase";
+import { NotificationBell } from "../../components/NotificationBell";
 
 type HomeNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, "Home">,
@@ -134,22 +135,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </AppText>
         </View>
         <View style={styles.topBarIcons}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => navigation.navigate("DoctorChat")}
-          >
-            <Ionicons name="chatbubbles-outline" size={24} color={"#475569"} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => Alert.alert("Notifications", "No new notifications")}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={24}
-              color={"#475569"}
-            />
-          </TouchableOpacity>
+          <NotificationBell />
           <TouchableOpacity
             style={styles.avatarBtn}
             onPress={() => navigation.navigate("Profile" as any)}

@@ -13,8 +13,8 @@ export type {
   UserProfile, UserRole,
   TreatmentPlan, Exercise, ExerciseDifficulty, ExerciseTemplate, Assignment,
   Session, ProgressSnapshot, IncompleteSession,
-  ChatMessage, Conversation, MessageType, ExerciseFeedback,
-  ScheduleItem, Notification, LibraryItem,
+  ExerciseFeedback, NotificationType, Notification,
+  ScheduleItem, LibraryItem,
 } from './types';
 
 // Auth
@@ -72,17 +72,15 @@ export {
   deleteIncompleteSession,
 } from './progressService';
 
-// Chat
+// Notifications
 export {
-  getOrCreateConversation,
-  getDoctorConversations,
-  getPatientConversation,
-  sendMessage,
-  getMessages,
-  onMessagesChange,
-  markAsRead,
-  uploadChatAttachment,
-} from './chatService';
+  createNotification,
+  getUserNotifications,
+  markNotificationRead,
+  markAllRead,
+  getUnreadCount,
+  onNotificationsChange,
+} from './notificationService';
 
 // Schedule
 export {

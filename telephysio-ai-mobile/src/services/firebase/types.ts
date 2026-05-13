@@ -148,38 +148,6 @@ export interface ProgressSnapshot {
   date: Timestamp;
 }
 
-// ── Chat Message ────────────────────────────────────
-// Derived from: DoctorChatScreen chatData (type, sender, text, tags, time)
-export type MessageType = "text" | "feedback" | "patient_feedback";
-
-export interface ChatMessage {
-  id: string;
-  conversationId: string;
-  sender: "user" | "doctor";
-  senderName: string; // "You" | "Dr. Marcus Sterling"
-  senderTitle?: string; // "Lateral Lunges • Session Feedback" | "Lead Physiotherapist"
-  type: MessageType;
-  text: string;
-  tags?: string[]; // ["12% Mobility Gain", "Pain: 5/10"]
-  attachmentUrl?: string; // Firebase Storage
-  createdAt: Timestamp;
-}
-
-// ── Conversation ────────────────────────────────────
-// Derived from: DoctorSessionScreen (conversation list with unread, lastMessage)
-export interface Conversation {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  patientName: string;
-  doctorName: string;
-  lastMessage: string;
-  lastMessageAt: Timestamp;
-  unreadByDoctor: number;
-  unreadByPatient: number;
-  hasFeedback: boolean;
-  feedbackSummary?: string; // "Pain level: 3/10 | Improved ROM"
-}
 
 // ── Exercise Template (Doctor's Library) ────────────
 export interface ExerciseTemplate {
@@ -222,14 +190,25 @@ export interface ScheduleItem {
 }
 
 // ── Notification ────────────────────────────────────
-// Derived from: Notification bell icon across all screens
+// Two event-driven notification types:
+//   session_completed  → sent to doctor when patient finishes a session
+//   session_assigned   → sent to patient when doctor assigns a workout
+export type NotificationType = "session_completed" | "session_assigned";
+
 export interface Notification {
   id: string;
-  userId: string;
+  userId: string;        // recipient uid
   title: string;
   body: string;
   read: boolean;
-  type: "alert" | "reminder" | "feedback" | "system";
+  type: NotificationType;
+  data?: {
+    sessionId?: string;
+    assignmentId?: string;
+    patientId?: string;
+    patientName?: string;
+    templateName?: string;
+  };
   createdAt: Timestamp;
 }
 

@@ -16,10 +16,10 @@ export type RootStackParamList = {
   Training: { assignmentId: string; exerciseIndex: number };
   ExerciseResult: { assignmentId: string; exerciseIndex: number; accuracy: number; durationSeconds: number; reps: number; sets: number };
   WorkoutSummary: { assignmentId: string };
-  DoctorChat: undefined;
   Profile: undefined;
   MyAssignments: undefined;
   WorkoutDetail: { assignmentId: string };
+  Notifications: undefined;
 };
 
 export type BottomTabParamList = {
@@ -35,17 +35,16 @@ export type DoctorStackParamList = {
   DoctorTabs: undefined;
   PatientDetail: { patientId: string; patientName: string };
   DoctorProfile: undefined;
-  DoctorChat: undefined;
   TemplateEditor: { templateId?: string };
   AssignTemplate: { templateId?: string; templateName?: string; patientId?: string; patientName?: string };
   PatientSessions: { patientId: string; patientName: string };
   DoctorSessionDetail: { session: Session; patientName: string };
+  Notifications: undefined;
 };
 
 export type DoctorTabParamList = {
   Dashboard: undefined;
   Assignments: undefined;
-  DoctorFeedback: undefined;
 };
 
 // Screen names as constants to avoid typo
@@ -64,11 +63,11 @@ export const SCREENS = {
   Profile: 'Profile',
   MyAssignments: 'MyAssignments',
   WorkoutDetail: 'WorkoutDetail',
+  Notifications: 'Notifications',
   // Doctor
   DoctorTabs: 'DoctorTabs',
   Dashboard: 'Dashboard',
   Assignments: 'Assignments',
-  DoctorFeedback: 'DoctorFeedback',
   Patients: 'Patients',
   PatientDetail: 'PatientDetail',
   DoctorProfile: 'DoctorProfile',
