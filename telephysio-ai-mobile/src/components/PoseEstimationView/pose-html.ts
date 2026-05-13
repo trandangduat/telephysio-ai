@@ -199,20 +199,26 @@ export const POSE_HTML = `<!DOCTYPE html>
       });
     }
 
-    // ── Pose data reporting to React Native ───────────────────────────────────
+    // ── Pose data reporting (works in both WebView and iframe) ───────────────
+    function postToHost(payload) {
+      const msg = JSON.stringify(payload);
+      if (window.ReactNativeWebView) {
+        // Native WebView (Android / iOS)
+        window.ReactNativeWebView.postMessage(msg);
+      } else {
+        // Web iframe — parent listens via window.addEventListener('message')
+        window.parent.postMessage(msg, '*');
+      }
+    }
+
     function reportPoseToNative(landmarks) {
-      if (!window.ReactNativeWebView) return;
       const simplified = landmarks.map(lm => ({
         x: parseFloat(lm.x.toFixed(4)),
         y: parseFloat(lm.y.toFixed(4)),
         z: parseFloat(lm.z.toFixed(4)),
         visibility: parseFloat(lm.visibility.toFixed(3)),
       }));
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'POSE_LANDMARKS',
-        landmarks: simplified,
-        fps: fps,
-      }));
+      postToHost({ type: 'POSE_LANDMARKS', landmarks: simplified, fps });
     }
 
     // ── MediaPipe Pose setup ──────────────────────────────────────────────────
@@ -295,13 +301,7 @@ export const POSE_HTML = `<!DOCTYPE html>
         console.error('Camera error:', err);
         statusEl.textContent = '✕ Camera error: ' + err.message;
         statusEl.className = 'error';
-
-        if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'CAMERA_ERROR',
-            error: err.message,
-          }));
-        }
+        postToHost({ type: 'CAMERA_ERROR', error: err.message });
       }
     }
 
