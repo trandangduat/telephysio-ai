@@ -1,5 +1,5 @@
 /**
- * DoctorAssignmentsScreen — Create, edit, assign exercises to patients.
+ * DoctorAssignmentsScreen — Create and edit reusable exercise templates.
  */
 
 import React, { useEffect, useState } from "react";
@@ -26,11 +26,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import { 
   getExerciseTemplates, 
-  getDoctorAssignments,
-  getPatients,
   deleteExerciseTemplate,
 } from "../../services/firebase";
-import type { Assignment, ExerciseTemplate } from "../../services/firebase/types";
+import type { ExerciseTemplate } from "../../services/firebase/types";
 
 type AssignmentsNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<DoctorTabParamList, 'Assignments'>,
@@ -42,10 +40,8 @@ export const DoctorAssignmentsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { uid } = useAuth();
   
-  const [activeTab, setActiveTab] = useState("templates");
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<ExerciseTemplate[]>([]);
-  const [assignments, setAssignments] = useState<(Assignment & { patientName?: string, dateString?: string })[]>([]);
 
   const loadData = async () => {
     if (!uid) {
@@ -53,27 +49,10 @@ export const DoctorAssignmentsScreen: React.FC = () => {
       return;
     }
     try {
-      const [fetchedTemplates, fetchedAssignments, patients] = await Promise.all([
-        getExerciseTemplates(uid),
-        getDoctorAssignments(uid),
-        getPatients(uid),
-      ]);
-
-      const patientMap = new Map(patients.map(p => [p.uid, p.displayName || 'Unknown Patient']));
-
-      const mappedAssignments = fetchedAssignments.map(a => {
-        const date = a.assignedAt as any;
-        return {
-          ...a,
-          patientName: patientMap.get(a.patientId) || 'Unknown',
-          dateString: date?.toDate ? date.toDate().toLocaleDateString() : 'Unknown Date',
-        };
-      });
-
+      const fetchedTemplates = await getExerciseTemplates(uid);
       setTemplates(fetchedTemplates);
-      setAssignments(mappedAssignments);
     } catch (error) {
-      console.error('Error loading assignments:', error);
+      console.error('Error loading templates:', error);
     } finally {
       setLoading(false);
     }
@@ -151,67 +130,20 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             Exercise Templates
           </AppText>
           <AppText variant="bodyMd" style={styles.pageSubtitle}>
-            Create groups of exercises and assign them to your patients
+            Create reusable exercise groups for patient care plans
           </AppText>
-        </View>
-
-        {/* Tab Toggle */}
-        <View style={styles.tabToggle}>
-          <TouchableOpacity
-            style={[
-              styles.tabBtn,
-              activeTab === "templates" && styles.tabBtnActive,
-            ]}
-            onPress={() => setActiveTab("templates")}
-          >
-            <Ionicons 
-              name={activeTab === "templates" ? "layers" : "layers-outline"} 
-              size={16} 
-              color={activeTab === "templates" ? "#fff" : "#475569"} 
-              style={{ marginRight: 6 }}
-            />
-            <AppText
-              variant="labelMd"
-              style={{ color: activeTab === "templates" ? "#fff" : "#475569" }}
-            >
-              Templates
-            </AppText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tabBtn,
-              activeTab === "assigned" && styles.tabBtnActive,
-            ]}
-            onPress={() => setActiveTab("assigned")}
-          >
-            <Ionicons 
-              name={activeTab === "assigned" ? "checkbox" : "checkbox-outline"} 
-              size={16} 
-              color={activeTab === "assigned" ? "#fff" : "#475569"} 
-              style={{ marginRight: 6 }}
-            />
-            <AppText
-              variant="labelMd"
-              style={{ color: activeTab === "assigned" ? "#fff" : "#475569" }}
-            >
-              Assignments
-            </AppText>
-          </TouchableOpacity>
         </View>
 
         {/* Tab Description */}
         <View style={styles.tabDescContainer}>
           <AppText variant="bodySm" style={styles.tabDescText}>
-            {activeTab === "templates" 
-              ? "Customized exercise groups that can be reused across patients"
-              : "Review exercises currently assigned to patients and their progress"
-            }
+            Customized exercise groups that can be reused across patients
           </AppText>
         </View>
 
         {loading ? (
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
-        ) : activeTab === "templates" ? (
+        ) : (
           <>
             {/* Create New */}
             <TouchableOpacity
@@ -276,22 +208,6 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                     </AppText>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionBtn, styles.assignBtn]}
-                    onPress={() => navigation.navigate('AssignTemplate', { templateId: tpl.id, templateName: tpl.name })}
-                  >
-                    <Ionicons
-                      name="person-add-outline"
-                      size={16}
-                      color={colors.primary}
-                    />
-                    <AppText
-                      variant="labelSm"
-                      style={{ color: colors.primary, fontWeight: "700" }}
-                    >
-                      Assign
-                    </AppText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
                     style={styles.actionBtn}
                     onPress={() => handleDeleteTemplate(tpl)}
                   >
@@ -305,57 +221,6 @@ export const DoctorAssignmentsScreen: React.FC = () => {
             )) : (
               <AppText variant="bodyMd" style={{ color: "#64748b", padding: spacing.md, textAlign: 'center' }}>
                 No templates found. Create one to get started.
-              </AppText>
-            )}
-          </>
-        ) : (
-          <>
-            {assignments.length > 0 ? assignments.map((assign) => (
-              <View key={assign.id} style={styles.card}>
-                <View style={styles.assignRow}>
-                  <View style={styles.assignAvatar}>
-                    <Ionicons name="person" size={16} color="#94a3b8" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <AppText variant="labelMd" style={styles.assignPatient}>
-                      {assign.patientName}
-                    </AppText>
-                    <AppText variant="bodySm" style={styles.assignTemplate}>
-                      {assign.templateName}
-                    </AppText>
-                    <AppText
-                      variant="bodySm"
-                      style={{ color: "#94a3b8", marginTop: 2 }}
-                    >
-                      {assign.dateString}
-                    </AppText>
-                  </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      assign.status === "completed"
-                        ? styles.statusCompleted
-                        : styles.statusActive,
-                    ]}
-                  >
-                    <AppText
-                      variant="labelSm"
-                      style={{
-                        color:
-                          assign.status === "completed"
-                            ? "#166534"
-                            : colors.primary,
-                        fontSize: 10,
-                      }}
-                    >
-                      {assign.status === "completed" ? "Completed" : "Active"}
-                    </AppText>
-                  </View>
-                </View>
-              </View>
-            )) : (
-              <AppText variant="bodyMd" style={{ color: "#64748b", padding: spacing.md, textAlign: 'center' }}>
-                No active assignments.
               </AppText>
             )}
           </>
@@ -404,21 +269,6 @@ const styles = StyleSheet.create({
   },
   pageSubtitle: { color: "#64748b" },
 
-  tabToggle: {
-    flexDirection: "row",
-    backgroundColor: "#f1f5f9",
-    borderRadius: 12,
-    padding: 4,
-  },
-  tabBtn: {
-    flex: 1,
-    flexDirection: "row",
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
-  },
-  tabBtnActive: { backgroundColor: colors.primary },
   tabDescContainer: {
     marginTop: -spacing.sm,
   },
@@ -480,23 +330,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#f8fafc",
   },
-  assignBtn: { backgroundColor: "#e0f2fe" },
-
-  assignRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  assignAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  assignPatient: { color: "#0f172a", fontWeight: "700" },
-  assignTemplate: { color: "#64748b", marginTop: 2 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  statusActive: { backgroundColor: "#e0f2fe" },
-  statusCompleted: { backgroundColor: "#dcfce7" },
-
   notifDot: {
     position: "absolute",
     right: 4,
