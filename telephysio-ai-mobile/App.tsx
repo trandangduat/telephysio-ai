@@ -25,6 +25,7 @@ import {
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { colors } from './src/theme';
+import { GlobalNotificationToast } from './src/components/GlobalNotificationToast';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -48,6 +49,7 @@ export default function App() {
       <NavigationContainer>
         <StatusBar style="dark" />
         <AppNavigator />
+        <GlobalNotificationToast />
       </NavigationContainer>
     </AuthProvider>
   );
