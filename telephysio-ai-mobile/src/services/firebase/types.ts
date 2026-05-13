@@ -71,6 +71,7 @@ export interface Assignment {
   status: "active" | "completed" | "paused";
   assignedAt: Timestamp;
   completedAt?: Timestamp;
+  scheduledTimeSlot?: string; // e.g., "Morning (08:00 - 09:00)"
 }
 
 // ── Session (Single workout session) ────────────────

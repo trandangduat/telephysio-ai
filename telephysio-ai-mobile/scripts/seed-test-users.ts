@@ -11,6 +11,10 @@ import {
   Timestamp,
   getDoc,
   setDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from '../src/services/firebase/config';
 
@@ -22,6 +26,19 @@ async function seed() {
   console.log("🚀 Starting custom seed script for test users...");
   
   try {
+    // Clear existing test data for user to provide clean slate
+    console.log("🧹 Clearing prior user sessions & incomplete sessions...");
+    const sessionsQ = query(collection(db, "sessions"), where("patientId", "==", PATIENT_UID));
+    const sessionsSnap = await getDocs(sessionsQ);
+    for (const snap of sessionsSnap.docs) {
+      await deleteDoc(snap.ref);
+    }
+    const incQ = query(collection(db, "incomplete_sessions"), where("patientId", "==", PATIENT_UID));
+    const incSnap = await getDocs(incQ);
+    for (const snap of incSnap.docs) {
+      await deleteDoc(snap.ref);
+    }
+
     const batch = writeBatch(db);
 
     // ═══════════════════════════════════════════════════
@@ -140,17 +157,18 @@ async function seed() {
     // ═══════════════════════════════════════════════════
     console.log("👉 Creating active/completed Assignments...");
     
-    // Active assignment
-    const activeAssignmentId = `assignment-${PATIENT_UID}-active`;
+    // Active Assignment 1: Morning Session
+    const activeAssignmentId = `assignment-${PATIENT_UID}-active-1`;
     const activeRef = doc(db, "assignments", activeAssignmentId);
     batch.set(activeRef, {
       id: activeAssignmentId,
       patientId: PATIENT_UID,
       doctorId: DOCTOR_UID,
       status: "active",
-      templateName: "Phục hồi khớp gối - Cơ bản hàng ngày",
-      totalDuration: "20 min",
+      templateName: "Phục hồi khớp gối - Sáng",
+      totalDuration: "10 min",
       assignedAt: Timestamp.now(),
+      scheduledTimeSlot: "08:00 - 09:00",
       exercises: [
         {
           id: "ex-1",
@@ -164,20 +182,23 @@ async function seed() {
           sets: 3,
           restBetweenSets: 45,
           notes: "Hãy cố gắng giữ thăng bằng cơ thể tốt.",
-        },
-        // {
-        //   id: "ex-5",
-        //   name: "Lunges",
-        //   category: "Lower Body",
-        //   color: "#FFB533",
-        //   icon: "walk-outline",
-        //   duration: "5 mins",
-        //   difficulty: "easy",
-        //   reps: 10,
-        //   sets: 3,
-        //   restBetweenSets: 30,
-        //   notes: "",
-        // },
+        }
+      ],
+    }, { merge: true });
+
+    // Active Assignment 2: Afternoon Session
+    const activeAssignmentId2 = `assignment-${PATIENT_UID}-active-2`;
+    const activeRef2 = doc(db, "assignments", activeAssignmentId2);
+    batch.set(activeRef2, {
+      id: activeAssignmentId2,
+      patientId: PATIENT_UID,
+      doctorId: DOCTOR_UID,
+      status: "active",
+      templateName: "Phục hồi khớp gối - Chiều",
+      totalDuration: "12 min",
+      assignedAt: Timestamp.now(),
+      scheduledTimeSlot: "15:00 - 16:00",
+      exercises: [
         {
           id: "ex-4",
           name: "Plank",
@@ -190,6 +211,19 @@ async function seed() {
           sets: 3,
           restBetweenSets: 60,
           notes: "Giữ thẳng cột sống.",
+        },
+        {
+          id: "ex-2",
+          name: "Knee Extension",
+          category: "Lower Body",
+          color: "#33FF57",
+          icon: "body-outline",
+          duration: "5 mins",
+          difficulty: "easy",
+          reps: 15,
+          sets: 3,
+          restBetweenSets: 30,
+          notes: "Giữ vững tư thế đùi.",
         }
       ],
     }, { merge: true });
@@ -284,6 +318,70 @@ async function seed() {
       }
     }, { merge: true });
 
+    // Past Session Example 2 (2 days ago)
+    const pastAssignmentId2 = `assignment-${PATIENT_UID}-past-2`;
+    const pastRef2 = doc(db, "assignments", pastAssignmentId2);
+    batch.set(pastRef2, {
+      id: pastAssignmentId2,
+      patientId: PATIENT_UID,
+      doctorId: DOCTOR_UID,
+      status: "completed",
+      templateName: "Bài tập phục hồi nâng cao - Buổi 2",
+      totalDuration: "20 min",
+      assignedAt: Timestamp.fromDate(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)),
+      completedAt: Timestamp.fromDate(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)),
+      exercises: []
+    }, { merge: true });
+
+    const pastSessionId2 = `session-${pastAssignmentId2}-2`;
+    const sessionRef2 = doc(db, "sessions", pastSessionId2);
+    batch.set(sessionRef2, {
+      id: pastSessionId2,
+      patientId: PATIENT_UID,
+      assignmentId: pastAssignmentId2,
+      date: Timestamp.fromDate(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)),
+      accuracy: 90,
+      accuracyScore: 90,
+      duration: "20 min",
+      totalDuration: "20 min",
+      durationSeconds: 1200,
+      painLevel: 2,
+      averagePain: 2,
+      reps: 60,
+      sets: 6,
+      exercisesCompleted: 2,
+      completedExercises: 2,
+      exerciseList: ["Squat", "Plank"],
+      completedExercisesData: [
+        {
+          name: "Squat",
+          accuracy: 92,
+          reps: 30,
+          sets: 3,
+          durationSeconds: 480,
+          icon: "barbell-outline",
+          color: "#FF5733",
+        },
+        {
+          name: "Plank",
+          accuracy: 88,
+          reps: 30,
+          sets: 3,
+          durationSeconds: 720,
+          icon: "accessibility-outline",
+          color: "#F333FF",
+        }
+      ],
+      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      doctorName: "Dr.TuanAnh",
+      doctorFeedback: "Tư thế Squat thẳng rất đẹp, giữ vững form này nhé.",
+      reviewedAt: Timestamp.now(),
+      formBreakdown: {
+        "Tư thế lưng": 92,
+        "Sức bền": 88,
+      }
+    }, { merge: true });
+
     // ═══════════════════════════════════════════════════
     // 6. PROGRESS SNAPSHOTS (for charts)
     // ═══════════════════════════════════════════════════
@@ -333,8 +431,10 @@ async function seed() {
     // ═══════════════════════════════════════════════════
     console.log("👉 Resetting/Preparing incomplete session state...");
     // By default, we delete any existing incomplete session to give you a clean slate (starts with "Start Session")
-    const incSessionRef = doc(db, "incomplete_sessions", activeAssignmentId);
-    batch.delete(incSessionRef);
+    const incSessionRef1 = doc(db, "incomplete_sessions", activeAssignmentId);
+    const incSessionRef2 = doc(db, "incomplete_sessions", activeAssignmentId2);
+    batch.delete(incSessionRef1);
+    batch.delete(incSessionRef2);
 
     /* 
       💡 TIPS FOR TESTING:

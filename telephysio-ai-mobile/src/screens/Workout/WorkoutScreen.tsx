@@ -34,9 +34,9 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
   const { uid } = useAuth();
 
   const [loading, setLoading] = useState(true);
-  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [doctorName, setDoctorName] = useState<string>('');
-  const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
+  const [incompleteSessions, setIncompleteSessions] = useState<Record<string, IncompleteSession>>({});
   const [todaySession, setTodaySession] = useState<Session | null>(null);
 
   // Date setup for weekly schedule
@@ -51,18 +51,25 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
       try {
-        const assignments = await getPatientAssignments(uid, 'active');
-        if (assignments.length > 0) {
-          const active = assignments[0];
-          setAssignment(active);
-          // Fetch doctor name
-          if (active.doctorId) {
-            const doctor = await getUser(active.doctorId);
+        const activeAssignments = await getPatientAssignments(uid, 'active');
+        setAssignments(activeAssignments);
+
+        if (activeAssignments.length > 0) {
+          // Fetch incomplete sessions mapped by assignmentId
+          const incSessionsMap: Record<string, IncompleteSession> = {};
+          for (const act of activeAssignments) {
+            const inc = await getIncompleteSession(uid, act.id);
+            if (inc) {
+              incSessionsMap[act.id] = inc;
+            }
+          }
+          setIncompleteSessions(incSessionsMap);
+
+          // Fetch doctor name from first assignment
+          if (activeAssignments[0].doctorId) {
+            const doctor = await getUser(activeAssignments[0].doctorId);
             setDoctorName(doctor?.displayName || 'Your doctor');
           }
-          // Fetch incomplete session
-          const incSession = await getIncompleteSession(uid, active.id);
-          setIncompleteSession(incSession);
         } else {
           // Fetch latest completed sessions to see if they finished one today
           const sessions = await getPatientSessions(uid, 1);
@@ -97,13 +104,9 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  const exercises = assignment?.exercises || [];
-  const currentIndex = incompleteSession ? incompleteSession.currentExerciseIndex : 0;
-
-  const handleNavigateToDetail = () => {
-    if (!assignment) return;
+  const handleNavigateToDetail = (assignmentId: string) => {
     navigation.navigate('WorkoutDetail', {
-      assignmentId: assignment.id,
+      assignmentId,
     });
   };
 
@@ -146,8 +149,9 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
             {daysOfWeek.map((day, index) => {
               const isToday = index === todayIndex;
               const isSelected = index === selectedDayIndex;
-              // Mock completion for Monday for demo purposes, other days pending
-              const isCompleted = index === 0; 
+              // Today is completed if ALL scheduled sessions are finished
+              const isTodayDone = assignments.length === 0 && todaySession !== null;
+              const isCompleted = index === 0 || (index === todayIndex && isTodayDone); 
               
               return (
                 <TouchableOpacity 
@@ -189,51 +193,69 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
         {/* Dynamic Page Content based on Selection */}
         {selectedDayIndex === todayIndex ? (
           <>
-            {/* Today's Assignment Info Card */}
-            {assignment ? (
-              <View style={styles.assignmentCard}>
-                <View style={styles.assignmentHeader}>
-                  <Ionicons name="clipboard-outline" size={18} color={colors.primary} />
-                  <AppText variant="labelMd" style={styles.assignmentLabel}>ACTIVE PLAN</AppText>
-                </View>
-                <AppText variant="headlineMd" style={styles.assignmentName}>{assignment.templateName}</AppText>
-                
-                <View style={styles.assignmentMetaRow}>
-                  {doctorName ? (
-                    <View style={styles.metaChip}>
-                      <Ionicons name="person-outline" size={12} color="#64748b" />
-                      <AppText variant="bodySm" style={styles.metaText}>{doctorName}</AppText>
-                    </View>
-                  ) : null}
-                  <View style={styles.metaChip}>
-                    <Ionicons name="barbell-outline" size={12} color="#64748b" />
-                    <AppText variant="bodySm" style={styles.metaText}>{exercises.length} exercises</AppText>
-                  </View>
-                  <View style={styles.metaChip}>
-                    <Ionicons name="time-outline" size={12} color="#64748b" />
-                    <AppText variant="bodySm" style={styles.metaText}>{assignment.totalDuration}</AppText>
-                  </View>
-                </View>
+            {/* Today's Assignment Info Cards (Support Multiple Sessions) */}
+            {assignments.length > 0 ? (
+              <View style={{ gap: spacing.lg }}>
+                {assignments.map((item) => {
+                  const inc = incompleteSessions[item.id];
+                  return (
+                    <View key={item.id} style={styles.assignmentCard}>
+                      <View style={styles.assignmentHeader}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="clipboard-outline" size={18} color={colors.primary} />
+                          <AppText variant="labelMd" style={styles.assignmentLabel}>ACTIVE PLAN</AppText>
+                        </View>
+                        
+                        {/* Display Session Time Slot */}
+                        {item.scheduledTimeSlot && (
+                          <View style={styles.timeSlotBadge}>
+                            <Ionicons name="time-outline" size={12} color={colors.primary} style={{ marginRight: 2 }} />
+                            <AppText variant="labelSm" style={styles.timeSlotText}>{item.scheduledTimeSlot}</AppText>
+                          </View>
+                        )}
+                      </View>
+                      
+                      <AppText variant="headlineMd" style={styles.assignmentName}>{item.templateName}</AppText>
+                      
+                      <View style={styles.assignmentMetaRow}>
+                        {doctorName ? (
+                          <View style={styles.metaChip}>
+                            <Ionicons name="person-outline" size={12} color="#64748b" />
+                            <AppText variant="bodySm" style={styles.metaText}>{doctorName}</AppText>
+                          </View>
+                        ) : null}
+                        <View style={styles.metaChip}>
+                          <Ionicons name="barbell-outline" size={12} color="#64748b" />
+                          <AppText variant="bodySm" style={styles.metaText}>{(item.exercises || []).length} exercises</AppText>
+                        </View>
+                        <View style={styles.metaChip}>
+                          <Ionicons name="time-outline" size={12} color="#64748b" />
+                          <AppText variant="bodySm" style={styles.metaText}>{item.totalDuration}</AppText>
+                        </View>
+                      </View>
 
-                {/* Start/Action Button Inside Card */}
-                <TouchableOpacity
-                  style={styles.cardStartButton}
-                  onPress={handleNavigateToDetail}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons
-                    name={incompleteSession ? "play-forward" : "play"}
-                    size={20}
-                    color="#fff"
-                    style={{ marginRight: 8 }}
-                  />
-                  <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>
-                    {incompleteSession 
-                      ? t('workout.continueWorkout', 'Continue Session')
-                      : t('workout.startSession', 'Start Session')
-                    }
-                  </AppText>
-                </TouchableOpacity>
+                      {/* Start/Action Button Inside Card */}
+                      <TouchableOpacity
+                        style={styles.cardStartButton}
+                        onPress={() => handleNavigateToDetail(item.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons
+                          name={inc ? "play-forward" : "play"}
+                          size={20}
+                          color="#fff"
+                          style={{ marginRight: 8 }}
+                        />
+                        <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>
+                          {inc 
+                            ? t('workout.continueWorkout', 'Continue Session')
+                            : t('workout.startSession', 'Start Session')
+                          }
+                        </AppText>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
               </View>
             ) : todaySession ? (
               /* Today's Workout Complete Case */
@@ -346,7 +368,7 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
               EXERCISES COMPLETED
             </AppText>
             
-            {[{ name: 'Shoulder Flexion', sets: 2, reps: 10, acc: 88, icon: 'body-outline', color: '#2563eb' }, { name: 'Wall Slides', sets: 3, reps: 12, acc: 82, icon: 'barbell-outline', color: '#0f766e' }].map((ex, i) => (
+            {[{ name: 'Knee Extension', sets: 3, reps: 45, acc: 88, icon: 'body-outline', color: '#33FF57' }, { name: 'Shoulder Press', sets: 3, reps: 36, acc: 82, icon: 'fitness-outline', color: '#3357FF' }].map((ex, i) => (
               <View key={i} style={styles.mockSummaryRow}>
                 <View style={[styles.mockSummaryIcon, { backgroundColor: ex.color + '1A' }]}>
                   <Ionicons name={ex.icon as any} size={18} color={ex.color} />
@@ -372,6 +394,25 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
                 <Ionicons name="checkmark-circle" size={20} color="#16a34a" style={{ alignSelf: 'flex-start', marginTop: 2, marginLeft: spacing.sm }} />
               </View>
             ))}
+
+            {/* Doctor's Feedback Block for Monday Session */}
+            <View style={styles.divider} />
+            <View style={styles.feedbackContainer}>
+              <View style={styles.feedbackHeaderRow}>
+                <View style={styles.feedbackAvatar}>
+                  <Ionicons name="medical" size={14} color="#fff" />
+                </View>
+                <View>
+                  <AppText variant="labelMd" style={{ fontWeight: '700', color: '#0f172a' }}>Dr. TuanAnh's Feedback</AppText>
+                  <AppText variant="bodySm" style={{ fontSize: 11, color: '#64748b' }}>Reviewed 4 days ago</AppText>
+                </View>
+              </View>
+              <View style={styles.feedbackBubble}>
+                <AppText variant="bodySm" style={styles.feedbackText}>
+                  "Biên độ gập gối đã khá ổn định, khớp gối giữ thăng bằng tốt hơn. Tiếp tục duy trì cường độ tập và hạn chế mang vác nặng nhé."
+                </AppText>
+              </View>
+            </View>
 
           </View>
         ) : selectedDayIndex === 4 ? (
@@ -457,7 +498,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
-  assignmentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm },
+  assignmentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: spacing.sm },
   assignmentLabel: { color: colors.primary, fontWeight: '700', letterSpacing: 0.8, fontSize: 11 },
   assignmentName: { color: '#0f172a', fontWeight: '700', fontSize: 22, marginBottom: spacing.md },
   assignmentMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.lg },
@@ -685,5 +726,48 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  timeSlotBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary + '12',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  timeSlotText: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  feedbackContainer: {
+    marginTop: spacing.xs,
+    gap: spacing.md,
+  },
+  feedbackHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  feedbackAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  feedbackBubble: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    padding: spacing.lg,
+    position: 'relative',
+  },
+  feedbackText: {
+    color: '#334155',
+    fontStyle: 'italic',
+    lineHeight: 20,
   },
 });

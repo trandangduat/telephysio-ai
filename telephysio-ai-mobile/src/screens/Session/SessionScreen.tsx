@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
+
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { AppText } from "../../components/ui";
@@ -63,8 +63,6 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
   visible,
   onClose,
 }) => {
-  const videoRef = useRef<Video>(null);
-  const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
   const [activeTab, setActiveTab] = useState<"video" | "review">("video");
 
   if (!session) return null;
@@ -78,27 +76,6 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     0;
   const duration =
     (session as any).duration ?? (session as any).totalDuration ?? "—";
-  const videoUrl: string | undefined = (session as any).videoUrl;
-
-  const isPlaying =
-    status && (status as any).isPlaying ? (status as any).isPlaying : false;
-
-  const togglePlay = async () => {
-    if (!videoRef.current || !status || !(status as any).isLoaded) {
-      console.warn("Video not loaded yet or invalid source.");
-      return;
-    }
-    
-    try {
-      if (isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
-      }
-    } catch (err) {
-      console.error("Playback error:", err);
-    }
-  };
 
   const doctorReview: string | undefined = (session as any).doctorFeedback;
   const doctorName: string =
@@ -209,64 +186,46 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
             {/* ── VIDEO TAB ── */}
             {activeTab === "video" && (
               <View>
-                {videoUrl ? (
-                  <View style={detail.videoWrapper}>
-                    <Video
-                      ref={videoRef}
-                      source={{ uri: videoUrl }}
-                      style={detail.video}
-                      resizeMode={ResizeMode.CONTAIN}
-                      onPlaybackStatusUpdate={(s) => setStatus(s)}
-                      shouldPlay={false}
-                      useNativeControls={false}
-                      onError={(error) => console.error("Video Error:", error)}
-                      onLoadStart={() => console.log("Video Loading Started:", videoUrl)}
-                    />
-                    {/* Custom play overlay */}
-                    <TouchableOpacity
-                      style={detail.playOverlay}
-                      onPress={togglePlay}
-                      activeOpacity={0.8}
-                    >
-                      {!isPlaying && (
-                        <View style={detail.playCircle}>
-                          <Ionicons name="play" size={28} color="#fff" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                    {/* Progress bar */}
-                    {status && (status as any).durationMillis ? (
-                      <View style={detail.progressTrack}>
-                        <View
-                          style={[
-                            detail.progressFill,
-                            {
-                              width: `${
-                                (((status as any).positionMillis ?? 0) /
-                                  (status as any).durationMillis) *
-                                100
-                              }%`,
-                            },
-                          ]}
-                        />
-                      </View>
-                    ) : null}
-                  </View>
-                ) : (
-                  <View style={detail.noVideoBox}>
-                    <Ionicons
-                      name="videocam-off-outline"
-                      size={36}
-                      color="#94a3b8"
-                    />
-                    <AppText variant="bodySm" style={detail.noVideoText}>
-                      Video is not available for this session.
-                    </AppText>
-                  </View>
-                )}
 
-                {/* Exercise list */}
-                {exercises_list.length > 0 && (
+
+                {/* Exercise list with beautiful cards */}
+                {(session as any).completedExercisesData && (session as any).completedExercisesData.length > 0 ? (
+                  <View style={[detail.section, { gap: spacing.sm, paddingBottom: spacing.md }]}>
+                    <AppText variant="labelSm" style={{ color: '#64748b', marginBottom: spacing.xs, fontWeight: '700', letterSpacing: 0.5 }}>
+                      EXERCISES COMPLETED
+                    </AppText>
+                    {(session as any).completedExercisesData.map((ex: any, i: number) => {
+                      const color = ex.color || colors.primary;
+                      const icon = ex.icon || "barbell-outline";
+                      return (
+                        <View key={i} style={detail.completedRowCard}>
+                          <View style={[detail.completedIconBg, { backgroundColor: color + '1A' }]}>
+                            <Ionicons name={icon as any} size={18} color={color} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <AppText variant="bodyMd" style={{ fontWeight: '600', color: '#0f172a' }}>{ex.name}</AppText>
+                            <AppText variant="labelSm" style={{ color: '#64748b', marginTop: 2, marginBottom: spacing.xs }}>
+                              {ex.sets} Sets • {ex.reps} Reps • {(ex.accuracy || ex.acc)}% Accuracy
+                            </AppText>
+                            
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 2 }}>
+                              {Array.from({ length: ex.sets || 1 }).map((_, setIdx) => (
+                                <View key={setIdx} style={detail.thumbItem}>
+                                  <View style={detail.thumbVideoBox}>
+                                    <Ionicons name="play-circle" size={16} color="#fff" />
+                                  </View>
+                                  <AppText style={{ fontSize: 9, color: '#64748b', textAlign: 'center', marginTop: 2 }}>Set {setIdx + 1}</AppText>
+                                </View>
+                              ))}
+                            </ScrollView>
+                          </View>
+                          {/* Checked icon on right */}
+                          <Ionicons name="checkmark-circle" size={20} color="#16a34a" style={{ alignSelf: 'flex-start', marginTop: 2, marginLeft: spacing.sm }} />
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : exercises_list.length > 0 ? (
                   <View style={detail.section}>
                     <AppText variant="labelMd" style={detail.sectionTitle}>
                       EXERCISES PERFORMED
@@ -286,7 +245,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                       </View>
                     ))}
                   </View>
-                )}
+                ) : null}
               </View>
             )}
 
@@ -1291,5 +1250,41 @@ const detail = StyleSheet.create({
     color: "#94a3b8",
     textAlign: "center",
     lineHeight: 20,
+  },
+  completedRowCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
+    marginBottom: spacing.sm,
+  },
+  completedIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.md,
+  },
+  thumbItem: {
+    width: 76,
+    marginRight: spacing.sm,
+  },
+  thumbVideoBox: {
+    width: 76,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: "#475569", // Slate
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
 });
