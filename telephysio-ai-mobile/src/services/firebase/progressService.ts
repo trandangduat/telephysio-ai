@@ -25,7 +25,53 @@ import {
 } from "firebase/firestore";
 
 import { db } from "./config";
-import type { Session, ProgressSnapshot, ExerciseFeedback } from "./types";
+import type { Session, ProgressSnapshot, ExerciseFeedback, IncompleteSession } from "./types";
+
+// ═══════════════════════════════════════════════════
+// INCOMPLETE SESSIONS (Active Workout State)
+// ═══════════════════════════════════════════════════
+
+export async function getIncompleteSession(
+  patientId: string,
+  assignmentId: string,
+): Promise<IncompleteSession | null> {
+  const snap = await getDocs(
+    query(
+      collection(db, "incomplete_sessions"),
+      where("patientId", "==", patientId),
+      where("assignmentId", "==", assignmentId),
+    ),
+  );
+  if (snap.empty) return null;
+  // There should only be one incomplete session per assignment per patient
+  return { id: snap.docs[0].id, ...snap.docs[0].data() } as IncompleteSession;
+}
+
+export async function saveIncompleteSession(
+  data: Omit<IncompleteSession, "id" | "lastUpdated">,
+): Promise<string> {
+  const ref = await addDoc(collection(db, "incomplete_sessions"), {
+    ...data,
+    lastUpdated: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateIncompleteSession(
+  sessionId: string,
+  data: Partial<Omit<IncompleteSession, "id" | "lastUpdated">>,
+): Promise<void> {
+  await updateDoc(doc(db, "incomplete_sessions", sessionId), {
+    ...data,
+    lastUpdated: serverTimestamp(),
+  });
+}
+
+import { deleteDoc } from "firebase/firestore";
+
+export async function deleteIncompleteSession(sessionId: string): Promise<void> {
+  await deleteDoc(doc(db, "incomplete_sessions", sessionId));
+}
 
 // ═══════════════════════════════════════════════════
 // SESSIONS

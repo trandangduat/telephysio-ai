@@ -12,7 +12,7 @@ export { auth, db, storage } from './config';
 export type {
   UserProfile, UserRole,
   TreatmentPlan, Exercise, ExerciseDifficulty, ExerciseTemplate, Assignment,
-  Session, ProgressSnapshot,
+  Session, ProgressSnapshot, IncompleteSession,
   ChatMessage, Conversation, MessageType, ExerciseFeedback,
   ScheduleItem, Notification, LibraryItem,
 } from './types';
@@ -66,6 +66,10 @@ export {
   submitFeedback,
   getPatientFeedback,
   getAverageAccuracy,
+  getIncompleteSession,
+  saveIncompleteSession,
+  updateIncompleteSession,
+  deleteIncompleteSession,
 } from './progressService';
 
 // Chat

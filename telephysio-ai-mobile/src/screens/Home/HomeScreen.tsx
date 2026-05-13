@@ -33,7 +33,9 @@ import type {
   TreatmentPlan,
   ProgressSnapshot,
   Assignment,
+  IncompleteSession,
 } from "../../services/firebase/types";
+import { getIncompleteSession } from "../../services/firebase";
 
 type HomeNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, "Home">,
@@ -50,6 +52,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<TreatmentPlan | null>(null);
   const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
+  const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
 
   useEffect(() => {
@@ -74,8 +77,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       setProgress(fetchedProgress);
       if (assignments && assignments.length > 0) {
         setActiveAssignment(assignments[0]);
+        const incSession = await getIncompleteSession(uid, assignments[0].id);
+        setIncompleteSession(incSession);
       } else {
         setActiveAssignment(null);
+        setIncompleteSession(null);
       }
     } catch (error) {
       console.error("Error loading home data:", error);
@@ -172,188 +178,77 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </AppText>
         </View>
 
-        {/* Current Protocol Card */}
-        <View style={styles.card}>
-          <View style={styles.cardTopLeft}>
-            <Ionicons
-              name="clipboard-outline"
-              size={16}
-              color={colors.primary}
-            />
-            <AppText variant="labelMd" style={styles.blueLabel}>
-              CURRENT PROTOCOL
-            </AppText>
-          </View>
-          <AppText variant="headlineMd" style={styles.protocolTitle}>
-            {protocolTitle}
-          </AppText>
-          <AppText
-            variant="bodySm"
-            color={colors.onSurfaceVariant}
-            style={styles.protocolSubtitle}
-          >
-            {protocolSubtitle}
-          </AppText>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => navigation.navigate("Workout")}
-          >
-            <Ionicons
-              name="play"
-              size={18}
-              color={colors.onPrimary}
-              style={{ marginRight: 8 }}
-            />
-            <AppText variant="labelMd" color={colors.onPrimary}>
-              Start Session
-            </AppText>
-          </TouchableOpacity>
-        </View>
+        {/* Hero Workout Card */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroCardContent}>
+            <View style={styles.heroLeftCol}>
+              <View style={styles.heroTag}>
+                <Ionicons name="flash" size={12} color={colors.primary} />
+                <AppText variant="labelSm" style={styles.heroTagText}>
+                  TODAY'S PLAN
+                </AppText>
+              </View>
+              <AppText variant="headlineMd" style={styles.heroTitle} numberOfLines={2}>
+                {activeAssignment ? activeAssignment.templateName : "Rest Day"}
+              </AppText>
+              
+              <View style={styles.heroMeta}>
+                {activeAssignment ? (
+                  <>
+                    <View style={styles.heroMetaItem}>
+                      <Ionicons name="barbell-outline" size={14} color="#64748b" />
+                      <AppText variant="bodySm" style={styles.heroMetaText}>
+                        {activeAssignment.exercises.length} exercises
+                      </AppText>
+                    </View>
+                    <View style={styles.heroMetaItem}>
+                      <Ionicons name="time-outline" size={14} color="#64748b" />
+                      <AppText variant="bodySm" style={styles.heroMetaText}>
+                        {activeAssignment.totalDuration}
+                      </AppText>
+                    </View>
+                  </>
+                ) : (
+                  <AppText variant="bodySm" style={{ color: "#64748b" }}>
+                    No assigned routines for today. Enjoy your break!
+                  </AppText>
+                )}
+              </View>
+            </View>
 
-        {/* Movement Score Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeaderBetween}>
-            <AppText variant="labelMd" style={styles.grayLabel}>
-              MOVEMENT SCORE
-            </AppText>
-            <Ionicons
-              name="information-circle"
-              size={20}
-              color={colors.outline}
-            />
-          </View>
-          <View style={styles.scoreRow}>
-            <AppText style={styles.scoreBig}>{movementScore}</AppText>
-            <AppText style={styles.scoreSmall}> /100</AppText>
-          </View>
-
-          {/* Mock Area Chart using CSS */}
-          <View style={styles.chartContainer}>
-            <View style={styles.chartBackground}>
-              {/* Fake curve elements */}
-              <View style={[styles.chartBar, { height: 30 }]} />
-              <View style={[styles.chartBar, { height: 45 }]} />
-              <View style={[styles.chartBar, { height: 40 }]} />
-              <View style={[styles.chartBar, { height: 60 }]} />
-              <View
-                style={[
-                  styles.chartBar,
-                  { height: Math.max(30, movementScore - 10) },
-                ]}
-              />
-              <View
-                style={[
-                  styles.chartBar,
-                  { height: Math.max(30, movementScore - 5) },
-                ]}
-              />
-              <View
-                style={[
-                  styles.chartBar,
-                  { height: Math.max(30, movementScore + 10) },
-                ]}
-              />
+            <View style={styles.heroRightCol}>
+              {activeAssignment ? (
+                <TouchableOpacity
+                  style={styles.heroPlayButton}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate("Workout")}
+                >
+                  <Ionicons
+                    name={incompleteSession ? "play-forward" : "play"}
+                    size={28}
+                    color="#fff"
+                  />
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.heroRestIcon}>
+                  <Ionicons name="cafe" size={28} color="#94a3b8" />
+                </View>
+              )}
             </View>
           </View>
-          <AppText
-            variant="labelSm"
-            color={colors.onSurfaceVariant}
-            style={styles.chartLabel}
-          >
-            AI Assessed Average (Last 7 Days)
-          </AppText>
-        </View>
-
-        {/* Time Active Card */}
-        <View style={styles.card}>
-          <View style={styles.cardTopLeft}>
-            <Ionicons
-              name="stopwatch"
-              size={16}
-              color={colors.onSurfaceVariant}
-            />
-            <AppText variant="labelMd" style={styles.grayLabel}>
-              TIME ACTIVE
-            </AppText>
-          </View>
-          <View style={styles.statRow}>
-            <AppText style={styles.statBig}>{timeActive}</AppText>
-            <AppText style={styles.statSmall}> min</AppText>
-          </View>
-          <View style={styles.progressBarTrack}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${Math.min(100, dailyGoalPercent)}%`,
-                  backgroundColor: colors.tertiaryFixedDim,
-                },
-              ]}
-            />
-          </View>
-          <AppText
-            variant="labelSm"
-            color={colors.onSurfaceVariant}
-            style={styles.progressLabelRight}
-          >
-            {dailyGoalPercent}% of daily goal
-          </AppText>
-        </View>
-
-        {/* Sessions Card */}
-        <View style={styles.card}>
-          <View style={styles.cardTopLeft}>
-            <Ionicons
-              name="calendar-outline"
-              size={16}
-              color={colors.onSurfaceVariant}
-            />
-            <AppText variant="labelMd" style={styles.grayLabel}>
-              SESSIONS
-            </AppText>
-          </View>
-          <View style={styles.statRow}>
-            <AppText style={styles.statBig}>{sessionsCompleted}</AppText>
-            <AppText style={styles.statSmall}>
-              {" "}
-              /{sessionsTarget} this week
-            </AppText>
-          </View>
-          <View style={styles.progressBarTrack}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${Math.min(100, (sessionsCompleted / sessionsTarget) * 100)}%`,
-                  backgroundColor: colors.primary,
-                },
-              ]}
-            />
-          </View>
-          <AppText
-            variant="labelSm"
-            color={colors.onSurfaceVariant}
-            style={styles.progressLabelRight}
-          >
-            {Math.max(0, sessionsTarget - sessionsCompleted)} remaining
-          </AppText>
-        </View>
-
-        {/* AI Insight Card */}
-        <View style={[styles.card, styles.insightCard]}>
-          <View style={styles.cardTopLeft}>
-            <Ionicons
-              name="sparkles"
-              size={16}
-              color={colors.primaryFixedDim}
-            />
-            <AppText variant="labelMd" style={styles.insightLabel}>
-              AI INSIGHT
-            </AppText>
-          </View>
-          <AppText variant="bodyMd" style={styles.insightText}>
-            {aiInsight}
-          </AppText>
+          
+          {activeAssignment && (
+            <TouchableOpacity 
+              style={styles.heroFooter} 
+              activeOpacity={0.7} 
+              onPress={() => navigation.navigate("Workout")}
+            >
+              <AppText variant="labelSm" style={styles.heroFooterText}>
+                {incompleteSession ? "Session In-Progress • Tap to resume" : "Ready to Start • Tap to play"}
+              </AppText>
+              <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -419,148 +314,105 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#64748b",
   },
-  card: {
+  heroCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 20,
-    padding: spacing.lg,
+    borderRadius: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
+    elevation: 4,
     borderWidth: 1,
     borderColor: "#f1f5f9",
+    overflow: "hidden",
   },
-  cardTopLeft: {
+  heroCardContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: spacing.xl,
+  },
+  heroLeftCol: {
+    flex: 1,
+    paddingRight: spacing.md,
+  },
+  heroRightCol: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heroTag: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#eff6ff",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    marginBottom: spacing.sm,
+    gap: 4,
+  },
+  heroTagText: {
+    color: colors.primary,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    fontSize: 11,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#0f172a",
+    letterSpacing: -0.3,
     marginBottom: spacing.md,
+  },
+  heroMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  heroMetaItem: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
-  cardHeaderBetween: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  blueLabel: {
-    color: colors.primary,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    fontSize: 11,
-  },
-  grayLabel: {
+  heroMetaText: {
+    fontSize: 13,
     color: "#64748b",
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    fontSize: 11,
+    fontWeight: "500",
   },
-  protocolTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: 4,
-  },
-  protocolSubtitle: {
-    color: "#64748b",
-    marginBottom: spacing.lg,
-  },
-  primaryButton: {
+  heroPlayButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.primary,
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 100,
+    alignItems: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  scoreRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginBottom: spacing.md,
-  },
-  scoreBig: {
-    fontFamily: typography.headlineXl.fontFamily,
-    fontSize: 48,
-    fontWeight: "700",
-    color: colors.primary,
-    letterSpacing: -1,
-  },
-  scoreSmall: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 16,
-    color: "#64748b",
-    fontWeight: "600",
-  },
-  chartContainer: {
-    height: 120,
-    marginBottom: spacing.md,
-    justifyContent: "flex-end",
-  },
-  chartBackground: {
-    height: "100%",
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    borderBottomWidth: 2,
-    borderBottomColor: "#e2e8f0",
-  },
-  chartBar: {
-    width: "12%",
-    backgroundColor: "#dbeafe",
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-  },
-  chartLabel: {
-    textAlign: "center",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  statRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginBottom: spacing.md,
-  },
-  statBig: {
-    fontFamily: typography.headlineXl.fontFamily,
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#0f172a",
-    letterSpacing: -0.5,
-  },
-  statSmall: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 15,
-    color: "#64748b",
-    fontWeight: "500",
-  },
-  progressBarTrack: {
-    height: 8,
+  heroRestIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: "#f1f5f9",
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 4,
+  heroFooter: {
+    backgroundColor: "#fafafa",
+    borderTopWidth: 1,
+    borderTopColor: "#f1f5f9",
+    paddingVertical: 12,
+    paddingHorizontal: spacing.xl,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  progressLabelRight: {
-    textAlign: "right",
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  insightCard: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  insightLabel: {
-    color: "#93c5fd",
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    fontSize: 11,
-  },
-  insightText: {
-    color: "#ffffff",
-    lineHeight: 24,
+  heroFooterText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#475569",
   },
 });

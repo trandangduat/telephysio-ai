@@ -12,11 +12,14 @@ export type AuthStackParamList = {
 // ── Patient Navigation ──────────────────────────────
 export type RootStackParamList = {
   MainTabs: undefined;
-  Calibration: undefined;
-  Training: undefined;
+  Calibration: { assignmentId: string; exerciseIndex: number };
+  Training: { assignmentId: string; exerciseIndex: number };
+  ExerciseResult: { assignmentId: string; exerciseIndex: number; accuracy: number; durationSeconds: number; reps: number; sets: number };
+  WorkoutSummary: { assignmentId: string };
   DoctorChat: undefined;
   Profile: undefined;
   MyAssignments: undefined;
+  WorkoutDetail: { assignmentId: string };
 };
 
 export type BottomTabParamList = {
@@ -54,9 +57,12 @@ export const SCREENS = {
   Home: 'Home',
   Calibration: 'Calibration',
   Training: 'Training',
+  ExerciseResult: 'ExerciseResult',
+  WorkoutSummary: 'WorkoutSummary',
   Workout: 'Workout',
   Profile: 'Profile',
   MyAssignments: 'MyAssignments',
+  WorkoutDetail: 'WorkoutDetail',
   // Doctor
   DoctorTabs: 'DoctorTabs',
   Dashboard: 'Dashboard',

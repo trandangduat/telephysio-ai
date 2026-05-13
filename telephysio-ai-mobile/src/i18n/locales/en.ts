@@ -99,6 +99,8 @@ export default {
     title: "Today's Protocol",
     subtitle: 'Complete these exercises to reach your daily goal.',
     startSession: 'Start Session',
+    beginWorkout: 'Begin Workout',
+    continueWorkout: 'Continue Workout',
   },
 
   // ── Calibration Screen ───────────────────────────

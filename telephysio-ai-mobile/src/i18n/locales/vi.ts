@@ -99,6 +99,8 @@ export default {
     title: "Bài tập Hôm nay",
     subtitle: 'Hoàn thành các bài tập này để đạt mục tiêu hàng ngày.',
     startSession: 'Bắt đầu tập',
+    beginWorkout: 'Bắt đầu ngay',
+    continueWorkout: 'Tiếp tục tập',
   },
 
   // ── Calibration Screen ───────────────────────────

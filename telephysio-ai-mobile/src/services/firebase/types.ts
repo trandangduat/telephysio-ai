@@ -98,7 +98,33 @@ export interface Session {
   reviewedAt?: Timestamp; // When the doctor reviewed it
   exerciseList?: string[]; // Names of exercises performed
   formBreakdown?: Record<string, number>; // Per-joint/angle accuracy (e.g. {"Knee Angle": 85})
+  completedExercisesData?: Array<{
+    name: string;
+    accuracy: number;
+    reps: number;
+    sets: number;
+    durationSeconds: number;
+    icon?: string;
+    color?: string;
+  }>;
   feedbackUpdatedAt?: Timestamp;
+}
+
+// ── Incomplete Session (Active Workout State) ───────
+export interface IncompleteSession {
+  id: string; // Same as assignmentId
+  patientId: string;
+  assignmentId: string;
+  currentExerciseIndex: number;
+  exercisesCompleted: number;
+  completedExercisesData: Array<{
+    exerciseId: string;
+    accuracy: number;
+    reps: number;
+    sets: number;
+    durationSeconds: number;
+  }>;
+  lastUpdated: Timestamp;
 }
 
 // ── Progress Snapshot ───────────────────────────────

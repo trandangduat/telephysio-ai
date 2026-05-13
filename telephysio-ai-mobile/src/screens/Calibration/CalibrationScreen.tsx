@@ -8,21 +8,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppText, AppButton } from '../../components/ui';
 import { colors, radius, spacing } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
-type CalibrationNavProp = NativeStackNavigationProp<RootStackParamList, 'Calibration'>;
-
-interface Props {
-  navigation: CalibrationNavProp;
-}
+type CalibrationProps = NativeStackScreenProps<RootStackParamList, 'Calibration'>;
 
 type CalibrationStatus = 'not-ready' | 'partial' | 'ready';
 
-export const CalibrationScreen: React.FC<Props> = ({ navigation }) => {
+export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigation }) => {
+  const { assignmentId, exerciseIndex } = route.params || { assignmentId: '', exerciseIndex: 0 };
   const { t } = useTranslation();
   const [status, setStatus] = useState<CalibrationStatus>('not-ready');
 
@@ -60,7 +57,7 @@ export const CalibrationScreen: React.FC<Props> = ({ navigation }) => {
           label={t('calibration.startButton')}
           size="lg"
           disabled={status !== 'ready'}
-          onPress={() => navigation.replace('Training')}
+          onPress={() => navigation.replace('Training', { assignmentId, exerciseIndex })}
           style={styles.startBtn}
         />
       </View>

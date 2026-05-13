@@ -23,9 +23,12 @@ import { SignUpScreen } from "../screens/Auth/SignUpScreen";
 import { BottomTabNavigator } from "./PatienttabNavigator";
 import { CalibrationScreen } from "../screens/Calibration/CalibrationScreen";
 import { TrainingScreen } from "../screens/Training/TrainingScreen";
+import { ExerciseResultScreen } from "../screens/Training/ExerciseResultScreen";
+import { WorkoutSummaryScreen } from "../screens/Training/WorkoutSummaryScreen";
 import { DoctorChatScreen } from "../screens/Session/DoctorChatScreen";
 import { ProfileScreen } from "../screens/Profile/ProfileScreen";
 import { MyAssignmentsScreen } from "../screens/Workout/MyAssignmentsScreen";
+import { WorkoutDetailScreen } from "../screens/Workout/WorkoutDetailScreen";
 
 // Doctor screens
 import { DoctorTabNavigator } from "./DoctorTabNavigator";
@@ -86,6 +89,16 @@ const PatientNavigator: React.FC = () => {
         options={{ headerShown: false }}
       />
       <PatientStack.Screen
+        name="ExerciseResult"
+        component={ExerciseResultScreen}
+        options={{ headerShown: false }}
+      />
+      <PatientStack.Screen
+        name="WorkoutSummary"
+        component={WorkoutSummaryScreen}
+        options={{ headerShown: false }}
+      />
+      <PatientStack.Screen
         name="DoctorChat"
         component={DoctorChatScreen}
         options={{ headerShown: false }}
@@ -98,6 +111,11 @@ const PatientNavigator: React.FC = () => {
       <PatientStack.Screen
         name="MyAssignments"
         component={MyAssignmentsScreen}
+        options={{ headerShown: false }}
+      />
+      <PatientStack.Screen
+        name="WorkoutDetail"
+        component={WorkoutDetailScreen}
         options={{ headerShown: false }}
       />
     </PatientStack.Navigator>
