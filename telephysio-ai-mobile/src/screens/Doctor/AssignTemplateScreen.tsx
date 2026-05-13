@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,15 +20,39 @@ import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import type { DoctorStackParamList } from '../../navigation/types';
-import type { UserProfile, ExerciseTemplate, Exercise } from '../../services/firebase/types';
+import type { UserProfile, ExerciseTemplate, Exercise, Assignment } from '../../services/firebase/types';
 import {
   getAllPatients,
   getExerciseTemplates,
   createAssignment,
+  getDoctorAssignments,
 } from '../../services/firebase';
+import { Timestamp } from 'firebase/firestore';
 
 type AssignTemplateNavProp = NativeStackNavigationProp<DoctorStackParamList, 'AssignTemplate'>;
 type AssignTemplateRouteProp = RouteProp<DoctorStackParamList, 'AssignTemplate'>;
+
+const startOfDay = (date: Date) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+const addDays = (date: Date, days: number) => {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+};
+
+const dateKey = (date: Date) => {
+  const local = startOfDay(date);
+  return `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`;
+};
+
+const getAssignmentDate = (assignment: Assignment) =>
+  ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ?? null;
 
 export const AssignTemplateScreen: React.FC = () => {
   const navigation = useNavigation<AssignTemplateNavProp>();
@@ -36,11 +61,14 @@ export const AssignTemplateScreen: React.FC = () => {
 
   const initialTemplateId = route.params?.templateId;
   const initialPatientId = route.params?.patientId;
+  const initialPatientName = route.params?.patientName;
+  const isPatientScoped = !!initialPatientId;
 
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [allPatients, setAllPatients] = useState<UserProfile[]>([]);
   const [allTemplates, setAllTemplates] = useState<ExerciseTemplate[]>([]);
+  const [patientAssignments, setPatientAssignments] = useState<Assignment[]>([]);
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>(
     initialTemplateId ? [initialTemplateId] : []
   );
@@ -49,6 +77,9 @@ export const AssignTemplateScreen: React.FC = () => {
     initialPatientId ? [initialPatientId] : []
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(new Date()));
 
   useEffect(() => { loadData(); }, [uid]);
 
@@ -56,12 +87,18 @@ export const AssignTemplateScreen: React.FC = () => {
     if (!uid) return;
     setLoading(true);
     try {
-      const [patientsData, templatesData] = await Promise.all([
+      const [patientsData, templatesData, assignmentsData] = await Promise.all([
         getAllPatients(),
         getExerciseTemplates(uid),
+        getDoctorAssignments(uid),
       ]);
       setAllPatients(patientsData);
       setAllTemplates(templatesData);
+      setPatientAssignments(
+        initialPatientId
+          ? assignmentsData.filter(a => a.patientId === initialPatientId)
+          : assignmentsData
+      );
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -133,6 +170,7 @@ export const AssignTemplateScreen: React.FC = () => {
             exercises,
             totalDuration: duration,
             status: 'active',
+            scheduledDate: Timestamp.fromDate(selectedDate),
           })
         )
       );
@@ -155,6 +193,25 @@ export const AssignTemplateScreen: React.FC = () => {
       setAssigning(false);
     }
   };
+
+  const assignedDayCounts = patientAssignments.reduce<Record<string, number>>((acc, assignment) => {
+    const date = getAssignmentDate(assignment);
+    if (!date) return acc;
+    const key = dateKey(date);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const quickDates = Array.from({ length: 14 }, (_, index) => addDays(new Date(), index));
+  const selectedDateKey = dateKey(selectedDate);
+  const calendarLead = startOfMonth(visibleMonth).getDay();
+  const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
+  const calendarCells = [
+    ...Array.from({ length: calendarLead }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), index + 1)),
+  ];
+
+  const selectedPatientLabel = initialPatientName || allPatients.find(p => p.uid === initialPatientId)?.displayName || 'Selected patient';
 
   if (loading) {
     return (
@@ -230,11 +287,63 @@ export const AssignTemplateScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Step 2: Select Patients */}
+        {/* Schedule */}
         <View style={styles.section}>
           <View style={styles.sectionLabelRow}>
             <AppText variant="labelMd" style={styles.sectionLabel}>
-              STEP 2: SELECT PATIENTS ({selectedPatientIds.length} selected)
+              STEP 2: SCHEDULE SESSION
+            </AppText>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <AppText variant="labelSm" style={{ color: colors.primary, fontWeight: '800' }}>
+                Open calendar
+              </AppText>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.scheduleCard}>
+            <View style={styles.scheduleHeader}>
+              <View>
+                <AppText variant="labelMd" style={styles.scheduleDate}>
+                  {selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                </AppText>
+                <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2 }}>
+                  {assignedDayCounts[selectedDateKey]
+                    ? `${assignedDayCounts[selectedDateKey]} existing assignment${assignedDayCounts[selectedDateKey] > 1 ? 's' : ''} on this day`
+                    : 'No assignments scheduled on this day'}
+                </AppText>
+              </View>
+              <Ionicons name="calendar" size={24} color={colors.primary} />
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickDateRail}>
+              {quickDates.map((date) => {
+                const key = dateKey(date);
+                const active = key === selectedDateKey;
+                const count = assignedDayCounts[key] || 0;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.quickDate, active && styles.quickDateActive]}
+                    onPress={() => setSelectedDate(startOfDay(date))}
+                    activeOpacity={0.85}
+                  >
+                    <AppText variant="labelSm" style={[styles.quickWeekday, active && styles.quickTextActive]}>
+                      {date.toLocaleDateString(undefined, { weekday: 'short' })}
+                    </AppText>
+                    <AppText variant="headlineMd" style={[styles.quickDay, active && styles.quickTextActive]}>
+                      {date.getDate()}
+                    </AppText>
+                    <View style={[styles.assignmentDot, count > 0 && styles.assignmentDotFilled, active && { backgroundColor: '#fff' }]} />
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Step 2: Select Patients */}
+        {!isPatientScoped ? <View style={styles.section}>
+          <View style={styles.sectionLabelRow}>
+            <AppText variant="labelMd" style={styles.sectionLabel}>
+              STEP 3: SELECT PATIENTS ({selectedPatientIds.length} selected)
             </AppText>
             {selectedPatientIds.length > 0 && (
               <TouchableOpacity onPress={() => setSelectedPatientIds([])}>
@@ -306,12 +415,71 @@ export const AssignTemplateScreen: React.FC = () => {
               })}
             </View>
           )}
-        </View>
+        </View> : (
+          <View style={styles.lockedPatientCard}>
+            <Ionicons name="person-circle-outline" size={24} color={colors.primary} />
+            <View style={{ flex: 1 }}>
+              <AppText variant="labelMd" style={{ color: '#0f172a', fontWeight: '800' }}>
+                Assigning to {selectedPatientLabel}
+              </AppText>
+              <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2 }}>
+                Patient is locked from Patient Details.
+              </AppText>
+            </View>
+          </View>
+        )}
       </ScrollView>
+
+      <Modal visible={showDatePicker} animationType="slide" transparent onRequestClose={() => setShowDatePicker(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarSheet}>
+            <View style={styles.calendarHeader}>
+              <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>
+                <Ionicons name="chevron-back" size={22} color={colors.primary} />
+              </TouchableOpacity>
+              <AppText variant="headlineMd" style={styles.calendarTitle}>
+                {visibleMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+              </AppText>
+              <TouchableOpacity onPress={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>
+                <Ionicons name="chevron-forward" size={22} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.weekHeader}>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                <AppText key={`${day}-${index}`} variant="labelSm" style={styles.weekHeaderText}>{day}</AppText>
+              ))}
+            </View>
+            <View style={styles.calendarGrid}>
+              {calendarCells.map((date, index) => {
+                if (!date) return <View key={`empty-${index}`} style={styles.calendarDay} />;
+                const key = dateKey(date);
+                const active = key === selectedDateKey;
+                const count = assignedDayCounts[key] || 0;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.calendarDay, active && styles.calendarDayActive]}
+                    onPress={() => setSelectedDate(startOfDay(date))}
+                    activeOpacity={0.85}
+                  >
+                    <AppText variant="labelMd" style={[styles.calendarDayText, active && styles.calendarDayTextActive]}>
+                      {date.getDate()}
+                    </AppText>
+                    {count > 0 && <View style={[styles.calendarAssignedPill, active && { backgroundColor: '#fff' }]} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <TouchableOpacity style={styles.calendarDoneBtn} onPress={() => setShowDatePicker(false)}>
+              <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '800' }}>Use this date</AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Bottom action bar */}
       <View style={styles.bottomBar}>
-        {selectedPatientIds.length > 0 && (
+        {selectedPatientIds.length > 0 && !isPatientScoped && (
           <AppText variant="bodySm" style={styles.selectedCount}>
             {selectedPatientIds.length} patient{selectedPatientIds.length > 1 ? 's' : ''} selected
           </AppText>
@@ -330,7 +498,9 @@ export const AssignTemplateScreen: React.FC = () => {
             <>
               <Ionicons name="person-add-outline" size={18} color="#fff" />
               <AppText variant="labelMd" style={styles.assignBtnText}>
-                Assign to {selectedPatientIds.length > 0 ? `${selectedPatientIds.length} Patient${selectedPatientIds.length > 1 ? 's' : ''}` : 'Patients'}
+                {isPatientScoped
+                  ? `Assign to ${selectedPatientLabel}`
+                  : `Assign to ${selectedPatientIds.length > 0 ? `${selectedPatientIds.length} Patient${selectedPatientIds.length > 1 ? 's' : ''}` : 'Patients'}`}
               </AppText>
             </>
           )}
@@ -386,6 +556,52 @@ const styles = StyleSheet.create({
   summaryLabel: { color: '#94a3b8', fontSize: 10, fontWeight: '700', marginBottom: 4 },
   summaryValue: { color: '#fff', fontWeight: '800' },
   summaryDivider: { width: 1, height: 40, backgroundColor: '#334155' },
+
+  scheduleCard: {
+    backgroundColor: '#fff', borderRadius: 20, padding: spacing.md,
+    borderWidth: 1.5, borderColor: '#dbeafe', gap: spacing.md,
+  },
+  scheduleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  scheduleDate: { color: '#0f172a', fontSize: 16, fontWeight: '800' },
+  quickDateRail: { gap: spacing.sm, paddingRight: spacing.md },
+  quickDate: {
+    width: 68, alignItems: 'center', borderRadius: 18, paddingVertical: 12,
+    backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0',
+  },
+  quickDateActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  quickWeekday: { color: '#64748b', fontSize: 11, fontWeight: '700' },
+  quickDay: { color: '#0f172a', fontSize: 22, fontWeight: '800', marginTop: 2 },
+  quickTextActive: { color: '#fff' },
+  assignmentDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent', marginTop: 6 },
+  assignmentDotFilled: { backgroundColor: '#f59e0b' },
+  lockedPatientCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#ecfeff', borderRadius: 18, padding: spacing.md,
+    borderWidth: 1, borderColor: '#bae6fd',
+  },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.35)', justifyContent: 'flex-end' },
+  calendarSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: spacing.lg, paddingBottom: 32,
+  },
+  calendarHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  calendarTitle: { color: '#0f172a', fontWeight: '800', fontSize: 18 },
+  weekHeader: { flexDirection: 'row', marginBottom: spacing.sm },
+  weekHeaderText: { flex: 1, textAlign: 'center', color: '#94a3b8', fontWeight: '800' },
+  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  calendarDay: {
+    width: `${100 / 7}%`, height: 46, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 14, marginBottom: 4,
+  },
+  calendarDayActive: { backgroundColor: colors.primary },
+  calendarDayText: { color: '#0f172a', fontWeight: '700' },
+  calendarDayTextActive: { color: '#fff' },
+  calendarAssignedPill: { width: 16, height: 4, borderRadius: 99, backgroundColor: '#f59e0b', marginTop: 3 },
+  calendarDoneBtn: {
+    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 14, borderRadius: 16, marginTop: spacing.md,
+  },
 
   // Search
   searchBox: {

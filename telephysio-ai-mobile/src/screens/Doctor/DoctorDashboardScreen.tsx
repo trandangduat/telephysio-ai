@@ -68,7 +68,7 @@ export const DoctorDashboardScreen: React.FC = () => {
           (a) => a.patientId === profile.uid
         );
         const todayAssignments = patientAssignments.filter((a) => {
-          const at = (a.assignedAt as any)?.toDate?.();
+          const at = ((a.scheduledDate ?? a.assignedAt) as any)?.toDate?.();
           return at && at >= today;
         });
         const completed = todayAssignments.filter((a) => a.status === "completed").length;
