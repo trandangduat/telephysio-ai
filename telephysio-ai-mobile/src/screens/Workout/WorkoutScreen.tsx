@@ -361,7 +361,7 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
               {/* Render completed sessions for the selected day */}
               {hasSessions && (
                 <View style={{ marginTop: hasActive ? spacing.lg : 0, marginBottom: spacing.md, paddingHorizontal: 4 }}>
-                  <AppText variant="labelLg" style={{ color: '#475569', fontWeight: '700' }}>
+                  <AppText variant="labelMd" style={{ color: '#475569', fontWeight: '700' }}>
                     Completed sessions
                   </AppText>
                 </View>
