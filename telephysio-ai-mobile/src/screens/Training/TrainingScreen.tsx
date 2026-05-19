@@ -31,6 +31,8 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     const [formAccuracy, setFormAccuracy] = useState(92);
     const [paused, setPaused] = useState(false);
     const [elapsed, setElapsed] = useState(0);
+    const [currentSetElapsed, setCurrentSetElapsed] = useState(0);
+    const [setDurations, setSetDurations] = useState<number[]>([]);
     const [isFinishing, setIsFinishing] = useState(false);
     const [isResting, setIsResting] = useState(false);
     const [restTimeLeft, setRestTimeLeft] = useState(0);
@@ -81,6 +83,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         setIsResting(false);
                         setCurrentSet(s => s + 1);
                         setCurrentRep(0);
+                        setCurrentSetElapsed(0); // Reset set timer for the new set!
                         return 0;
                     }
                     return prev - 1;
@@ -88,17 +91,23 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
             }, 1000);
             return () => clearInterval(timer);
         } else {
-            const timer = setInterval(() => setElapsed((p) => p + 1), 1000);
+            const timer = setInterval(() => {
+                setElapsed(p => p + 1);
+                setCurrentSetElapsed(p => p + 1);
+            }, 1000);
             return () => clearInterval(timer);
         }
     }, [paused, isResting]);
 
     const handleStop = useCallback(() => { navigation.goBack(); }, [navigation]);
 
-    const handleNextExercise = async () => {
+    const handleNextExercise = async (finalDurations?: number[]) => {
         if (!uid || !exercise) return;
         setIsFinishing(true);
         setPaused(true);
+
+        const durationsToSend = finalDurations || [...setDurations, currentSetElapsed];
+
         try {
             // Just navigate to ExerciseResult
             navigation.replace('ExerciseResult', {
@@ -108,6 +117,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                 durationSeconds: elapsed,
                 reps: currentRep,
                 sets: currentSet,
+                setDurations: durationsToSend,
             });
         } catch (error) {
             console.error('Failed to finish exercise:', error);
@@ -119,11 +129,16 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     };
 
     const handleCompleteSet = () => {
+        const currentSetDuration = currentSetElapsed;
+        const updatedDurations = [...setDurations, currentSetDuration];
+        setSetDurations(updatedDurations);
+
         if (currentSet < totalSets) {
             setIsResting(true);
             setRestTimeLeft(exercise?.restBetweenSets || 30);
+            setCurrentSetElapsed(0);
         } else {
-            handleNextExercise();
+            handleNextExercise(updatedDurations);
         }
     };
 
@@ -179,7 +194,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                                 <View style={styles.fsLiveDot} />
                                 <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>LIVE</AppText>
                             </View>
-                            <AppText variant="bodyMd" style={styles.timerText}>{formatTime(elapsed)}</AppText>
+                            <AppText variant="bodyMd" style={styles.timerText}>{formatTime(currentSetElapsed)}</AppText>
                         </View>
 
                         {/* Right button finishes session */}
@@ -226,9 +241,9 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         </TouchableOpacity>
 
                         {/* Right button is used to complete current set / finish exercise */}
-                        <TouchableOpacity 
-                            style={[styles.skipButton, { backgroundColor: '#10b981' }]} 
-                            onPress={handleCompleteSet} 
+                        <TouchableOpacity
+                            style={[styles.skipButton, { backgroundColor: '#10b981' }]}
+                            onPress={handleCompleteSet}
                             disabled={isFinishing}
                         >
                             {isFinishing ? (
@@ -245,29 +260,29 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         <View style={styles.restIconCircle}>
                             <Ionicons name="stopwatch-outline" size={36} color={colors.primary} />
                         </View>
-                        
+
                         <AppText variant="labelMd" style={styles.restLabel}>RESTING PERIOD</AppText>
-                        
+
                         <AppText variant="headlineXl" style={styles.restTimerDigits}>
                             {formatTime(restTimeLeft)}
                         </AppText>
-                        
+
                         <AppText variant="bodySm" style={styles.restSubtext}>
                             Up Next: Set {currentSet + 1} of {totalSets}
                         </AppText>
 
                         <View style={styles.restActionRow}>
-                            <TouchableOpacity 
-                                style={styles.addTimeButton} 
+                            <TouchableOpacity
+                                style={styles.addTimeButton}
                                 onPress={() => setRestTimeLeft(p => p + 20)}
                                 activeOpacity={0.8}
                             >
                                 <Ionicons name="add-outline" size={16} color="#fff" />
                                 <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>20s</AppText>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity 
-                                style={styles.skipRestBtnPremium} 
+
+                            <TouchableOpacity
+                                style={styles.skipRestBtnPremium}
                                 onPress={() => setRestTimeLeft(0)}
                                 activeOpacity={0.8}
                             >
@@ -391,9 +406,9 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                     </TouchableOpacity>
 
                     {/* Right Button ONLY (Completes set / finishes) */}
-                    <TouchableOpacity 
-                        style={[styles.skipButton, { backgroundColor: '#10b981' }]} 
-                        onPress={handleCompleteSet} 
+                    <TouchableOpacity
+                        style={[styles.skipButton, { backgroundColor: '#10b981' }]}
+                        onPress={handleCompleteSet}
                         disabled={isFinishing}
                     >
                         {isFinishing ? (
@@ -409,29 +424,29 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         <View style={styles.restIconCircle}>
                             <Ionicons name="stopwatch-outline" size={36} color={colors.primary} />
                         </View>
-                        
+
                         <AppText variant="labelMd" style={styles.restLabel}>RESTING PERIOD</AppText>
-                        
+
                         <AppText variant="headlineXl" style={styles.restTimerDigits}>
                             {formatTime(restTimeLeft)}
                         </AppText>
-                        
+
                         <AppText variant="bodySm" style={styles.restSubtext}>
                             Up Next: Set {currentSet + 1} of {totalSets}
                         </AppText>
 
                         <View style={styles.restActionRow}>
-                            <TouchableOpacity 
-                                style={styles.addTimeButton} 
+                            <TouchableOpacity
+                                style={styles.addTimeButton}
                                 onPress={() => setRestTimeLeft(p => p + 20)}
                                 activeOpacity={0.8}
                             >
                                 <Ionicons name="add-outline" size={16} color="#fff" />
                                 <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>20s</AppText>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity 
-                                style={styles.skipRestBtnPremium} 
+
+                            <TouchableOpacity
+                                style={styles.skipRestBtnPremium}
                                 onPress={() => setRestTimeLeft(0)}
                                 activeOpacity={0.8}
                             >
@@ -531,11 +546,11 @@ const styles = StyleSheet.create({
     statValue: { fontFamily: typography.headlineXl.fontFamily, fontSize: 36, color: '#0f172a' },
     controlsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.lg, marginTop: spacing.sm },
     pauseButton: { flexDirection: 'row', height: 56, paddingHorizontal: spacing.xl, borderRadius: 28, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-    restOverlay: { 
-        ...StyleSheet.absoluteFillObject, 
-        backgroundColor: 'rgba(15, 23, 42, 0.96)', 
-        zIndex: 100, 
-        alignItems: 'center', 
+    restOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(15, 23, 42, 0.96)',
+        zIndex: 100,
+        alignItems: 'center',
         justifyContent: 'center',
     },
     restIconCircle: {

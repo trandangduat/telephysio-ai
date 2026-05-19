@@ -11,6 +11,10 @@ import {
   Timestamp,
   getDoc,
   setDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from '../src/services/firebase/config';
 
@@ -22,6 +26,19 @@ async function seed() {
   console.log("🚀 Starting custom seed script for test users...");
   
   try {
+    // Clear existing test data for user to provide clean slate
+    console.log("🧹 Clearing prior user sessions & incomplete sessions...");
+    const sessionsQ = query(collection(db, "sessions"), where("patientId", "==", PATIENT_UID));
+    const sessionsSnap = await getDocs(sessionsQ);
+    for (const snap of sessionsSnap.docs) {
+      await deleteDoc(snap.ref);
+    }
+    const incQ = query(collection(db, "incomplete_sessions"), where("patientId", "==", PATIENT_UID));
+    const incSnap = await getDocs(incQ);
+    for (const snap of incSnap.docs) {
+      await deleteDoc(snap.ref);
+    }
+
     const batch = writeBatch(db);
 
     // ═══════════════════════════════════════════════════
@@ -140,17 +157,21 @@ async function seed() {
     // ═══════════════════════════════════════════════════
     console.log("👉 Creating active/completed Assignments...");
     
-    // Active assignment
-    const activeAssignmentId = `assignment-${PATIENT_UID}-active`;
-    const activeRef = doc(db, "assignments", activeAssignmentId);
-    batch.set(activeRef, {
-      id: activeAssignmentId,
+    // Active Assignment 1 (Morning)
+    const morningDate = new Date();
+    morningDate.setHours(8, 0, 0, 0);
+    const activeAssignmentId1 = `assignment-${PATIENT_UID}-active-1`;
+    const activeRef1 = doc(db, "assignments", activeAssignmentId1);
+    batch.set(activeRef1, {
+      id: activeAssignmentId1,
       patientId: PATIENT_UID,
       doctorId: DOCTOR_UID,
       status: "active",
-      templateName: "Phục hồi khớp gối - Cơ bản hàng ngày",
-      totalDuration: "20 min",
-      assignedAt: Timestamp.now(),
+      templateName: "Phục hồi khớp gối - Sáng",
+      totalDuration: "12 min",
+      assignedAt: Timestamp.fromDate(new Date()),
+      scheduledDate: Timestamp.fromDate(morningDate),
+      scheduledTimeSlot: "08:00 - 09:00",
       exercises: [
         {
           id: "ex-1",
@@ -164,20 +185,26 @@ async function seed() {
           sets: 3,
           restBetweenSets: 45,
           notes: "Hãy cố gắng giữ thăng bằng cơ thể tốt.",
-        },
-        // {
-        //   id: "ex-5",
-        //   name: "Lunges",
-        //   category: "Lower Body",
-        //   color: "#FFB533",
-        //   icon: "walk-outline",
-        //   duration: "5 mins",
-        //   difficulty: "easy",
-        //   reps: 10,
-        //   sets: 3,
-        //   restBetweenSets: 30,
-        //   notes: "",
-        // },
+        }
+      ],
+    }, { merge: true });
+
+    // Active Assignment 2 (Afternoon)
+    const afternoonDate = new Date();
+    afternoonDate.setHours(15, 0, 0, 0);
+    const activeAssignmentId2 = `assignment-${PATIENT_UID}-active-2`;
+    const activeRef2 = doc(db, "assignments", activeAssignmentId2);
+    batch.set(activeRef2, {
+      id: activeAssignmentId2,
+      patientId: PATIENT_UID,
+      doctorId: DOCTOR_UID,
+      status: "active",
+      templateName: "Phục hồi khớp gối - Chiều",
+      totalDuration: "10 min",
+      assignedAt: Timestamp.fromDate(new Date(Date.now() - 3600000)),
+      scheduledDate: Timestamp.fromDate(afternoonDate),
+      scheduledTimeSlot: "15:00 - 16:00",
+      exercises: [
         {
           id: "ex-4",
           name: "Plank",
@@ -190,9 +217,27 @@ async function seed() {
           sets: 3,
           restBetweenSets: 60,
           notes: "Giữ thẳng cột sống.",
+        },
+        {
+          id: "ex-2",
+          name: "Knee Extension",
+          category: "Lower Body",
+          color: "#33FF57",
+          icon: "body-outline",
+          duration: "5 mins",
+          difficulty: "easy",
+          reps: 15,
+          sets: 3,
+          restBetweenSets: 30,
+          notes: "Giữ vững tư thế đùi.",
         }
       ],
     }, { merge: true });
+
+    const now = new Date();
+    const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+    const mondayMs = Date.now() - (currentDay - 1) * 24 * 60 * 60 * 1000;
+    const fridayMs = Date.now() + (5 - currentDay) * 24 * 60 * 60 * 1000;
 
     // Completed assignment (past)
     const pastAssignmentId = `assignment-${PATIENT_UID}-past`;
@@ -204,8 +249,8 @@ async function seed() {
       status: "completed",
       templateName: "Tuần khởi động - Khởi động cơ xương khớp",
       totalDuration: "15 min",
-      assignedAt: Timestamp.fromDate(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)),
-      completedAt: Timestamp.fromDate(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)),
+      assignedAt: Timestamp.fromDate(new Date(mondayMs - 1 * 24 * 60 * 60 * 1000)),
+      completedAt: Timestamp.fromDate(new Date(mondayMs)),
       exercises: [
         {
           id: "ex-2",
@@ -241,7 +286,8 @@ async function seed() {
       id: pastSessionId,
       patientId: PATIENT_UID,
       assignmentId: pastAssignmentId,
-      date: Timestamp.fromDate(new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)),
+      templateName: "Tuần khởi động - Khởi động cơ xương khớp",
+      date: Timestamp.fromDate(new Date(mondayMs)),
       accuracy: 85,
       accuracyScore: 85,
       duration: "15 min",
@@ -283,6 +329,33 @@ async function seed() {
         "Độ thẳng tay": 82,
       }
     }, { merge: true });
+
+    // Upcoming Assignment (Friday)
+    const upcomingAssignmentId = `assignment-${PATIENT_UID}-upcoming`;
+    const upcomingRef = doc(db, "assignments", upcomingAssignmentId);
+    batch.set(upcomingRef, {
+      id: upcomingAssignmentId,
+      patientId: PATIENT_UID,
+      doctorId: DOCTOR_UID,
+      status: "active",
+      templateName: "Bài tập phục hồi nâng cao - Buổi 2",
+      totalDuration: "20 min",
+      assignedAt: Timestamp.fromDate(new Date()),
+      scheduledDate: Timestamp.fromDate(new Date(fridayMs)),
+      exercises: [
+        {
+          id: "ex-3",
+          name: "Shoulder Press",
+          category: "Upper Body",
+          color: "#3357FF",
+          icon: "fitness-outline",
+          duration: "7 mins",
+          reps: 12,
+          sets: 3,
+        }
+      ]
+    }, { merge: true });
+
 
     // ═══════════════════════════════════════════════════
     // 6. PROGRESS SNAPSHOTS (for charts)
@@ -333,8 +406,10 @@ async function seed() {
     // ═══════════════════════════════════════════════════
     console.log("👉 Resetting/Preparing incomplete session state...");
     // By default, we delete any existing incomplete session to give you a clean slate (starts with "Start Session")
-    const incSessionRef = doc(db, "incomplete_sessions", activeAssignmentId);
-    batch.delete(incSessionRef);
+    const incSessionRef1 = doc(db, "incomplete_sessions", activeAssignmentId1);
+    const incSessionRef2 = doc(db, "incomplete_sessions", activeAssignmentId2);
+    batch.delete(incSessionRef1);
+    batch.delete(incSessionRef2);
 
     /* 
       💡 TIPS FOR TESTING:

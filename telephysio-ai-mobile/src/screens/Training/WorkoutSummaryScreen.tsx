@@ -66,6 +66,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
           await recordSession({
             patientId: uid,
             assignmentId: active.id,
+            templateName: active.templateName,
             exercisesCompleted: exercisesData.length,
             accuracy: avgAcc,
             durationSeconds: totalSecs,

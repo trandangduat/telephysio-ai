@@ -80,6 +80,7 @@ export interface Session {
   id: string;
   patientId: string;
   assignmentId: string;
+  templateName?: string; // NEW: Name of the assigned workout routine
   exercisesCompleted: number;
   completedExercises?: number; // Alias for UI compatibility
   accuracy: number; // 0-100, from formAccuracy
