@@ -17,7 +17,7 @@ export const SummaryTextCard: React.FC<SummaryTextCardProps> = ({ text }) => {
       <View style={styles.iconRow}>
         <AppText variant="headlineMd">📊</AppText>
         <AppText variant="labelMd" color={colors.primary}>
-          Tóm tắt AI
+          AI Summary
         </AppText>
       </View>
       <AppText variant="bodyLg" style={styles.text}>

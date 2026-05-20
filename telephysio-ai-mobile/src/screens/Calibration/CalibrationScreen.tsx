@@ -54,7 +54,7 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: spacing.xl }]}>
         <AppText variant="bodyMd" color={colors.onSurface} style={{ textAlign: 'center', marginBottom: spacing.lg }}>
-          Ứng dụng cần quyền truy cập Camera để thực hiện cân chỉnh tư thế trước khi tập.
+          The app needs camera access to perform pose calibration before your workout.
         </AppText>
         <AppButton label="Cấp quyền Camera" onPress={requestPermission} />
       </View>

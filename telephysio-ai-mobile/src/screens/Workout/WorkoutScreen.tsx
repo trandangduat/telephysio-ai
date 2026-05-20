@@ -245,7 +245,7 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
               <View style={{ marginBottom: spacing.lg, paddingHorizontal: 4 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <AppText variant="labelMd" style={{ color: '#475569', fontWeight: '600' }}>
-                    Tiến độ hôm nay
+                    Today's Progress
                   </AppText>
                   <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>
                     {completedForDay} / {totalForDay}
@@ -262,7 +262,7 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
                   />
                 </View>
                 <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 8 }}>
-                  Đã hoàn thành {completedForDay} trên tổng số {totalForDay} ca tập
+                  Completed {completedForDay} out of {totalForDay} sessions
                 </AppText>
               </View>
 
@@ -438,6 +438,25 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
                       </AppText>
                     </>
                   )}
+                  
+                  <View style={styles.divider} />
+                  <AppText variant="labelSm" style={{ color: '#64748b', marginBottom: spacing.sm, fontWeight: '700', letterSpacing: 0.5 }}>
+                    DOCTOR'S REVIEW
+                  </AppText>
+                  <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', gap: 12 }}>
+                    <Ionicons name="medical" size={20} color={colors.primary} />
+                    <View style={{ flex: 1 }}>
+                      {((session as any).doctorFeedback || (session as any).doctorReview) ? (
+                        <AppText variant="bodyMd" style={{ color: '#334155' }}>
+                          {(session as any).doctorFeedback || (session as any).doctorReview}
+                        </AppText>
+                      ) : (
+                        <AppText variant="bodyMd" style={{ color: '#94a3b8', fontStyle: 'italic' }}>
+                          Doctor has not reviewed this session yet. Feedback will appear here once available.
+                        </AppText>
+                      )}
+                    </View>
+                  </View>
                 </View>
               ))}
             </>
