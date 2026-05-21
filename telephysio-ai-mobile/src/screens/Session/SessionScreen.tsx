@@ -8,6 +8,7 @@ import {
   Modal,
   ActivityIndicator,
   Dimensions,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -214,7 +215,21 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                   <View style={detail.videoWrapper}>
                     <Video
                       ref={videoRef}
-                      source={{ uri: videoUrl }}
+                      source={{ 
+                        uri: (() => {
+                          if (Platform.OS !== 'web') return videoUrl || "";
+                          // On web: check global recorded videos dictionary, then use Firestore URL directly
+                          let resolved = (typeof window !== 'undefined' && videoUrl && (window as any).__recordedVideos?.[videoUrl]) 
+                            ? (window as any).__recordedVideos[videoUrl] 
+                            : videoUrl;
+                          
+                          // Ensure relative local server paths start with / to load from root
+                          if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
+                            resolved = '/' + resolved;
+                          }
+                          return resolved || "";
+                        })()
+                      }}
                       style={detail.video}
                       resizeMode={ResizeMode.CONTAIN}
                       onPlaybackStatusUpdate={(s) => setStatus(s)}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import { AppText } from '../../components/ui';
 import { colors, spacing, radius } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
-import { getPatientAssignments, getUser, getIncompleteSession } from '../../services/firebase';
+import { getPatientAssignments, getUser, getIncompleteSession, deleteIncompleteSession } from '../../services/firebase';
 import type { Assignment, Exercise, ExerciseDifficulty, IncompleteSession } from '../../services/firebase/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutDetail'>;
@@ -29,6 +29,7 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [doctorName, setDoctorName] = useState<string>('');
   const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
+  const [recordVideo, setRecordVideo] = useState(true);
 
   useEffect(() => {
     async function loadData() {
@@ -87,10 +88,51 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const remainingExercises = exercises.slice(currentIndex);
 
   const handleStartWorkout = () => {
-    navigation.navigate('Calibration', {
-      assignmentId: assignment.id,
-      exerciseIndex: currentIndex,
-    });
+    if (incompleteSession) {
+      Alert.alert(
+        "Tiếp tục buổi tập?",
+        "Chúng tôi tìm thấy một buổi tập đang dở của bạn. Bạn có muốn tiếp tục hay bắt đầu lại từ đầu?",
+        [
+          {
+            text: "Bắt đầu lại",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                setLoading(true);
+                await deleteIncompleteSession(incompleteSession.id);
+                setIncompleteSession(null);
+                navigation.navigate('Calibration', {
+                  assignmentId: assignment.id,
+                  exerciseIndex: 0,
+                  recordVideo: recordVideo,
+                });
+              } catch (err) {
+                console.error("Lỗi khi xóa buổi tập cũ:", err);
+              } finally {
+                setLoading(false);
+              }
+            }
+          },
+          {
+            text: "Tiếp tục",
+            onPress: () => {
+              navigation.navigate('Calibration', {
+                assignmentId: assignment.id,
+                exerciseIndex: currentIndex,
+                recordVideo: recordVideo,
+              });
+            }
+          }
+        ],
+        { cancelable: true }
+      );
+    } else {
+      navigation.navigate('Calibration', {
+        assignmentId: assignment.id,
+        exerciseIndex: 0,
+        recordVideo: recordVideo,
+      });
+    }
   };
 
   const renderExerciseCard = (ex: Exercise, originalIndex: number, isCompleted: boolean) => {
@@ -250,6 +292,26 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       {/* Sticky Action Button at bottom */}
       <View style={styles.footer}>
+        <View style={styles.recordToggleRow}>
+          <View style={styles.recordToggleTextCol}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="videocam" size={16} color={colors.primary} />
+              <AppText variant="bodyMd" style={{ fontWeight: '700', color: '#0f172a', fontSize: 13 }}>
+                Quay video buổi tập
+              </AppText>
+            </View>
+            <AppText variant="bodySm" style={{ color: '#64748b', fontSize: 10, marginTop: 1 }}>
+              Lưu trữ cục bộ .mp4 giúp bác sĩ xem lại form dáng
+            </AppText>
+          </View>
+          <Switch
+            value={recordVideo}
+            onValueChange={setRecordVideo}
+            trackColor={{ false: "#cbd5e1", true: colors.primary + "80" }}
+            thumbColor={recordVideo ? colors.primary : "#f4f3f4"}
+          />
+        </View>
+
         <TouchableOpacity
           style={[styles.launchBtn, currentIndex > 0 && styles.resumeBtn]}
           activeOpacity={0.85}
@@ -414,4 +476,24 @@ const styles = StyleSheet.create({
     shadowColor: '#0f766e',
   },
   launchBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  recordToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  recordToggleTextCol: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
 });

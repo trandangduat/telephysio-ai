@@ -19,7 +19,7 @@ type CalibrationProps = NativeStackScreenProps<RootStackParamList, 'Calibration'
 type CalibrationStatus = 'not-ready' | 'partial' | 'ready';
 
 export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigation }) => {
-  const { assignmentId, exerciseIndex } = route.params || { assignmentId: '', exerciseIndex: 0 };
+  const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
   const { t } = useTranslation();
   const [status, setStatus] = useState<CalibrationStatus>('not-ready');
 
@@ -57,7 +57,7 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
           label={t('calibration.startButton')}
           size="lg"
           disabled={status !== 'ready'}
-          onPress={() => navigation.replace('Training', { assignmentId, exerciseIndex })}
+          onPress={() => navigation.replace('Training', { assignmentId, exerciseIndex, recordVideo })}
           style={styles.startBtn}
         />
       </View>

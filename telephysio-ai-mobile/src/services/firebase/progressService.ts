@@ -318,3 +318,34 @@ export async function getAverageAccuracy(doctorId: string): Promise<number> {
 
   return count > 0 ? Math.round(totalAccuracy / count) : 0;
 }
+
+// ── Update Session Effort ───────────────────────────
+export async function updateSessionEffort(
+  sessionId: string,
+  effort: "easy" | "normal" | "hard",
+): Promise<void> {
+  await updateDoc(doc(db, "sessions", sessionId), {
+    perceivedEffort: effort,
+  });
+}
+
+// ── Delete Session Video ────────────────────────────
+export async function deleteSessionVideo(
+  sessionId: string,
+  videoPath: string,
+  thumbnailPath: string,
+): Promise<void> {
+  // 1. Delete local files using our videoService
+  try {
+    const { deleteLocalVideo } = require("./videoService");
+    await deleteLocalVideo(videoPath, thumbnailPath);
+  } catch (err) {
+    console.warn("Failed to delete local files in service:", err);
+  }
+
+  // 2. Clear paths in Firestore doc
+  await updateDoc(doc(db, "sessions", sessionId), {
+    videoLocalPath: null,
+    thumbnailPath: null,
+  });
+}

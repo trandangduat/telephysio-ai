@@ -122,7 +122,22 @@ export const DoctorSessionDetailScreen: React.FC = () => {
               <View style={styles.videoContainer}>
                 <Video
                   ref={videoRef}
-                  source={{ uri: session.videoUrl }}
+                  source={{ 
+                    uri: (() => {
+                      const url = session.videoUrl;
+                      if (Platform.OS !== 'web') return url || "";
+                      // On web: check global recorded videos dictionary, then use Firestore URL directly
+                      let resolved = (typeof window !== 'undefined' && url && (window as any).__recordedVideos?.[url]) 
+                        ? (window as any).__recordedVideos[url] 
+                        : url;
+                      
+                      // Ensure relative local server paths start with / to load from root
+                      if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
+                        resolved = '/' + resolved;
+                      }
+                      return resolved || "";
+                    })()
+                  }}
                   style={styles.video}
                   resizeMode={ResizeMode.CONTAIN}
                   onPlaybackStatusUpdate={setStatus}

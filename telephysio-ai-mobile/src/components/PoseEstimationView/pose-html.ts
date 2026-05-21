@@ -262,6 +262,9 @@ export const POSE_HTML = `<!DOCTYPE html>
       return pose;
     }
 
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
     // ── Camera setup ──────────────────────────────────────────────────────────
     async function startCamera() {
       statusEl.textContent = '⟳ Requesting camera…';
@@ -297,6 +300,57 @@ export const POSE_HTML = `<!DOCTYPE html>
         });
         camera.start();
 
+        // ── Web MediaRecorder Setup ──────────────────────────────────────────
+        try {
+          recordedChunks = [];
+          let options = {};
+          const candidateMimeTypes = [
+            'video/mp4;codecs=h264',
+            'video/mp4',
+            'video/webm;codecs=vp9',
+            'video/webm;codecs=vp8',
+            'video/webm'
+          ];
+          for (const mime of candidateMimeTypes) {
+            if (MediaRecorder.isTypeSupported(mime)) {
+              options = { mimeType: mime };
+              break;
+            }
+          }
+
+          mediaRecorder = new MediaRecorder(stream, options);
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            if (recordedChunks.length > 0) {
+              const mime = mediaRecorder.mimeType || 'video/webm';
+              const blob = new Blob(recordedChunks, { type: mime });
+              console.log("[pose-html] Recording complete. Blob size:", blob.size, "bytes, mime:", mime);
+              // Transfer raw ArrayBuffer to parent — blob URLs from iframes
+              // get revoked when the iframe is destroyed, so we send the data itself.
+              blob.arrayBuffer().then(function(buffer) {
+                console.log("[pose-html] ArrayBuffer ready, transferring to parent. Size:", buffer.byteLength);
+                window.parent.postMessage({
+                  type: 'RECORDING_COMPLETE',
+                  buffer: buffer,
+                  mimeType: mime
+                }, '*', [buffer]);
+              }).catch(function(err) {
+                console.error("[pose-html] Failed to convert blob to ArrayBuffer:", err);
+              });
+            }
+          };
+
+          mediaRecorder.start(1000); // chunk every 1 second
+          console.log("[pose-html] MediaRecorder started successfully!");
+        } catch (recErr) {
+          console.warn("[pose-html] Failed to initialize MediaRecorder:", recErr);
+        }
+
       } catch (err) {
         console.error('Camera error:', err);
         statusEl.textContent = '✕ Camera error: ' + err.message;
@@ -304,6 +358,33 @@ export const POSE_HTML = `<!DOCTYPE html>
         postToHost({ type: 'CAMERA_ERROR', error: err.message });
       }
     }
+
+    // ── Listen to host control commands ──────────────────────────────────────
+    window.addEventListener('message', (event) => {
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (!mediaRecorder) return;
+
+        if (data.type === 'PAUSE_RECORDING') {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.pause();
+            console.log("[pose-html] Recording paused");
+          }
+        } else if (data.type === 'RESUME_RECORDING') {
+          if (mediaRecorder.state === 'paused') {
+            mediaRecorder.resume();
+            console.log("[pose-html] Recording resumed");
+          }
+        } else if (data.type === 'STOP_RECORDING') {
+          if (mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            console.log("[pose-html] Recording stopped");
+          }
+        }
+      } catch (e) {
+        // ignore malformed messages
+      }
+    });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     window.addEventListener('load', () => {

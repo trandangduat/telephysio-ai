@@ -230,7 +230,7 @@ export const seedMockData = async () => {
           completedExercises: selectedExercises.length,
           accuracy: Math.floor(Math.random() * 20) + 80, // 80 to 100
           accuracyScore: Math.floor(Math.random() * 20) + 80,
-          duration: `${selectedExercises.length * 4} min`,
+          duration: selectedExercises.length * 4 * 60,
           totalDuration: `${selectedExercises.length * 4} min`,
           durationSeconds: selectedExercises.length * 4 * 60,
           painLevel: Math.floor(Math.random() * 3), // 0 to 2
@@ -241,7 +241,7 @@ export const seedMockData = async () => {
           reps: 10 * selectedExercises.length,
           sets: 3 * selectedExercises.length,
           // NEW: Detail view data
-          videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", // Stable mock video
+          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Stable mock video
           doctorFeedback: s % 2 === 0 
             ? "Kỹ thuật thực hiện bài squat của bạn đã cải thiện rõ rệt, hãy chú ý giữ thẳng lưng hơn nữa nhé." 
             : null,

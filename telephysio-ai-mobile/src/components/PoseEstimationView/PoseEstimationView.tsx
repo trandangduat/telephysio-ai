@@ -74,7 +74,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
         // ── Media / Camera permissions ──────────────────────────────────────
         mediaPlaybackRequiresUserAction={false}
         allowsInlineMediaPlayback={true}
-        // Camera permission prompt (Android WebView)
+        // @ts-ignore: onPermissionRequest is valid for Android but missing in WebView type definition
         onPermissionRequest={(request: any) => request.grant(request.resources)}
         // iOS – grant camera permission inside WKWebView
         allowsProtectedMedia={true}

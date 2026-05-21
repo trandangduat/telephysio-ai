@@ -1,26 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Modal,Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Video, ResizeMode } from 'expo-av';
+import type { AVPlaybackStatus } from 'expo-av';
 
 import { AppText, AppButton } from '../../components/ui';
 import { colors, spacing, typography, radius } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession } from '../../services/firebase';
-import type { Assignment, Exercise, IncompleteSession } from '../../services/firebase/types';
+import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession, getTemporaryVideoPath } from '../../services/firebase';
+import type { Assignment, Exercise, IncompleteSession, SetRecord, ExerciseRecord } from '../../services/firebase/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseResult'>;
 
+function accuracyColor(acc: number): string {
+  if (acc >= 80) return '#10b981'; // elegant green
+  if (acc >= 60) return '#f59e0b'; // amber
+  return '#ef4444'; // red
+}
+
 export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets } = route.params;
+  const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets, recordVideo, setsData } = route.params || { recordVideo: false };
   const { uid } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [exercise, setExercise] = useState<Exercise | null>(null);
+  const [videoUri, setVideoUri] = useState<string>('');
+
+  const [selectedSet, setSelectedSet] = useState<{
+    setNum: number;
+    reps: number;
+    accuracy: number;
+    duration: number;
+  } | null>(null);
+  const [playbackStatus, setPlaybackStatus] = useState<AVPlaybackStatus | null>(null);
+  const videoRef = useRef<Video>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -41,6 +59,36 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     loadData();
   }, [uid, assignmentId, exerciseIndex]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      if (recordVideo && assignmentId) {
+        setVideoUri(getTemporaryVideoPath(assignmentId));
+      }
+      return;
+    }
+
+    // On Web: poll window.__recordedVideos / window.__lastRecordedVideoUrl for up to 3 seconds
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const resolved = (typeof window !== 'undefined' && 
+        ((window as any).__recordedVideos?.['latest'] || (window as any).__lastRecordedVideoUrl));
+      
+      if (resolved) {
+        console.log("[ExerciseResultScreen] Web video URI resolved after", attempts, "attempts:", resolved);
+        setVideoUri(resolved);
+        clearInterval(interval);
+      } else {
+        attempts++;
+        if (attempts > 30) { // max 3 seconds
+          console.warn("[ExerciseResultScreen] Web video URI not resolved after 3 seconds");
+          clearInterval(interval);
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [assignmentId, recordVideo]);
+
   const handleNext = async () => {
     if (!uid || !assignment) return;
     setSaving(true);
@@ -55,28 +103,53 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         sets
       };
 
+      const setsRecords: SetRecord[] = displaySets.map(s => ({
+        setNumber: s.setNum,
+        repsCompleted: s.reps,
+        durationSec: s.duration,
+        weightKg: null,
+        accuracy: s.accuracy,
+        notes: null
+      }));
+
+      const newExerciseRecord: ExerciseRecord = {
+        exerciseId: exercise?.id || `ex-${exerciseIndex}`,
+        exerciseName: exercise?.name || 'Exercise',
+        muscleGroup: exercise?.category ? [exercise.category] : [],
+        sets: setsRecords,
+        accuracy: Math.round(accuracy),
+        completedAt: new Date().toISOString()
+      };
+
       const nextIndex = exerciseIndex + 1;
 
       if (incSession) {
         await updateIncompleteSession(incSession.id, {
           currentExerciseIndex: nextIndex,
+          currentSetIndex: 1,
           exercisesCompleted: nextIndex,
-          completedExercisesData: [...incSession.completedExercisesData, newExerciseData]
+          completedExercises: [...(incSession.completedExercises || []), newExerciseRecord],
+          completedExercisesData: [...(incSession.completedExercisesData || []), newExerciseData],
+          elapsedSeconds: (incSession.elapsedSeconds || 0) + durationSeconds,
         });
       } else {
         await saveIncompleteSession({
           patientId: uid,
           assignmentId: assignmentId,
           currentExerciseIndex: nextIndex,
+          currentSetIndex: 1,
           exercisesCompleted: nextIndex,
-          completedExercisesData: [newExerciseData]
+          completedExercises: [newExerciseRecord],
+          completedExercisesData: [newExerciseData],
+          elapsedSeconds: durationSeconds,
+          startedAt: new Date(),
         });
       }
 
       if (nextIndex >= assignment.exercises.length) {
-        navigation.replace('WorkoutSummary', { assignmentId });
+        navigation.replace('WorkoutSummary', { assignmentId, recordVideo });
       } else {
-        navigation.replace('Calibration', { assignmentId, exerciseIndex: nextIndex });
+        navigation.replace('Calibration', { assignmentId, exerciseIndex: nextIndex, recordVideo });
       }
     } catch (error) {
       console.error('Failed to save exercise result:', error);
@@ -85,43 +158,83 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     }
   };
 
-  // Smart Partition: Distribute total duration across sets with realistic, diverse variations
-  const numSets = Math.max(1, sets);
-  const setDurations = Array(numSets).fill(Math.floor(durationSeconds / numSets));
-  
-  // 1. Distribute leftover modulo seconds
-  for (let i = 0; i < durationSeconds % numSets; i++) {
-    setDurations[i % numSets] += 1;
-  }
+  // Use actual setsData if provided from TrainingScreen, otherwise use simulated breakdown
+  const displaySets = setsData && setsData.length > 0
+    ? setsData.map(s => ({
+        setNum: s.setNumber,
+        reps: s.repsCompleted,
+        accuracy: s.accuracy,
+        duration: s.durationSec,
+      }))
+    : (() => {
+        const numSets = Math.max(1, sets);
+        const setDurations = Array(numSets).fill(Math.floor(durationSeconds / numSets));
+        
+        for (let i = 0; i < durationSeconds % numSets; i++) {
+          setDurations[i % numSets] += 1;
+        }
 
-  // 2. Apply jitter variance to make each set independent while preserving total sum
-  if (numSets >= 2 && durationSeconds > 20) {
-    const variance = Math.min(Math.floor(durationSeconds / (numSets * 4)), 12); // shift 10-15% of time
-    setDurations[0] += variance; // Set 1: setup overhead (slower)
-    setDurations[1] -= variance; // Set 2: pacing established (faster)
-    
-    if (numSets >= 3) {
-      const variance2 = Math.min(Math.floor(variance / 2), 5);
-      setDurations[numSets - 1] += variance2; // Last Set: fatigue overhead (slower)
-      setDurations[1] -= variance2; // Adjust Set 2 further down
+        if (numSets >= 2 && durationSeconds > 20) {
+          const variance = Math.min(Math.floor(durationSeconds / (numSets * 4)), 12);
+          setDurations[0] += variance;
+          setDurations[1] -= variance;
+          
+          if (numSets >= 3) {
+            const variance2 = Math.min(Math.floor(variance / 2), 5);
+            setDurations[numSets - 1] += variance2;
+            setDurations[1] -= variance2;
+          }
+        }
+
+        return Array.from({ length: numSets }).map((_, idx) => {
+          const setDuration = Math.max(5, setDurations[idx]);
+          const repsPerSet = Math.ceil(reps / numSets);
+          const factor = (idx % 2 === 0 ? 1 : -1) * (2 + (idx % 3));
+          const setAccuracy = Math.min(100, Math.max(65, Math.round(accuracy + factor)));
+          return {
+            setNum: idx + 1,
+            reps: repsPerSet,
+            accuracy: setAccuracy,
+            duration: setDuration,
+          };
+        });
+      })();
+
+  const handleOpenVideo = (set: typeof displaySets[0]) => {
+    setSelectedSet(set);
+    setPlaybackStatus(null);
+  };
+
+  const handleCloseVideo = () => {
+    setSelectedSet(null);
+    setPlaybackStatus(null);
+  };
+
+  const togglePlayPause = async () => {
+    if (!videoRef.current || !playbackStatus || !playbackStatus.isLoaded) return;
+    try {
+      if (playbackStatus.isPlaying) {
+        await videoRef.current.pauseAsync();
+      } else {
+        await videoRef.current.playAsync();
+      }
+    } catch (err) {
+      console.error('Failed to toggle play/pause:', err);
     }
-  }
+  };
 
-  // Simulated breakdown per Set
-  const simulatedSets = Array.from({ length: numSets }).map((_, idx) => {
-    const setDuration = Math.max(5, setDurations[idx]); // Ensure logical minimum of 5s
-    const repsPerSet = Math.ceil(reps / numSets);
-    
-    // Add slight variation to accuracy per set for realism
-    const factor = (idx % 2 === 0 ? 1 : -1) * (2 + (idx % 3));
-    const setAccuracy = Math.min(100, Math.max(65, Math.round(accuracy + factor)));
-    return {
-      setNum: idx + 1,
-      reps: repsPerSet,
-      accuracy: setAccuracy,
-      duration: setDuration,
-    };
-  });
+  const formatTime = (ms: number) => {
+    if (!ms || isNaN(ms)) return '0:00';
+    const totalSecs = Math.floor(ms / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const durationMs = playbackStatus && playbackStatus.isLoaded && playbackStatus.durationMillis ? playbackStatus.durationMillis : 0;
+  const positionMs = playbackStatus && playbackStatus.isLoaded ? playbackStatus.positionMillis : 0;
+  const progress = durationMs > 0 ? positionMs / durationMs : 0;
+  const isPlaying = playbackStatus && playbackStatus.isLoaded ? playbackStatus.isPlaying : false;
 
   if (loading) {
     return (
@@ -144,8 +257,8 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         </AppText>
 
         <ScrollView style={styles.setsScroll} contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
-          {simulatedSets.map((s) => (
-            <View key={s.setNum} style={styles.setRowCard}>
+          {displaySets.map((s) => (
+            <TouchableOpacity key={s.setNum} style={styles.setRowCard} onPress={() => handleOpenVideo(s)} activeOpacity={0.75}>
               <View style={styles.setVideoThumb}>
                 <View style={styles.thumbPlayBtn}>
                   <Ionicons name="play" size={12} color="#fff" />
@@ -163,14 +276,14 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
               </View>
 
               <View style={{ alignItems: 'flex-end' }}>
-                <AppText variant="headlineMd" style={{ color: '#10b981', fontWeight: '800', fontSize: 18 }}>
+                <AppText variant="headlineMd" style={{ color: accuracyColor(s.accuracy), fontWeight: '800', fontSize: 18 }}>
                   {s.accuracy}%
                 </AppText>
                 <AppText style={{ color: '#94a3b8', fontSize: 9, fontWeight: '700', letterSpacing: 0.3 }}>
                   ACCURACY
                 </AppText>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
@@ -201,6 +314,97 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
           style={{ width: '100%' }}
         />
       </View>
+
+      {/* Sleek, Cinema-mode Video Playback Modal */}
+      <Modal
+        visible={selectedSet !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseVideo}
+      >
+        <View style={styles.modalOverlay}>
+          <SafeAreaView style={styles.modalContent} edges={['top', 'bottom']}>
+            
+            {/* Top Bar with elegant glass overlay */}
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={handleCloseVideo} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
+              
+              <View style={styles.modalHeaderDetails}>
+                <AppText variant="headlineMd" style={styles.modalTitle} numberOfLines={1}>
+                  {exercise?.name || 'Exercise Playback'}
+                </AppText>
+                <AppText variant="bodySm" style={styles.modalSubtitle}>
+                  Set {selectedSet?.setNum} • {selectedSet?.reps} reps
+                </AppText>
+              </View>
+
+              {/* Accuracy chip with dynamic border color matching accuracy grade */}
+              <View style={[styles.modalAccuracyChip, { borderColor: selectedSet ? accuracyColor(selectedSet.accuracy) : '#fff' }]}>
+                <AppText style={[styles.modalAccuracyVal, { color: selectedSet ? accuracyColor(selectedSet.accuracy) : '#fff' }]}>
+                  {selectedSet?.accuracy}%
+                </AppText>
+                <AppText style={styles.modalAccuracyLbl}>ACCURACY</AppText>
+              </View>
+            </View>
+
+            {/* Video container */}
+            <View style={styles.modalVideoContainer}>
+              {selectedSet && (
+                <Video
+                  ref={videoRef}
+                  source={{ uri: videoUri }}
+                  style={styles.modalVideo}
+                  resizeMode={ResizeMode.CONTAIN}
+                  shouldPlay={true}
+                  isMuted={true}
+                  isLooping={true}
+                  onPlaybackStatusUpdate={(s) => setPlaybackStatus(s)}
+                />
+              )}
+
+              {/* Central Quick-Toggle Overlay Play Button */}
+              <TouchableOpacity
+                style={styles.videoOverlayPlayToggle}
+                onPress={togglePlayPause}
+                activeOpacity={0.8}
+              >
+                {!isPlaying && (
+                  <View style={styles.videoOverlayPlayCircle}>
+                    <Ionicons name="play" size={32} color="#fff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Bottom Premium Controls Bar */}
+            <View style={styles.modalControlsBar}>
+              <TouchableOpacity onPress={togglePlayPause} style={styles.controlPlayBtn}>
+                <Ionicons name={isPlaying ? "pause" : "play"} size={22} color="#fff" />
+              </TouchableOpacity>
+
+              <View style={styles.progressContainer}>
+                <View style={styles.progressTimeContainer}>
+                  <AppText style={styles.progressTimeText}>
+                    {formatTime(positionMs)}
+                  </AppText>
+                  <AppText style={styles.progressTimeDivider}>/</AppText>
+                  <AppText style={styles.progressTimeText}>
+                    {formatTime(durationMs)}
+                  </AppText>
+                </View>
+
+                {/* Progress bar track */}
+                <View style={styles.progressBarTrack}>
+                  <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+                </View>
+              </View>
+            </View>
+
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -288,4 +492,143 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
   },
+
+  // Cinema Playback Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.95)', // ultra-deep slate transparent
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.gutter,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+    backgroundColor: 'rgba(30, 41, 59, 0.4)', // slate-800 backdrop overlay
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalHeaderDetails: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 18,
+  },
+  modalSubtitle: {
+    color: '#94a3b8',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  modalAccuracyChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs || 4,
+    borderRadius: radius.md || 8,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+  },
+  modalAccuracyVal: {
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  modalAccuracyLbl: {
+    color: '#94a3b8',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  modalVideoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    position: 'relative',
+  },
+  modalVideo: {
+    width: '100%',
+    height: '100%',
+  },
+  videoOverlayPlayToggle: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  videoOverlayPlayCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 4, // offset play icon
+  },
+  modalControlsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.gutter,
+    paddingVertical: spacing.lg,
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    gap: spacing.md,
+  },
+  controlPlayBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  progressTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressTimeText: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  progressTimeDivider: {
+    color: '#475569',
+    marginHorizontal: 4,
+    fontSize: 12,
+  },
+  progressBarTrack: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 3,
+  },
 });
+

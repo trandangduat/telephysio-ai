@@ -74,31 +74,57 @@ export interface Assignment {
   completedAt?: Timestamp;
 }
 
+// ── Workout Records (Spec Compliant Details) ────────
+export interface SetRecord {
+  setNumber: number;
+  repsCompleted: number | null; // null if time-based (plank, hold, etc.)
+  durationSec: number | null;   // null if rep-based
+  weightKg: number | null;      // null if bodyweight
+  accuracy: number;             // % accuracy (0-100)
+  notes: string | null;
+}
+
+export interface ExerciseRecord {
+  exerciseId: string;
+  exerciseName: string;
+  muscleGroup: string[];
+  sets: SetRecord[];
+  accuracy: number;             // mean accuracy of sets, rounded to integer
+  completedAt: string;          // ISO 8601 UTC string
+}
+
 // ── Session (Single workout session) ────────────────
 // Derived from: TrainingScreen (reps, formAccuracy, elapsed), PatientDetailScreen (session history)
 export interface Session {
   id: string;
   patientId: string;
   assignmentId: string;
-  exercisesCompleted: number;
-  completedExercises?: number; // Alias for UI compatibility
-  accuracy: number; // 0-100, from formAccuracy
-  accuracyScore?: number; // Alias for UI compatibility
-  duration: string; // "42 min"
-  totalDuration?: string; // Alias for UI compatibility
-  durationSeconds: number; // elapsed in TrainingScreen
-  painLevel: number; // 0-10
-  averagePain?: number; // Alias for UI compatibility
+  reps: number;                 // total reps completed in session
+  accuracy: number;             // avg accuracy (0-100)
+  duration: number;             // total seconds (excluding paused time)
+  caloriesBurned?: number;      // MET based calorie formula
+  completionRate?: number;      // 0.0 - 1.0
+  perceivedEffort?: "easy" | "normal" | "hard" | null;
+  exercises?: ExerciseRecord[]; // detailed exercises list
+  videoLocalPath?: string | null; // local absolute path to video
+  thumbnailPath?: string | null;  // local absolute path to video thumbnail
   date: Timestamp;
-  reps: number;
-  sets: number;
-  // NEW: Detail view support
-  videoUrl?: string; // Link to recorded session video in Storage
-  doctorFeedback?: string; // Doctor's note for this session
-  doctorName?: string; // Name of the doctor who reviewed
-  reviewedAt?: Timestamp; // When the doctor reviewed it
-  exerciseList?: string[]; // Names of exercises performed
-  formBreakdown?: Record<string, number>; // Per-joint/angle accuracy (e.g. {"Knee Angle": 85})
+  doctorFeedback?: string | null; // Doctor's note for this session
+  feedbackUpdatedAt?: Timestamp;
+
+  // Backward compatibility fields for legacy UI:
+  exercisesCompleted?: number;
+  completedExercises?: number;
+  accuracyScore?: number;
+  durationSeconds?: number;
+  totalDuration?: string;
+  painLevel?: number;
+  averagePain?: number;
+  videoUrl?: string;
+  doctorName?: string;
+  reviewedAt?: Timestamp;
+  exerciseList?: string[];
+  formBreakdown?: Record<string, number>;
   completedExercisesData?: Array<{
     name: string;
     accuracy: number;
@@ -108,24 +134,30 @@ export interface Session {
     icon?: string;
     color?: string;
   }>;
-  feedbackUpdatedAt?: Timestamp;
 }
 
 // ── Incomplete Session (Active Workout State) ───────
 export interface IncompleteSession {
-  id: string; // Same as assignmentId
+  id: string; // Same as assignmentId or document auto-ID
   patientId: string;
   assignmentId: string;
   currentExerciseIndex: number;
-  exercisesCompleted: number;
-  completedExercisesData: Array<{
+  currentSetIndex: number;
+  completedExercises?: ExerciseRecord[];
+  elapsedSeconds: number;
+  startedAt?: Timestamp;        // local video path if recording mid-workout
+  lastUpdated: Timestamp;
+  videoPath?: string | null;    // local video path if recording mid-workout
+
+  // Backward compatibility fields:
+  exercisesCompleted?: number;
+  completedExercisesData?: Array<{
     exerciseId: string;
     accuracy: number;
     reps: number;
     sets: number;
     durationSeconds: number;
   }>;
-  lastUpdated: Timestamp;
 }
 
 // ── Progress Snapshot ───────────────────────────────
@@ -133,20 +165,25 @@ export interface IncompleteSession {
 export interface ProgressSnapshot {
   id: string;
   patientId: string;
-  movementScore: number; // HomeScreen: 88 /100
-  timeActiveMinutes: number; // HomeScreen: 45 min
-  dailyGoalPercent: number; // HomeScreen: 75%
-  sessionsCompleted: number; // HomeScreen: 2 /3
-  sessionsTarget: number; // 3
-  // ProgressScreen data
-  weeklyConsistency: number; // 85%
-  romFlexion: number; // degrees
-  romExtension: number; // degrees
-  quadricepsStrength: number; // percent
-  hamstringStability: number; // percent
-  aiInsight?: string; // ProgressScreen insight text
+  movementScore: number;        // e.g. 88
+  timeActive?: number;          // total active minutes accumulated
+  weeklyConsistency: number;    // % weeks completed
+  rom?: number;                 // range of motion value
+  strength?: number;            // muscle strength percentage
   date: Timestamp;
+
+  // Backward compatibility fields:
+  timeActiveMinutes?: number;
+  dailyGoalPercent?: number;
+  sessionsCompleted?: number;
+  sessionsTarget?: number;
+  romFlexion?: number;
+  romExtension?: number;
+  quadricepsStrength?: number;
+  hamstringStability?: number;
+  aiInsight?: string;
 }
+
 
 
 // ── Exercise Template (Doctor's Library) ────────────

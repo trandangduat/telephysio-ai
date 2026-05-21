@@ -5,7 +5,7 @@
  * Integrates real-time human pose estimation via MediaPipe BlazePose (WebView).
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback,useRef } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Platform, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,39 +15,65 @@ import { AppText } from '../../components/ui';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPatientAssignments } from '../../services/firebase';
+import { getPatientAssignments, startRecording, pauseRecording, resumeRecording, stopRecording } from '../../services/firebase';
 import type { Assignment, Exercise } from '../../services/firebase/types';
-import { PoseEstimationView } from '../../components/PoseEstimationView';
+import { PoseEstimationView, PoseAnalyzer } from '../../components/PoseEstimationView';
 import type { PoseLandmark } from '../../components/PoseEstimationView';
 
 type TrainingProps = NativeStackScreenProps<RootStackParamList, 'Training'>;
 
 export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) => {
-    const { assignmentId, exerciseIndex } = route.params || { assignmentId: '', exerciseIndex: 0 };
+    const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
     const { uid } = useAuth();
     const [isFullScreen, setIsFullScreen] = useState(true); // Toggle state
     const [currentRep, setCurrentRep] = useState(0);
     const [currentSet, setCurrentSet] = useState(1);
-    const [formAccuracy, setFormAccuracy] = useState(92);
+    const [formAccuracy, setFormAccuracy] = useState(95);
+    const [averageAccuracy, setAverageAccuracy] = useState(95);
+    const isFinishingRef = useRef(false);
     const [paused, setPaused] = useState(false);
     const [elapsed, setElapsed] = useState(0);
     const [isFinishing, setIsFinishing] = useState(false);
     const [isResting, setIsResting] = useState(false);
     const [restTimeLeft, setRestTimeLeft] = useState(0);
 
+    const [completedSets, setCompletedSets] = useState<{
+        setNumber: number;
+        repsCompleted: number;
+        durationSec: number;
+        accuracy: number;
+    }[]>([]);
+    const [lastSetElapsed, setLastSetElapsed] = useState(0);
+
     const [assignment, setAssignment] = useState<Assignment | null>(null);
     const [exercise, setExercise] = useState<Exercise | null>(null);
+
+    const totalReps = exercise?.reps || 12;
+    const totalSets = exercise?.sets || 3;
 
     // ── Pose estimation state ─────────────────────────────────────────────────
     const [poseDetected, setPoseDetected] = useState(false);
     const [liveFps, setLiveFps] = useState(0);
     const [poseError, setPoseError] = useState<string | null>(null);
+    const [coachFeedback, setCoachFeedback] = useState("Ready to start!");
+
+    const poseAnalyzerRef = useRef<PoseAnalyzer | null>(null);
 
     const handlePoseDetected = useCallback((landmarks: PoseLandmark[], fps: number) => {
         setPoseDetected(true);
         setLiveFps(fps);
-        // Future: analyse landmarks for rep counting and form scoring
-    }, []);
+        
+        if (paused || isResting || isFinishing) return;
+        
+        if (poseAnalyzerRef.current) {
+            const result = poseAnalyzerRef.current.analyze(landmarks, totalReps);
+            const displayedReps = Math.min(result.reps, totalReps);
+            setCurrentRep(displayedReps);
+            setFormAccuracy(result.formAccuracy);
+            setAverageAccuracy(result.averageAccuracy);
+            setCoachFeedback(result.feedback);
+        }
+    }, [paused, isResting, isFinishing, totalReps]);
 
     const handlePoseError = useCallback((msg: string) => {
         setPoseError(msg);
@@ -67,8 +93,15 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         loadData();
     }, [uid, assignmentId, exerciseIndex]);
 
-    const totalReps = exercise?.reps || 12;
-    const totalSets = exercise?.sets || 3;
+    useEffect(() => {
+        if (exercise?.name) {
+            console.log(`[TrainingScreen] Initializing PoseAnalyzer for: ${exercise.name}`);
+            poseAnalyzerRef.current = new PoseAnalyzer(exercise.name);
+            setCoachFeedback("Align your body in the frame.");
+        }
+    }, [exercise?.name]);
+
+    // totalReps and totalSets have been moved up to resolve reference issues in callbacks
 
     // Simulate timers
     useEffect(() => {
@@ -93,39 +126,133 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         }
     }, [paused, isResting]);
 
+    // Live Video Recording effects
+    useEffect(() => {
+        let isMounted = true;
+        async function initRecording() {
+            if (recordVideo && assignmentId) {
+                try {
+                    console.log(`[TrainingScreen] Mounting: auto-starting video recording for ${assignmentId}`);
+                    await startRecording(assignmentId);
+                } catch (err) {
+                    console.error("[TrainingScreen] Failed to start recording on mount:", err);
+                }
+            }
+        }
+        initRecording();
+        return () => {
+            isMounted = false;
+            if (recordVideo) {
+                stopRecording().catch(err => console.warn("[TrainingScreen] Failed to stop recording on unmount:", err));
+            }
+        };
+    }, [assignmentId, recordVideo]);
+
+    useEffect(() => {
+        if (!recordVideo) return;
+        if (paused) {
+            console.log("[TrainingScreen] Session paused: pausing recording");
+            pauseRecording();
+        } else {
+            console.log("[TrainingScreen] Session resumed: resuming recording");
+            resumeRecording();
+        }
+    }, [paused, recordVideo]);
+
     const handleStop = useCallback(() => { navigation.goBack(); }, [navigation]);
 
-    const handleNextExercise = async () => {
+    const handleNextExercise = useCallback(async (finalSets: any[]) => {
         if (!uid || !exercise) return;
+        if (isFinishingRef.current) return;
+        isFinishingRef.current = true;
         setIsFinishing(true);
         setPaused(true);
+        
+        // Calculate dynamic overall average accuracy over completed sets
+        const avgAccuracy = finalSets.length > 0 
+            ? Math.round(finalSets.reduce((sum, s) => sum + s.accuracy, 0) / finalSets.length)
+            : averageAccuracy;
+
+        // Calculate total reps completed
+        const totalRepsCompleted = finalSets.reduce((sum, s) => sum + s.repsCompleted, 0);
+
+        if (recordVideo) {
+            try {
+                console.log("[TrainingScreen] Stopping video recording...");
+                await stopRecording();
+            } catch (err) {
+                console.error("[TrainingScreen] Failed to stop recording inside handleNextExercise:", err);
+            }
+        }
+
         try {
             // Just navigate to ExerciseResult
             navigation.replace('ExerciseResult', {
                 assignmentId,
                 exerciseIndex,
-                accuracy: formAccuracy,
+                accuracy: avgAccuracy,
                 durationSeconds: elapsed,
-                reps: currentRep,
-                sets: currentSet,
+                reps: totalRepsCompleted,
+                sets: finalSets.length,
+                recordVideo,
+                setsData: finalSets,
             });
         } catch (error) {
             console.error('Failed to finish exercise:', error);
             Alert.alert('Error', 'Failed to save exercise progress.');
             setPaused(false);
+            isFinishingRef.current = false;
         } finally {
             setIsFinishing(false);
         }
-    };
+    }, [uid, exercise, assignmentId, exerciseIndex, averageAccuracy, elapsed, recordVideo, navigation]);
 
-    const handleCompleteSet = () => {
+    const handleCompleteSet = useCallback(() => {
+        if (isFinishingRef.current || isResting || isFinishing) {
+            console.log("[TrainingScreen] handleCompleteSet skipped: already resting or finishing");
+            return;
+        }
+        const currentSetDuration = elapsed - lastSetElapsed;
+        const currentSetData = {
+            setNumber: currentSet,
+            repsCompleted: currentRep,
+            durationSec: currentSetDuration,
+            accuracy: averageAccuracy,
+        };
+
+        const updatedSets = [...completedSets, currentSetData];
+        setCompletedSets(updatedSets);
+        setLastSetElapsed(elapsed);
+
         if (currentSet < totalSets) {
             setIsResting(true);
             setRestTimeLeft(exercise?.restBetweenSets || 30);
+            if (poseAnalyzerRef.current) {
+                poseAnalyzerRef.current.reset();
+            }
+            setCurrentRep(0);
+            setFormAccuracy(95);
+            setAverageAccuracy(95);
         } else {
-            handleNextExercise();
+            handleNextExercise(updatedSets);
         }
-    };
+    }, [currentSet, totalSets, exercise, elapsed, lastSetElapsed, currentRep, averageAccuracy, completedSets, handleNextExercise, isResting, isFinishing]);
+
+    const handleCompleteSetRef = useRef(handleCompleteSet);
+    useEffect(() => {
+        handleCompleteSetRef.current = handleCompleteSet;
+    }, [handleCompleteSet]);
+
+    // Auto-complete set when reps reach totalReps goal
+    useEffect(() => {
+        if (exercise && currentRep > 0 && currentRep >= totalReps && !isResting && !isFinishing && !paused) {
+            console.log(`[TrainingScreen] Auto-completing set: ${currentRep}/${totalReps} reached.`);
+            const timer = setTimeout(() => {
+                handleCompleteSetRef.current();
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [currentRep, totalReps, isResting, isFinishing, paused, exercise]);
 
     const formatTime = (s: number) => {
         const m = Math.floor(s / 60);
@@ -205,6 +332,16 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                             <AppText style={styles.repBig}>{currentRep}</AppText>
                             <AppText style={styles.repSmall}> /{totalReps}</AppText>
                         </View>
+                    </View>
+
+                    {/* AI Feedback Bubble */}
+                    <View style={styles.fsFeedbackCard}>
+                        <View style={styles.fsFeedbackPulse}>
+                            <View style={styles.fsFeedbackDot} />
+                        </View>
+                        <AppText variant="bodySm" style={styles.fsFeedbackText}>
+                            {poseError ? 'Camera unavailable' : poseDetected ? coachFeedback : 'Starting posture tracking...'}
+                        </AppText>
                     </View>
 
                     <View style={styles.progressContainer}>
@@ -339,7 +476,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         <View style={styles.analysisTextCol}>
                             <AppText variant="labelMd" style={styles.analysisLabel}>POSE ANALYSIS</AppText>
                             <AppText variant="bodySm" style={styles.analysisText}>
-                                {poseError ? 'Camera access required for AI tracking' : poseDetected ? 'Pose detected — keep moving!' : 'Waiting for AI model to load…'}
+                                {poseError ? 'Camera access required for AI tracking' : poseDetected ? coachFeedback : 'Waiting for AI model to load…'}
                             </AppText>
                         </View>
                     </View>
@@ -484,6 +621,38 @@ const styles = StyleSheet.create({
     fsLiveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#ef4444' },
     timerText: { color: '#fff', fontVariant: ['tabular-nums'], letterSpacing: 1 },
     bottomSheet: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl, paddingBottom: spacing.xl * 2, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 20 },
+    fsFeedbackCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0fdf4',
+        borderWidth: 1,
+        borderColor: '#bbf7d0',
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: 12,
+        marginBottom: spacing.md,
+        gap: 8,
+    },
+    fsFeedbackPulse: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#10b981',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fsFeedbackDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#10b981',
+    },
+    fsFeedbackText: {
+        color: '#166534',
+        fontWeight: '600',
+        fontSize: 13,
+        flex: 1,
+    },
     sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
     dataRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
     repContainer: { flexDirection: 'row', alignItems: 'baseline' },

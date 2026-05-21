@@ -34,6 +34,15 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
     `pose-view-${Math.random().toString(36).slice(2)}`,
   ).current;
 
+  // Use refs to keep callbacks stable and prevent iframe from being destroyed & re-created
+  const onPoseDetectedRef = useRef(onPoseDetected);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onPoseDetectedRef.current = onPoseDetected;
+    onErrorRef.current = onError;
+  }, [onPoseDetected, onError]);
+
   useEffect(() => {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -50,6 +59,10 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
 
     container.appendChild(iframe);
 
+    if (typeof window !== 'undefined') {
+      (window as any).__poseIframe = iframe.contentWindow;
+    }
+
     // ── Listen for messages posted from inside the iframe ─────────────────────
     const handleMessage = (event: MessageEvent) => {
       // Only handle messages from our iframe
@@ -61,9 +74,25 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
             : event.data;
 
         if (data.type === 'POSE_LANDMARKS') {
-          onPoseDetected?.(data.landmarks as PoseLandmark[], data.fps as number);
+          onPoseDetectedRef.current?.(data.landmarks as PoseLandmark[], data.fps as number);
         } else if (data.type === 'CAMERA_ERROR') {
-          onError?.(data.error as string);
+          onErrorRef.current?.(data.error as string);
+        } else if (data.type === 'RECORDING_COMPLETE') {
+          // Receive raw ArrayBuffer from iframe and create blob URL in parent context.
+          // This is critical: blob URLs created inside srcdoc iframes get revoked
+          // when the iframe is destroyed, so we must recreate the blob here.
+          if (data.buffer instanceof ArrayBuffer) {
+            const blob = new Blob([data.buffer], { type: data.mimeType || 'video/webm' });
+            const blobUrl = URL.createObjectURL(blob);
+            console.log("[PoseEstimationView.web] Created parent-context blob URL:", blobUrl, "size:", blob.size, "mime:", blob.type);
+            if (typeof window !== 'undefined') {
+              (window as any).__lastRecordedVideoUrl = blobUrl;
+              (window as any).__recordedVideos = (window as any).__recordedVideos || {};
+              (window as any).__recordedVideos['latest'] = blobUrl;
+            }
+          } else {
+            console.warn("[PoseEstimationView.web] RECORDING_COMPLETE received without ArrayBuffer — video will not be available.");
+          }
         }
       } catch (_) {
         // ignore malformed messages
@@ -73,10 +102,16 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
     window.addEventListener('message', handleMessage);
 
     return () => {
+      if (typeof window !== 'undefined') {
+        (window as any).__poseIframe = null;
+      }
       window.removeEventListener('message', handleMessage);
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      if (iframe && iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+        console.log("[PoseEstimationView.web] Iframe cleaned up cleanly on unmount.");
+      }
     };
-  }, [containerId, onPoseDetected, onError]);
+  }, [containerId]);
 
   // React Native Web renders <View> as a <div> — nativeID becomes the DOM id
   return (

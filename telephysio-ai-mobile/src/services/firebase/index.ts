@@ -70,6 +70,8 @@ export {
   saveIncompleteSession,
   updateIncompleteSession,
   deleteIncompleteSession,
+  updateSessionEffort,
+  deleteSessionVideo,
 } from './progressService';
 
 // Notifications
@@ -81,6 +83,19 @@ export {
   getUnreadCount,
   onNotificationsChange,
 } from './notificationService';
+
+// Video Recording Local
+export {
+  startRecording,
+  pauseRecording,
+  resumeRecording,
+  stopRecording,
+  deleteLocalVideo,
+  getLocalVideoDirectory,
+  getTemporaryVideoPath,
+  uploadVideoToFirebaseStorage,
+  uploadThumbnailToFirebaseStorage,
+} from './videoService';
 
 // Schedule
 export {
