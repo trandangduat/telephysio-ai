@@ -93,8 +93,8 @@ export {
   deleteLocalVideo,
   getLocalVideoDirectory,
   getTemporaryVideoPath,
-  uploadVideoToFirebaseStorage,
-  uploadThumbnailToFirebaseStorage,
+  uploadVideoToCloudinary,
+  uploadThumbnailToCloudinary,
 } from './videoService';
 
 // Schedule
