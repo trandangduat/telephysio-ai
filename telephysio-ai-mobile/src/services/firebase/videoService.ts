@@ -346,49 +346,122 @@ export async function deleteLocalVideo(
 }
 
 /**
- * Uploads a local video file from absolute URI to Firebase Storage under `videos/{sessionId}.mp4`
+ * Uploads a local video file from absolute URI to Cloudinary under `videos/{sessionId}.mp4`
  * and returns the public download URL.
  */
-export async function uploadVideoToFirebaseStorage(
+export async function uploadVideoToCloudinary(
   localFileUri: string,
   sessionId: string
 ): Promise<string> {
-  console.log(`[VideoService] Uploading video to Firebase Storage. Local URI: ${localFileUri}`);
+  console.log(`[VideoService] Uploading video to Cloudinary. Local URI: ${localFileUri}`);
   try {
-    // const response = await fetch(localFileUri);
-    // const blob = await response.blob();
-    // const videoRef = ref(storage, `videos/${sessionId}.mp4`);
-    // await uploadBytes(videoRef, blob);
-    // const downloadUrl = await getDownloadURL(videoRef);
-    // console.log(`[VideoService] Upload success! Public URL: ${downloadUrl}`);
-    // return downloadUrl;
-    return `videos/${sessionId}.mp4`;
+    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary config missing in .env");
+    }
+    
+    let fileToUpload: any;
+    if (Platform.OS === 'web') {
+      // Trên Web, localFileUri là một blob URL. Ta cần fetch nó để lấy Blob object thật.
+      const fetchResponse = await fetch(localFileUri);
+      fileToUpload = await fetchResponse.blob();
+    } else {
+      // Trên Mobile (iOS/Android), ta truyền object với thuộc tính uri
+      fileToUpload = {
+        uri: localFileUri,
+        type: 'video/mp4',
+        name: `${sessionId}.mp4`,
+      };
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
+    
+    formData.append('upload_preset', uploadPreset);
+    // Chú ý: Unsigned upload không cho phép gửi public_id từ client. 
+    // Cloudinary sẽ tự tạo tên file ngẫu nhiên hoặc bạn có thể config folder trong Preset.
+    // formData.append('api_key', '747817445469264'); // Không nên dùng trên client
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Failed to upload to Cloudinary');
+    }
+
+    console.log(`[VideoService] Video upload success! Public URL: ${data.secure_url}`);
+    
+    // Tối ưu hóa delivery (tương đương f_auto, q_auto trong snippet)
+    const optimizeUrl = data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+    
+    return optimizeUrl;
   } catch (err) {
-    // console.error("[VideoService] Failed to upload video to Firebase Storage:", err);
-    // throw err;
-    return `videos/${sessionId}.mp4`;
+     console.error("[VideoService] Failed to upload video to Cloudinary:", err);
+    throw err;
+    // return `videos/${sessionId}.mp4`;
   }
 }
 
 /**
- * Uploads a local thumbnail image from absolute URI to Firebase Storage under `thumbnails/{sessionId}.jpg`
+ * Uploads a local thumbnail image from absolute URI to Cloudinary under `thumbnails/{sessionId}.jpg`
  * and returns the public download URL.
  */
-export async function uploadThumbnailToFirebaseStorage(
+export async function uploadThumbnailToCloudinary(
   localFileUri: string,
   sessionId: string
 ): Promise<string> {
-  console.log(`[VideoService] Uploading thumbnail to Firebase Storage. Local URI: ${localFileUri}`);
+  console.log(`[VideoService] Uploading thumbnail to Cloudinary. Local URI: ${localFileUri}`);
   try {
-    const response = await fetch(localFileUri);
-    const blob = await response.blob();
-    const thumbRef = ref(storage, `thumbnails/${sessionId}.jpg`);
-    await uploadBytes(thumbRef, blob);
-    const downloadUrl = await getDownloadURL(thumbRef);
-    console.log(`[VideoService] Thumbnail upload success! Public URL: ${downloadUrl}`);
-    return downloadUrl;
+    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary config missing in .env");
+    }
+    
+    let fileToUpload: any;
+    if (Platform.OS === 'web') {
+      const fetchResponse = await fetch(localFileUri);
+      fileToUpload = await fetchResponse.blob();
+    } else {
+      fileToUpload = {
+        uri: localFileUri,
+        type: 'image/jpeg',
+        name: `${sessionId}_thumb.jpg`,
+      };
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
+    
+    formData.append('upload_preset', uploadPreset);
+    // Bỏ public_id vì Unsigned upload không cho phép gửi thông số này
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Failed to upload to Cloudinary');
+    }
+
+    console.log(`[VideoService] Thumbnail upload success! Public URL: ${data.secure_url}`);
+    
+    // Tự động crop thành dạng vuông như trong snippet yêu cầu
+    const autoCropUrl = data.secure_url.replace('/upload/', '/upload/c_auto,g_auto,w_500,h_500,f_auto,q_auto/');
+    
+    return autoCropUrl;
   } catch (err) {
-    console.warn("[VideoService] Failed to upload thumbnail to Firebase Storage:", err);
+    console.warn("[VideoService] Failed to upload thumbnail to Cloudinary:", err);
     // Return empty string or fallback on error, don't crash the session flow for a thumbnail
     return "";
   }

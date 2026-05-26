@@ -38,7 +38,7 @@ import {
   saveProgressSnapshot,
   updateSessionEffort,
   deleteSessionVideo,
-  uploadVideoToFirebaseStorage,
+  uploadVideoToCloudinary,
 } from '../../services/firebase';
 import type { Assignment, ExerciseRecord, SetRecord } from '../../services/firebase/types';
 
@@ -218,22 +218,19 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             }
           }
 
-          // 2.5. Upload video to Firebase Storage and update session with real URL
+          // 2.5. Upload video to Cloudinary and update session with real URL
           if (recordedVideoLocalPath && recordedVideoLocalPath.startsWith('blob:')) {
             try {
-              console.log(`[WorkoutSummary] Step 2.5 - Uploading video to Firebase Storage...`);
-              // const firebaseVideoUrl = await uploadVideoToFirebaseStorage(recordedVideoLocalPath, finalSessionId);
-              console.log(`[WorkoutSummary] Step 2.5 - Upload complete! URL: ${videoUrl}`);
-
-              // Update the session document with the real Firebase Storage download URL
+              console.log(`[WorkoutSummary] Step 2.5 - Uploading video to Cloudinary...`);
+              const cloudVideoUrl = await uploadVideoToCloudinary(recordedVideoLocalPath, finalSessionId);
               const { doc, updateDoc } = await import('firebase/firestore');
               const { db } = await import('../../services/firebase/config');
               await updateDoc(doc(db, 'sessions', finalSessionId), {
-                videoUrl: videoUrl,
+                videoUrl: cloudVideoUrl,
               });
               console.log(`[WorkoutSummary] Step 2.5 - Session videoUrl updated in Firestore.`);
             } catch (uploadErr) {
-              console.error('[WorkoutSummary] Failed to upload video to Firebase Storage:', uploadErr);
+              console.error('[WorkoutSummary] Failed to upload video to Cloudinary:', uploadErr);
               // Non-blocking: session is still saved with the relative path
             }
           }
