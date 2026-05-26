@@ -20,12 +20,12 @@ interface QuickSelectChipsProps {
 }
 
 export const SYMPTOM_OPTIONS: QuickSelectOption[] = [
-  { id: 'pain',     label: 'Đau nhức',     description: 'Cảm giác đau ở vùng tập' },
-  { id: 'stiff',    label: 'Cứng khớp',    description: 'Khó cử động' },
-  { id: 'swelling', label: 'Sưng',         description: 'Vùng tập bị sưng' },
-  { id: 'tired',    label: 'Mệt mỏi',     description: 'Cảm giác kiệt sức' },
-  { id: 'good',     label: 'Bình thường',  description: 'Không có triệu chứng' },
-  { id: 'better',   label: 'Tốt hơn',     description: 'Cải thiện rõ rệt' },
+  { id: 'pain',     label: 'Pain',     description: 'Feeling pain in the training area' },
+  { id: 'stiff',    label: 'Stiffness',    description: 'Difficulty moving' },
+  { id: 'swelling', label: 'Swelling',         description: 'Training area is swollen' },
+  { id: 'tired',    label: 'Fatigue',     description: 'Feeling exhausted' },
+  { id: 'good',     label: 'Normal',  description: 'No symptoms' },
+  { id: 'better',   label: 'Better',     description: 'Clear improvement' },
 ];
 
 export const QuickSelectChips: React.FC<QuickSelectChipsProps> = ({

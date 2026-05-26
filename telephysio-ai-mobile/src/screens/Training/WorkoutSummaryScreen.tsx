@@ -170,6 +170,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             patientId: uid,
             assignmentId: active.id,
             reps: sumReps,
+            templateName: active.templateName,
             accuracy: avgAcc,
             duration: totalSecs, // total seconds
             caloriesBurned: finalCalories,

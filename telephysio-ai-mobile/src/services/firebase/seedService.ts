@@ -239,7 +239,6 @@ export const seedMockData = async () => {
             getRandomDate(new Date(2026, 4, 1), new Date(2026, 4, 6)),
           ),
           reps: 10 * selectedExercises.length,
-          sets: 3 * selectedExercises.length,
           // NEW: Detail view data
           videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Stable mock video
           doctorFeedback: s % 2 === 0 
