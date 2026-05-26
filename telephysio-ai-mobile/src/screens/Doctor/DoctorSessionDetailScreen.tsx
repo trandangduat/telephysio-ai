@@ -33,13 +33,47 @@ type ScreenRouteProp = RouteProp<DoctorStackParamList, 'DoctorSessionDetail'>;
 export const DoctorSessionDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute<ScreenRouteProp>();
-  const { session, patientName } = route.params;
-
-  const videoRef = useRef<Video>(null);
+  const { session, patientName } = route.params;  const videoRef = useRef<Video>(null);
   const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
   const [feedback, setFeedback] = useState(session.doctorFeedback || "");
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<"video" | "analysis">("video");
+
+  const [resolvedVideoUri, setResolvedVideoUri] = useState<string>("");
+  const [loadingVideo, setLoadingVideo] = useState(false);
+
+  React.useEffect(() => {
+    async function resolveVideo() {
+      const url = session.videoUrl;
+      if (!url) return;
+
+      setLoadingVideo(true);
+      try {
+        if (url.startsWith("http") || url.startsWith("blob:")) {
+          setResolvedVideoUri(url);
+        } else {
+          // It's a relative path! e.g., "videos/2JKbKHm37XkFKlgZidTR_20260526.mp4"
+          console.log("[DoctorSessionDetail] Relative path detected. Fetching from Firebase Storage:", url);
+          const { ref, getDownloadURL } = await import("firebase/storage");
+          const { storage } = await import("../../services/firebase/config");
+          const downloadUrl = await getDownloadURL(ref(storage, url));
+          console.log("[DoctorSessionDetail] Successfully resolved relative path to download URL:", downloadUrl);
+          setResolvedVideoUri(downloadUrl);
+        }
+      } catch (err) {
+        console.warn("[DoctorSessionDetail] Failed to resolve video URL:", err);
+        // Fallback to relative path starting with /
+        let fallback = url;
+        if (!fallback.startsWith("/")) {
+          fallback = "/" + fallback;
+        }
+        setResolvedVideoUri(fallback);
+      } finally {
+        setLoadingVideo(false);
+      }
+    }
+    resolveVideo();
+  }, [session.videoUrl]);
 
   const isPlaying = status && (status as any).isPlaying;
 
@@ -120,29 +154,28 @@ export const DoctorSessionDetailScreen: React.FC = () => {
             
             {session.videoUrl ? (
               <View style={styles.videoContainer}>
-                <Video
-                  ref={videoRef}
-                  source={{ 
-                    uri: (() => {
-                      const url = session.videoUrl;
-                      if (Platform.OS !== 'web') return url || "";
-                      // On web: check global recorded videos dictionary, then use Firestore URL directly
-                      let resolved = (typeof window !== 'undefined' && url && (window as any).__recordedVideos?.[url]) 
-                        ? (window as any).__recordedVideos[url] 
-                        : url;
-                      
-                      // Ensure relative local server paths start with / to load from root
-                      if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
-                        resolved = '/' + resolved;
-                      }
-                      return resolved || "";
-                    })()
-                  }}
-                  style={styles.video}
-                  resizeMode={ResizeMode.CONTAIN}
-                  onPlaybackStatusUpdate={setStatus}
-                  useNativeControls
-                />
+                {loadingVideo ? (
+                  <View style={[styles.video, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }]}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <AppText style={{ color: '#fff', fontSize: 12, marginTop: 8 }}>Resolving video path...</AppText>
+                  </View>
+                ) : resolvedVideoUri ? (
+                  <Video
+                    ref={videoRef}
+                    source={{ uri: resolvedVideoUri }}
+                    style={styles.video}
+                    resizeMode={ResizeMode.CONTAIN}
+                    onPlaybackStatusUpdate={setStatus}
+                    useNativeControls
+                    onError={(error) => console.error("[DoctorSessionDetail] Video Playback Error:", error)}
+                    onLoadStart={() => console.log("[DoctorSessionDetail] Video loading started...")}
+                  />
+                ) : (
+                  <View style={styles.noVideo}>
+                    <Ionicons name="videocam-off-outline" size={48} color={colors.outline} />
+                    <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, marginTop: 8 }}>No video available</AppText>
+                  </View>
+                )}
               </View>
             ) : (
               <View style={styles.noVideo}>

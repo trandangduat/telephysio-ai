@@ -219,17 +219,17 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
           }
 
           // 2.5. Upload video to Firebase Storage and update session with real URL
-          if (recordedVideoLocalPath && recordedVideoLocalPath.startsWith('blob:')) {
+          if (recordedVideoLocalPath) {
             try {
               console.log(`[WorkoutSummary] Step 2.5 - Uploading video to Firebase Storage...`);
-              // const firebaseVideoUrl = await uploadVideoToFirebaseStorage(recordedVideoLocalPath, finalSessionId);
-              console.log(`[WorkoutSummary] Step 2.5 - Upload complete! URL: ${videoUrl}`);
+              const firebaseVideoUrl = await uploadVideoToFirebaseStorage(recordedVideoLocalPath, finalSessionId);
+              console.log(`[WorkoutSummary] Step 2.5 - Upload complete! URL: ${firebaseVideoUrl}`);
 
               // Update the session document with the real Firebase Storage download URL
               const { doc, updateDoc } = await import('firebase/firestore');
               const { db } = await import('../../services/firebase/config');
               await updateDoc(doc(db, 'sessions', finalSessionId), {
-                videoUrl: videoUrl,
+                videoUrl: firebaseVideoUrl,
               });
               console.log(`[WorkoutSummary] Step 2.5 - Session videoUrl updated in Firestore.`);
             } catch (uploadErr) {

@@ -355,18 +355,16 @@ export async function uploadVideoToFirebaseStorage(
 ): Promise<string> {
   console.log(`[VideoService] Uploading video to Firebase Storage. Local URI: ${localFileUri}`);
   try {
-    // const response = await fetch(localFileUri);
-    // const blob = await response.blob();
-    // const videoRef = ref(storage, `videos/${sessionId}.mp4`);
-    // await uploadBytes(videoRef, blob);
-    // const downloadUrl = await getDownloadURL(videoRef);
-    // console.log(`[VideoService] Upload success! Public URL: ${downloadUrl}`);
-    // return downloadUrl;
-    return `videos/${sessionId}.mp4`;
+    const response = await fetch(localFileUri);
+    const blob = await response.blob();
+    const videoRef = ref(storage, `videos/${sessionId}.mp4`);
+    await uploadBytes(videoRef, blob);
+    const downloadUrl = await getDownloadURL(videoRef);
+    console.log(`[VideoService] Upload success! Public URL: ${downloadUrl}`);
+    return downloadUrl;
   } catch (err) {
-    // console.error("[VideoService] Failed to upload video to Firebase Storage:", err);
-    // throw err;
-    return `videos/${sessionId}.mp4`;
+    console.error("[VideoService] Failed to upload video to Firebase Storage:", err);
+    throw err;
   }
 }
 

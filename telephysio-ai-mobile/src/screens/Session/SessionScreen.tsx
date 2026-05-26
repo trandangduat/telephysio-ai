@@ -79,6 +79,43 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
 
   const videoUrl = (session as any)?.videoUrl || null;
 
+  const [resolvedVideoUri, setResolvedVideoUri] = useState<string>("");
+  const [loadingVideo, setLoadingVideo] = useState(false);
+
+  useEffect(() => {
+    async function resolveVideo() {
+      if (!videoUrl) return;
+
+      setLoadingVideo(true);
+      try {
+        if (videoUrl.startsWith("http") || videoUrl.startsWith("blob:")) {
+          setResolvedVideoUri(videoUrl);
+        } else {
+          // It's a relative path! e.g., "videos/2JKbKHm37XkFKlgZidTR_20260526.mp4"
+          console.log("[SessionDetailModal] Relative path detected. Fetching from Firebase Storage:", videoUrl);
+          const { ref, getDownloadURL } = await import("firebase/storage");
+          const { storage } = await import("../../services/firebase/config");
+          const downloadUrl = await getDownloadURL(ref(storage, videoUrl));
+          console.log("[SessionDetailModal] Successfully resolved relative path to download URL:", downloadUrl);
+          setResolvedVideoUri(downloadUrl);
+        }
+      } catch (err) {
+        console.warn("[SessionDetailModal] Failed to resolve video URL:", err);
+        // Fallback to relative path starting with /
+        let fallback = videoUrl;
+        if (!fallback.startsWith("/")) {
+          fallback = "/" + fallback;
+        }
+        setResolvedVideoUri(fallback);
+      } finally {
+        setLoadingVideo(false);
+      }
+    }
+    if (visible) {
+      resolveVideo();
+    }
+  }, [videoUrl, visible]);
+
   const togglePlay = async () => {
     if (!videoRef.current) return;
     try {
@@ -222,55 +259,58 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
               <View>
                 {videoUrl ? (
                   <View style={detail.videoWrapper}>
-                    <Video
-                      ref={videoRef}
-                      source={{ 
-                        uri: (() => {
-                          if (Platform.OS !== 'web') return videoUrl || "";
-                          let resolved = (typeof window !== 'undefined' && videoUrl && (window as any).__recordedVideos?.[videoUrl]) 
-                            ? (window as any).__recordedVideos[videoUrl] 
-                            : videoUrl;
-                          if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
-                            resolved = '/' + resolved;
-                          }
-                          return resolved || "";
-                        })()
-                      }}
-                      style={detail.video}
-                      resizeMode={ResizeMode.CONTAIN}
-                      onPlaybackStatusUpdate={(s) => setStatus(s)}
-                      shouldPlay={false}
-                      useNativeControls={false}
-                      onError={(error) => console.error("Video Error:", error)}
-                      onLoadStart={() => console.log("Video Loading Started:", videoUrl)}
-                    />
-                    <TouchableOpacity
-                      style={detail.playOverlay}
-                      onPress={togglePlay}
-                      activeOpacity={0.8}
-                    >
-                      {!isPlaying && (
-                        <View style={detail.playCircle}>
-                          <Ionicons name="play" size={28} color="#fff" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                    {status && (status as any).durationMillis ? (
-                      <View style={detail.progressTrack}>
-                        <View
-                          style={[
-                            detail.progressFill,
-                            {
-                              width: `${
-                                (((status as any).positionMillis ?? 0) /
-                                  (status as any).durationMillis) *
-                                100
-                              }%`,
-                            },
-                          ]}
-                        />
+                    {loadingVideo ? (
+                      <View style={[detail.video, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }]}>
+                        <ActivityIndicator size="small" color={colors.primary} />
+                        <AppText style={{ color: '#fff', fontSize: 11, marginTop: 8 }}>Resolving video path...</AppText>
                       </View>
-                    ) : null}
+                    ) : resolvedVideoUri ? (
+                      <>
+                        <Video
+                          ref={videoRef}
+                          source={{ uri: resolvedVideoUri }}
+                          style={detail.video}
+                          resizeMode={ResizeMode.CONTAIN}
+                          onPlaybackStatusUpdate={(s) => setStatus(s)}
+                          shouldPlay={false}
+                          useNativeControls={false}
+                          onError={(error) => console.error("Video Error:", error)}
+                          onLoadStart={() => console.log("Video Loading Started:", videoUrl)}
+                        />
+                        <TouchableOpacity
+                          style={detail.playOverlay}
+                          onPress={togglePlay}
+                          activeOpacity={0.8}
+                        >
+                          {!isPlaying && (
+                            <View style={detail.playCircle}>
+                              <Ionicons name="play" size={28} color="#fff" />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                        {status && (status as any).durationMillis ? (
+                          <View style={detail.progressTrack}>
+                            <View
+                              style={[
+                                detail.progressFill,
+                                {
+                                  width: `${
+                                    (((status as any).positionMillis ?? 0) /
+                                      (status as any).durationMillis) *
+                                    100
+                                  }%`,
+                                },
+                              ]}
+                            />
+                          </View>
+                        ) : null}
+                      </>
+                    ) : (
+                      <View style={detail.noExerciseBox}>
+                        <Ionicons name="videocam-off-outline" size={32} color="#94a3b8" />
+                        <AppText variant="labelMd" style={detail.noExerciseTitle}>Video unavailable</AppText>
+                      </View>
+                    )}
                   </View>
                 ) : null}
                 {/* Exercises list */}
