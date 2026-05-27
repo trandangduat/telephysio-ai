@@ -10,7 +10,7 @@
  *   - Public cloud URLs are retrieved and synced back to Firestore.
  */
 
-import { documentDirectory, getInfoAsync, makeDirectoryAsync, writeAsStringAsync, deleteAsync, downloadAsync, moveAsync } from 'expo-file-system';
+import { documentDirectory, getInfoAsync, makeDirectoryAsync, writeAsStringAsync, deleteAsync, downloadAsync, moveAsync } from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './config';
@@ -346,7 +346,7 @@ export async function deleteLocalVideo(
 }
 
 /**
- * Uploads a local video file from absolute URI to Cloudinary under `videos/{sessionId}.mp4`
+ * Uploads a local video file from absolute URI to Cloudinary
  * and returns the public download URL.
  */
 export async function uploadVideoToCloudinary(
@@ -402,14 +402,13 @@ export async function uploadVideoToCloudinary(
     
     return optimizeUrl;
   } catch (err) {
-     console.error("[VideoService] Failed to upload video to Cloudinary:", err);
+    console.error("[VideoService] Failed to upload video to Cloudinary:", err);
     throw err;
-    // return `videos/${sessionId}.mp4`;
   }
 }
 
 /**
- * Uploads a local thumbnail image from absolute URI to Cloudinary under `thumbnails/{sessionId}.jpg`
+ * Uploads a local thumbnail image from absolute URI to Cloudinary
  * and returns the public download URL.
  */
 export async function uploadThumbnailToCloudinary(
@@ -466,3 +465,4 @@ export async function uploadThumbnailToCloudinary(
     return "";
   }
 }
+

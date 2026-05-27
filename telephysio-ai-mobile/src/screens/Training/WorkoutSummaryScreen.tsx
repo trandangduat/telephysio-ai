@@ -22,7 +22,6 @@ import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Aler
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Video, ResizeMode } from 'expo-av';
 
 import { AppText, AppButton } from '../../components/ui';
 import { colors, spacing, typography, radius } from '../../theme';
@@ -37,8 +36,6 @@ import {
   stopRecording,
   saveProgressSnapshot,
   updateSessionEffort,
-  deleteSessionVideo,
-  uploadVideoToCloudinary,
 } from '../../services/firebase';
 import type { Assignment, ExerciseRecord, SetRecord } from '../../services/firebase/types';
 
@@ -127,6 +124,12 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
           const exercisesList = sessionData.completedExercises || [];
           setCompletedExercises(exercisesList);
 
+          // Use the last exercise's Cloudinary URL as the session-level videoUrl
+          // (each exercise's video was already uploaded in ExerciseResultScreen)
+          const sessionVideoUrl = exercisesList.length > 0
+            ? (exercisesList[exercisesList.length - 1].videoUrl ?? null)
+            : null;
+
           // Calculate accuracy and sums (Workout Flow Spec section 10)
           let totalAcc = 0;
           let totalSecs = 0;
@@ -177,18 +180,12 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             completionRate: completionRate,
             perceivedEffort: null, // starts empty, chosen by user below
             exercises: exercisesList,
-            videoLocalPath: recordedVideoLocalPath,
-            thumbnailPath: relativeThumbnailPath || recordedThumbnailPath,
-            videoUrl: relativeVideoPath || "", // Store the relative video reference link!
-
             // Backward compatibility properties:
             exercisesCompleted: exercisesList.length,
             completedExercises: exercisesList.length,
             accuracyScore: avgAcc,
             durationSeconds: totalSecs,
             totalDuration: `${Math.floor(totalSecs / 60)} min`,
-            painLevel: 2, // Default standard pain score
-            averagePain: 2,
             completedExercisesData: exercisesList.map((ex) => ({
               name: ex.exerciseName,
               accuracy: ex.accuracy,
@@ -200,40 +197,6 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
 
           setSessionId(finalSessionId);
           console.log(`[WorkoutSummary] Step 2 - Session recorded with ID: ${finalSessionId}`);
-
-          // 2.2. Automatically download video to local machine on Web
-          if (Platform.OS === 'web' && recordedVideoLocalPath && typeof document !== 'undefined') {
-            try {
-              console.log("[WorkoutSummary] Auto-downloading recorded video to local machine...");
-              const link = document.createElement('a');
-              link.href = recordedVideoLocalPath;
-              const filename = relativeVideoPath ? relativeVideoPath.split('/').pop() : `session_${finalSessionId}.mp4`;
-              link.download = filename;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              console.log("[WorkoutSummary] Auto-download completed successfully.");
-            } catch (dlErr) {
-              console.error("[WorkoutSummary] Failed to auto-download video:", dlErr);
-            }
-          }
-
-          // 2.5. Upload video to Cloudinary and update session with real URL
-          if (recordedVideoLocalPath && recordedVideoLocalPath.startsWith('blob:')) {
-            try {
-              console.log(`[WorkoutSummary] Step 2.5 - Uploading video to Cloudinary...`);
-              const cloudVideoUrl = await uploadVideoToCloudinary(recordedVideoLocalPath, finalSessionId);
-              const { doc, updateDoc } = await import('firebase/firestore');
-              const { db } = await import('../../services/firebase/config');
-              await updateDoc(doc(db, 'sessions', finalSessionId), {
-                videoUrl: cloudVideoUrl,
-              });
-              console.log(`[WorkoutSummary] Step 2.5 - Session videoUrl updated in Firestore.`);
-            } catch (uploadErr) {
-              console.error('[WorkoutSummary] Failed to upload video to Cloudinary:', uploadErr);
-              // Non-blocking: session is still saved with the relative path
-            }
-          }
 
           // 3. Complete assignment only if 100% finished
           if (completionRate >= 1.0) {

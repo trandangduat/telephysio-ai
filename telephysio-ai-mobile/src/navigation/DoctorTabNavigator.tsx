@@ -24,7 +24,7 @@ const TAB_ICONS: Record<
 > = {
   Dashboard: { active: "grid", inactive: "grid-outline" },
   Assignments: { active: "clipboard", inactive: "clipboard-outline" },
-  Patients: { active: "people", inactive: "people-outline" },
+  Patients: { active: "person", inactive: "person-outline" },
 };
 
 export const DoctorTabNavigator: React.FC = () => {

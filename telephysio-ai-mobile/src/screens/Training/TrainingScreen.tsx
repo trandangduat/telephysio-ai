@@ -31,6 +31,13 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     const [formAccuracy, setFormAccuracy] = useState(95);
     const [averageAccuracy, setAverageAccuracy] = useState(95);
     const isFinishingRef = useRef(false);
+    
+    // Video timing refs
+    const recordingStartTimeRef = useRef<number>(0);
+    const currentSetRepTimestamps = useRef<{rep: number, start: number, end: number}[]>([]);
+    const lastRepEndMs = useRef<number>(0);
+    const currentRepRef = useRef<number>(0);
+    const setVideoStartMs = useRef<number>(0);
     const [paused, setPaused] = useState(false);
     const [elapsed, setElapsed] = useState(0);
     const [currentSetElapsed, setCurrentSetElapsed] = useState(0);
@@ -70,6 +77,18 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         if (poseAnalyzerRef.current) {
             const result = poseAnalyzerRef.current.analyze(landmarks, totalReps);
             const displayedReps = Math.min(result.reps, totalReps);
+            
+            if (displayedReps > currentRepRef.current) {
+                const nowMs = recordingStartTimeRef.current ? (Date.now() - recordingStartTimeRef.current) : 0;
+                currentSetRepTimestamps.current.push({
+                    rep: displayedReps,
+                    start: lastRepEndMs.current,
+                    end: nowMs
+                });
+                lastRepEndMs.current = nowMs;
+                currentRepRef.current = displayedReps;
+            }
+
             setCurrentRep(displayedReps);
             setFormAccuracy(result.formAccuracy);
             setAverageAccuracy(result.averageAccuracy);
@@ -140,6 +159,9 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                 try {
                     console.log(`[TrainingScreen] Mounting: auto-starting video recording for ${assignmentId}`);
                     await startRecording(assignmentId);
+                    recordingStartTimeRef.current = Date.now();
+                    lastRepEndMs.current = 0;
+                    setVideoStartMs.current = 0;
                 } catch (err) {
                     console.error("[TrainingScreen] Failed to start recording on mount:", err);
                 }
@@ -182,10 +204,11 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         // Calculate total reps completed
         const totalRepsCompleted = finalSets.reduce((sum, s) => sum + s.repsCompleted, 0);
 
+        let videoResult = null;
         if (recordVideo) {
             try {
                 console.log("[TrainingScreen] Stopping video recording...");
-                await stopRecording();
+                videoResult = await stopRecording();
             } catch (err) {
                 console.error("[TrainingScreen] Failed to stop recording inside handleNextExercise:", err);
             }
@@ -202,6 +225,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                 sets: finalSets.length,
                 recordVideo,
                 setsData: finalSets,
+                videoResult,
             });
         } catch (error) {
             console.error('Failed to finish exercise:', error);
@@ -219,12 +243,22 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
             return;
         }
         const currentSetDuration = elapsed - lastSetElapsed;
+        const nowVideoMs = recordingStartTimeRef.current ? (Date.now() - recordingStartTimeRef.current) : 0;
         const currentSetData = {
             setNumber: currentSet,
             repsCompleted: currentRep,
             durationSec: currentSetDuration,
             accuracy: averageAccuracy,
+            repTimestamps: [...currentSetRepTimestamps.current],
+            videoStartMs: setVideoStartMs.current,
+            videoEndMs: nowVideoMs,
         };
+
+        // Reset tracking for next set
+        currentSetRepTimestamps.current = [];
+        lastRepEndMs.current = nowVideoMs;
+        currentRepRef.current = 0;
+        setVideoStartMs.current = nowVideoMs;
 
         const updatedSets = [...completedSets, currentSetData];
         setCompletedSets(updatedSets);
