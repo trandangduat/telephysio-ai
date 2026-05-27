@@ -16,7 +16,7 @@ interface DoctorNoticeCardProps {
 
 export const DoctorNoticeCard: React.FC<DoctorNoticeCardProps> = ({
   doctorName = 'BS. Nguyễn Thị Hoa',
-  message = 'Bạn đang tiến bộ tốt! Tuần này hãy tập trung vào biên độ khuỷu tay. Nhớ giữ động tác chậm và kiểm soát.',
+  message = 'You are making good progress! This week, focus on your elbow range of motion. Remember to keep your movements slow and controlled.',
   date,
 }) => {
   const { t } = useTranslation();

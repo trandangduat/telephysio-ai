@@ -461,6 +461,7 @@ export async function uploadThumbnailToCloudinary(
     return autoCropUrl;
   } catch (err) {
     console.warn("[VideoService] Failed to upload thumbnail to Cloudinary:", err);
+    // Return empty string or fallback on error, don't crash the session flow for a thumbnail
     return "";
   }
 }

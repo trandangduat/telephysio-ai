@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-n
 import { AppText, AppButton } from '../../components/ui';
 import { colors, radius, spacing } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 type CalibrationProps = NativeStackScreenProps<RootStackParamList, 'Calibration'>;
 
@@ -22,6 +23,7 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
   const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
   const { t } = useTranslation();
   const [status, setStatus] = useState<CalibrationStatus>('not-ready');
+  const [permission, requestPermission] = useCameraPermissions();
 
   const statusConfig: Record<CalibrationStatus, { color: string; label: string }> = {
     'not-ready': { color: colors.error,   label: t('calibration.notReady') },
@@ -35,11 +37,40 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // Automatically request camera permission on mount if not yet decided
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      requestPermission();
+    }
+  }, [permission]);
+
+  if (!permission) {
+    // Camera permissions are still loading.
+    return <View style={styles.container} />;
+  }
+
+  if (!permission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: spacing.xl }]}>
+        <AppText variant="bodyMd" color={colors.onSurface} style={{ textAlign: 'center', marginBottom: spacing.lg }}>
+          The app needs camera access to perform pose calibration before your workout.
+        </AppText>
+        <AppButton label="Cấp quyền Camera" onPress={requestPermission} />
+      </View>
+    );
+  }
+
   const cfg = statusConfig[status];
 
   return (
     <View style={styles.container}>
       <View style={styles.cameraView}>
+        <CameraView
+          style={StyleSheet.absoluteFillObject}
+          facing="front"
+          mute={true}
+        />
         <View style={styles.silhouette}>
           <View style={[styles.silhouetteBody, { borderColor: cfg.color }]} />
         </View>

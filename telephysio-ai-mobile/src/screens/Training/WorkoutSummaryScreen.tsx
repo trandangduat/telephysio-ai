@@ -173,6 +173,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             patientId: uid,
             assignmentId: active.id,
             reps: sumReps,
+            templateName: active.templateName,
             accuracy: avgAcc,
             duration: totalSecs, // total seconds
             caloriesBurned: finalCalories,
@@ -185,8 +186,6 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             accuracyScore: avgAcc,
             durationSeconds: totalSecs,
             totalDuration: `${Math.floor(totalSecs / 60)} min`,
-            painLevel: 2, // Default standard pain score
-            averagePain: 2,
             completedExercisesData: exercisesList.map((ex) => ({
               name: ex.exerciseName,
               accuracy: ex.accuracy,
