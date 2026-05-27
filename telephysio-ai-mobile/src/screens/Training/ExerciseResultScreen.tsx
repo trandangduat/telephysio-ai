@@ -7,11 +7,11 @@ import { Video, ResizeMode } from 'expo-av';
 import type { AVPlaybackStatus } from 'expo-av';
 
 import { AppText, AppButton } from '../../components/ui';
-import { colors, spacing, typography, radius } from '../../theme';
+import { colors, spacing, radius } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession, getTemporaryVideoPath } from '../../services/firebase';
-import type { Assignment, Exercise, IncompleteSession, SetRecord, ExerciseRecord } from '../../services/firebase/types';
+import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession, uploadVideoToCloudinary } from '../../services/firebase';
+import type { Assignment, Exercise, SetRecord, ExerciseRecord } from '../../services/firebase/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseResult'>;
 
@@ -22,7 +22,7 @@ function accuracyColor(acc: number): string {
 }
 
 export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets, recordVideo, setsData } = route.params || { recordVideo: false };
+  const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets, recordVideo, setsData, videoResult } = route.params || { recordVideo: false };
   const { uid } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -59,35 +59,14 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     loadData();
   }, [uid, assignmentId, exerciseIndex]);
 
+  // Use videoResult.videoPath directly (passed from TrainingScreen after stopRecording)
   useEffect(() => {
-    if (Platform.OS !== 'web') {
-      if (recordVideo && assignmentId) {
-        setVideoUri(getTemporaryVideoPath(assignmentId));
-      }
-      return;
+    if (!recordVideo) return;
+    if (videoResult?.videoPath) {
+      console.log('[ExerciseResultScreen] Using videoResult.videoPath:', videoResult.videoPath);
+      setVideoUri(videoResult.videoPath);
     }
-
-    // On Web: poll window.__recordedVideos / window.__lastRecordedVideoUrl for up to 3 seconds
-    let attempts = 0;
-    const interval = setInterval(() => {
-      const resolved = (typeof window !== 'undefined' && 
-        ((window as any).__recordedVideos?.['latest'] || (window as any).__lastRecordedVideoUrl));
-      
-      if (resolved) {
-        console.log("[ExerciseResultScreen] Web video URI resolved after", attempts, "attempts:", resolved);
-        setVideoUri(resolved);
-        clearInterval(interval);
-      } else {
-        attempts++;
-        if (attempts > 30) { // max 3 seconds
-          console.warn("[ExerciseResultScreen] Web video URI not resolved after 3 seconds");
-          clearInterval(interval);
-        }
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [assignmentId, recordVideo]);
+  }, [recordVideo, videoResult]);
 
   const handleNext = async () => {
     if (!uid || !assignment) return;
@@ -112,13 +91,31 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         notes: null
       }));
 
+      // Upload per-exercise video to Cloudinary and attach URL to ExerciseRecord
+      let exerciseVideoUrl: string | undefined;
+      let exerciseVideoLocalPath: string | undefined;
+      if (recordVideo && videoResult?.videoPath) {
+        try {
+          console.log(`[ExerciseResult] Uploading video for exercise ${exerciseIndex}...`);
+          const uploadId = `${assignmentId}_ex${exerciseIndex}_${Date.now()}`;
+          exerciseVideoUrl = await uploadVideoToCloudinary(videoResult.videoPath, uploadId);
+          exerciseVideoLocalPath = videoResult.videoPath;
+          console.log(`[ExerciseResult] Video uploaded: ${exerciseVideoUrl}`);
+        } catch (uploadErr) {
+          console.error('[ExerciseResult] Failed to upload exercise video:', uploadErr);
+          // Non-blocking: continue saving record without video URL
+        }
+      }
+
       const newExerciseRecord: ExerciseRecord = {
         exerciseId: exercise?.id || `ex-${exerciseIndex}`,
         exerciseName: exercise?.name || 'Exercise',
         muscleGroup: exercise?.category ? [exercise.category] : [],
         sets: setsRecords,
         accuracy: Math.round(accuracy),
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
+        videoUrl: exerciseVideoUrl ?? null,
+        videoLocalPath: exerciseVideoLocalPath ?? null,
       };
 
       const nextIndex = exerciseIndex + 1;
@@ -142,7 +139,6 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
           completedExercises: [newExerciseRecord],
           completedExercisesData: [newExerciseData],
           elapsedSeconds: durationSeconds,
-          startedAt: new Date(),
         });
       }
 
@@ -165,6 +161,9 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         reps: s.repsCompleted,
         accuracy: s.accuracy,
         duration: s.durationSec,
+        videoStartMs: (s as any).videoStartMs ?? null,
+        videoEndMs: (s as any).videoEndMs ?? null,
+        repTimestamps: (s as any).repTimestamps ?? [],
       }))
     : (() => {
         const numSets = Math.max(1, sets);
@@ -202,6 +201,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
 
   const handleOpenVideo = (set: typeof displaySets[0]) => {
     setSelectedSet(set);
+    setSelectedRep(null);
     setPlaybackStatus(null);
   };
 
@@ -231,10 +231,42 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const durationMs = playbackStatus && playbackStatus.isLoaded && playbackStatus.durationMillis ? playbackStatus.durationMillis : 0;
   const positionMs = playbackStatus && playbackStatus.isLoaded ? playbackStatus.positionMillis : 0;
+  const durationMs = playbackStatus && playbackStatus.isLoaded && playbackStatus.durationMillis ? playbackStatus.durationMillis : 0;
   const progress = durationMs > 0 ? positionMs / durationMs : 0;
   const isPlaying = playbackStatus && playbackStatus.isLoaded ? playbackStatus.isPlaying : false;
+  
+  const [selectedRep, setSelectedRep] = useState<number | null>(null);
+
+  const playbackSegment = React.useMemo(() => {
+    if (!selectedSet) return null;
+    const ss = selectedSet as any;
+    if (selectedRep !== null && ss.repTimestamps && ss.repTimestamps.length > 0) {
+      const rep = ss.repTimestamps.find((r: any) => r.rep === selectedRep);
+      if (rep) return { start: rep.start, end: rep.end };
+    }
+    // Use set-level timestamps if available
+    if (ss.videoStartMs != null && ss.videoEndMs != null && ss.videoEndMs > ss.videoStartMs) {
+      return { start: ss.videoStartMs, end: ss.videoEndMs };
+    }
+    return null;
+  }, [selectedSet, selectedRep]);
+
+  useEffect(() => {
+    if (playbackSegment && videoRef.current) {
+      videoRef.current.playFromPositionAsync(playbackSegment.start);
+    }
+  }, [playbackSegment]);
+
+  const handlePlaybackUpdate = (s: AVPlaybackStatus) => {
+    setPlaybackStatus(s);
+    if (s.isLoaded && playbackSegment) {
+      // Loop if it exceeds segment end time
+      if (s.positionMillis >= playbackSegment.end - 100) { // 100ms padding to ensure smooth loop before overshoot
+        videoRef.current?.playFromPositionAsync(playbackSegment.start);
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -360,8 +392,48 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
                   shouldPlay={true}
                   isMuted={true}
                   isLooping={true}
-                  onPlaybackStatusUpdate={(s) => setPlaybackStatus(s)}
+                  onPlaybackStatusUpdate={handlePlaybackUpdate}
                 />
+              )}
+
+              {/* Rep Selector Chips */}
+              {selectedSet && (selectedSet as any).repTimestamps && (selectedSet as any).repTimestamps.length > 0 && (
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false} 
+                  style={{ position: 'absolute', bottom: 16, left: 0, right: 0, zIndex: 10 }}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center' }}
+                >
+                  <TouchableOpacity
+                    onPress={() => setSelectedRep(null)}
+                    style={{ 
+                      paddingHorizontal: 16, 
+                      paddingVertical: 8, 
+                      borderRadius: 20, 
+                      backgroundColor: selectedRep === null ? colors.primary : 'rgba(0,0,0,0.6)',
+                      borderWidth: selectedRep === null ? 0 : 1,
+                      borderColor: 'rgba(255,255,255,0.3)'
+                    }}
+                  >
+                    <AppText style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Toàn bộ Set</AppText>
+                  </TouchableOpacity>
+                  {(selectedSet as any).repTimestamps.map((r: any) => (
+                    <TouchableOpacity
+                      key={r.rep}
+                      onPress={() => setSelectedRep(r.rep)}
+                      style={{ 
+                        paddingHorizontal: 16, 
+                        paddingVertical: 8, 
+                        borderRadius: 20, 
+                        backgroundColor: selectedRep === r.rep ? colors.primary : 'rgba(0,0,0,0.6)',
+                        borderWidth: selectedRep === r.rep ? 0 : 1,
+                        borderColor: 'rgba(255,255,255,0.3)'
+                      }}
+                    >
+                      <AppText style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Rep {r.rep}</AppText>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               )}
 
               {/* Central Quick-Toggle Overlay Play Button */}

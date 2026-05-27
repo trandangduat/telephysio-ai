@@ -74,6 +74,23 @@ export const DoctorSessionDetailScreen: React.FC = () => {
   const dateStr = (session.date as any)?.toDate ? (session.date as any).toDate().toLocaleDateString() : "Recent";
   const accuracy = session.accuracyScore || session.accuracy || 0;
 
+  const resolveVideoUrl = (url?: string | null) => {
+    if (!url) return "";
+    if (Platform.OS !== 'web') return url;
+    // On web: check global recorded videos dictionary, then use Firestore URL directly
+    let resolved = (typeof window !== 'undefined' && (window as any).__recordedVideos?.[url]) 
+      ? (window as any).__recordedVideos[url] 
+      : url;
+    // Ensure relative local server paths start with / to load from root
+    if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
+      resolved = '/' + resolved;
+    }
+    return resolved;
+  };
+
+  const hasExerciseVideos = session.exercises && session.exercises.some(ex => ex.videoUrl);
+  const [activeVideo, setActiveVideo] = useState<{ url: string, name: string } | null>(null);
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <KeyboardAvoidingView 
@@ -118,32 +135,43 @@ export const DoctorSessionDetailScreen: React.FC = () => {
               <AppText variant="labelMd" style={styles.cardTitle}>Session Recording</AppText>
             </View>
             
-            {session.videoUrl ? (
-              <View style={styles.videoContainer}>
-                <Video
-                  ref={videoRef}
-                  source={{ 
-                    uri: (() => {
-                      const url = session.videoUrl;
-                      if (Platform.OS !== 'web') return url || "";
-                      // On web: check global recorded videos dictionary, then use Firestore URL directly
-                      let resolved = (typeof window !== 'undefined' && url && (window as any).__recordedVideos?.[url]) 
-                        ? (window as any).__recordedVideos[url] 
-                        : url;
-                      
-                      // Ensure relative local server paths start with / to load from root
-                      if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
-                        resolved = '/' + resolved;
-                      }
-                      return resolved || "";
-                    })()
-                  }}
-                  style={styles.video}
-                  resizeMode={ResizeMode.CONTAIN}
-                  onPlaybackStatusUpdate={setStatus}
-                  useNativeControls
-                />
+            {hasExerciseVideos ? (
+              <View style={{ gap: spacing.md }}>
+                {session.exercises!.filter(ex => ex.videoUrl).map((ex, index) => (
+                  <View key={index}>
+                    <AppText variant="labelSm" style={{ marginBottom: 8, color: colors.onSurface }}>
+                      {ex.exerciseName}
+                    </AppText>
+                    <TouchableOpacity activeOpacity={0.8} onPress={() => setActiveVideo({ url: ex.videoUrl!, name: ex.exerciseName })}>
+                      <View style={styles.videoContainer}>
+                        <Video
+                          source={{ uri: resolveVideoUrl(ex.videoUrl) }}
+                          style={styles.video}
+                          resizeMode={ResizeMode.COVER}
+                          shouldPlay={false}
+                        />
+                        <View style={styles.videoOverlayPlay}>
+                          <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.8)" />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                ))}
               </View>
+            ) : session.videoUrl ? (
+              <TouchableOpacity activeOpacity={0.8} onPress={() => setActiveVideo({ url: session.videoUrl!, name: "Session Video" })}>
+                <View style={styles.videoContainer}>
+                  <Video
+                    source={{ uri: resolveVideoUrl(session.videoUrl) }}
+                    style={styles.video}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay={false}
+                  />
+                  <View style={styles.videoOverlayPlay}>
+                    <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.8)" />
+                  </View>
+                </View>
+              </TouchableOpacity>
             ) : (
               <View style={styles.noVideo}>
                 <Ionicons name="videocam-off-outline" size={48} color={colors.outline} />
@@ -159,7 +187,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
               <AppText variant="labelMd" style={styles.cardTitle}>Exercise Breakdown</AppText>
             </View>
             <View style={styles.exerciseList}>
-              {(session.exerciseList || ["Squat", "Knee Extension"]).map((ex, i) => (
+              {(session.exercises ? session.exercises.map(e => e.exerciseName) : (session.exerciseList || ["Squat", "Knee Extension"])).map((ex, i) => (
                 <View key={i} style={styles.exerciseItem}>
                   <View style={styles.exDot} />
                   <AppText variant="bodyMd" style={styles.exName}>{ex}</AppText>
@@ -214,6 +242,33 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Fullscreen Video Modal */}
+      {activeVideo && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 999 }]}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' }}>
+            <SafeAreaView style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                <TouchableOpacity onPress={() => setActiveVideo(null)} style={{ padding: 8 }}>
+                  <Ionicons name="close" size={28} color="#fff" />
+                </TouchableOpacity>
+                <AppText style={{ color: '#fff', fontSize: 18, fontWeight: '600', marginLeft: 16 }}>
+                  {activeVideo.name}
+                </AppText>
+              </View>
+              <View style={{ flex: 1, justifyContent: 'center', paddingBottom: 40 }}>
+                <Video
+                  source={{ uri: resolveVideoUrl(activeVideo.url) }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode={ResizeMode.CONTAIN}
+                  useNativeControls
+                  shouldPlay
+                />
+              </View>
+            </SafeAreaView>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -256,6 +311,7 @@ const styles = StyleSheet.create({
   cardTitle: { fontWeight: '600', fontSize: 16, color: colors.onSurface },
   videoContainer: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#000', height: 200 },
   video: { width: '100%', height: '100%' },
+  videoOverlayPlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
   noVideo: { 
     height: 160, 
     alignItems: 'center', 

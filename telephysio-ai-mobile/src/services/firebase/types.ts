@@ -89,8 +89,12 @@ export interface ExerciseRecord {
   exerciseName: string;
   muscleGroup: string[];
   sets: SetRecord[];
-  accuracy: number;             // mean accuracy of sets, rounded to integer
-  completedAt: string;          // ISO 8601 UTC string
+  accuracy: number;             
+  completedAt: string;        
+  videoLocalPath?: string | null;
+  videoUrl?: string | null;
+  thumbnailPath?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 // ── Session (Single workout session) ────────────────
@@ -106,8 +110,6 @@ export interface Session {
   completionRate?: number;      // 0.0 - 1.0
   perceivedEffort?: "easy" | "normal" | "hard" | null;
   exercises?: ExerciseRecord[]; // detailed exercises list
-  videoLocalPath?: string | null; // local absolute path to video
-  thumbnailPath?: string | null;  // local absolute path to video thumbnail
   date: Timestamp;
   doctorFeedback?: string | null; // Doctor's note for this session
   feedbackUpdatedAt?: Timestamp;
@@ -121,8 +123,6 @@ export interface Session {
   painLevel?: number;
   averagePain?: number;
   videoUrl?: string;
-  doctorName?: string;
-  reviewedAt?: Timestamp;
   exerciseList?: string[];
   formBreakdown?: Record<string, number>;
   completedExercisesData?: Array<{
