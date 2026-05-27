@@ -22,7 +22,6 @@ import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Aler
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Video, ResizeMode } from 'expo-av';
 
 import { AppText, AppButton } from '../../components/ui';
 import { colors, spacing, typography, radius } from '../../theme';
@@ -127,6 +126,12 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
           const exercisesList = sessionData.completedExercises || [];
           setCompletedExercises(exercisesList);
 
+          // Use the last exercise's Cloudinary URL as the session-level videoUrl
+          // (each exercise's video was already uploaded in ExerciseResultScreen)
+          const sessionVideoUrl = exercisesList.length > 0
+            ? (exercisesList[exercisesList.length - 1].videoUrl ?? null)
+            : null;
+
           // Calculate accuracy and sums (Workout Flow Spec section 10)
           let totalAcc = 0;
           let totalSecs = 0;
@@ -177,10 +182,6 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             completionRate: completionRate,
             perceivedEffort: null, // starts empty, chosen by user below
             exercises: exercisesList,
-            videoLocalPath: recordedVideoLocalPath,
-            thumbnailPath: relativeThumbnailPath || recordedThumbnailPath,
-            videoUrl: relativeVideoPath || "", // Store the relative video reference link!
-
             // Backward compatibility properties:
             exercisesCompleted: exercisesList.length,
             completedExercises: exercisesList.length,
@@ -234,6 +235,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
               // Non-blocking: session is still saved with the relative path
             }
           }
+
 
           // 3. Complete assignment only if 100% finished
           if (completionRate >= 1.0) {

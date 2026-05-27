@@ -29,6 +29,13 @@ export type RootStackParamList = {
       durationSec: number;
       accuracy: number;
     }[];
+    videoResult?: {
+      videoPath: string;
+      thumbnailPath: string;
+      relativeVideoPath: string;
+      relativeThumbnailPath: string;
+      fileSizeMB: number;
+    } | null;
   };
   WorkoutSummary: { assignmentId: string; recordVideo?: boolean };
   Profile: undefined;

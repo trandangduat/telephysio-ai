@@ -89,8 +89,12 @@ export interface ExerciseRecord {
   exerciseName: string;
   muscleGroup: string[];
   sets: SetRecord[];
-  accuracy: number;             // mean accuracy of sets, rounded to integer
-  completedAt: string;          // ISO 8601 UTC string
+  accuracy: number;             
+  completedAt: string;        
+  videoLocalPath?: string | null;
+  videoUrl?: string | null;
+  thumbnailPath?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 // ── Session (Single workout session) ────────────────
@@ -122,8 +126,6 @@ export interface Session {
 
   // Additional backward compatibility fields for legacy UI:
   videoUrl?: string;
-  doctorName?: string;
-  reviewedAt?: Timestamp;
   exerciseList?: string[];
   formBreakdown?: Record<string, number>;
   completedExercisesData?: Array<{
