@@ -10,7 +10,7 @@
  *   - Public cloud URLs are retrieved and synced back to Firestore.
  */
 
-import { documentDirectory, getInfoAsync, makeDirectoryAsync, writeAsStringAsync, deleteAsync, downloadAsync, moveAsync } from 'expo-file-system';
+import { documentDirectory, getInfoAsync, makeDirectoryAsync, writeAsStringAsync, deleteAsync, downloadAsync, moveAsync } from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './config';
