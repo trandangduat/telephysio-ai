@@ -380,6 +380,12 @@ export const POSE_HTML = `<!DOCTYPE html>
             mediaRecorder.stop();
             console.log("[pose-html] Recording stopped");
           }
+        } else if (data.type === 'START_RECORDING') {
+          if (mediaRecorder.state === 'inactive') {
+            recordedChunks = [];
+            mediaRecorder.start(1000);
+            console.log("[pose-html] Recording started (from host command)");
+          }
         }
       } catch (e) {
         // ignore malformed messages
