@@ -409,10 +409,8 @@ export async function uploadVideoToCloudinary(
 
     console.log(`[VideoService] Video upload success! Public URL: ${data.secure_url}`);
     
-    // Tối ưu hóa delivery (tương đương f_auto, q_auto trong snippet)
-    const optimizeUrl = data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
-    
-    return optimizeUrl;
+    // Return original secure_url to prevent black screen while Cloudinary transcodes f_auto
+    return data.secure_url;
   } catch (err) {
     console.error("[VideoService] Failed to upload video to Cloudinary:", err);
     throw err;
@@ -513,12 +511,16 @@ export async function uploadSetsVideosInBackground(
       const docRef = incSnap.docs[0].ref;
       const data = incSnap.docs[0].data();
       const completedExercises = data.completedExercises || [];
+      const completedExercisesData = data.completedExercisesData || [];
       if (completedExercises[exerciseIndex]) {
         completedExercises[exerciseIndex].sets = updatedSets;
         completedExercises[exerciseIndex].videoUrl = updatedSets[updatedSets.length - 1]?.videoUrl || null;
-        await updateDoc(docRef, { completedExercises });
+        if (completedExercisesData[exerciseIndex]) {
+          completedExercisesData[exerciseIndex].sets = updatedSets;
+          completedExercisesData[exerciseIndex].videoUrl = updatedSets[updatedSets.length - 1]?.videoUrl || null;
+        }
+        await updateDoc(docRef, { completedExercises, completedExercisesData });
         console.log(`[VideoService] Background upload updated IncompleteSession ${docRef.id}`);
-        return;
       }
     }
 

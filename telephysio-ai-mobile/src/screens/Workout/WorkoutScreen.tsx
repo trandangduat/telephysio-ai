@@ -14,6 +14,9 @@ import type { RootStackParamList, BottomTabParamList } from '../../navigation/ty
 import { getPatientAssignments, getUser, getIncompleteSession, getPatientSessions } from '../../services/firebase';
 import type { Assignment, Exercise, ExerciseDifficulty, IncompleteSession, Session } from '../../services/firebase/types';
 import { NotificationBell } from '../../components/NotificationBell';
+import { VideoPlaybackModal } from '../../components/VideoPlaybackModal';
+import { getVideoThumbnailUri } from '../../utils/videoUtils';
+import { Image } from 'react-native';
 
 type WorkoutNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, 'Workout'>,
@@ -39,6 +42,7 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
   const [doctorName, setDoctorName] = useState<string>('');
   const [incompleteSessions, setIncompleteSessions] = useState<Record<string, IncompleteSession>>({});
   const [weekSessions, setWeekSessions] = useState<Session[]>([]);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
   // Date setup for weekly schedule
   const today = new Date();
@@ -395,38 +399,55 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                   </View>
 
-                  {session.completedExercisesData && session.completedExercisesData.length > 0 ? (
+                  {(session.exercises || (session as any).completedExercisesData)?.length > 0 ? (
                     <>
                       <View style={styles.divider} />
                       <AppText variant="labelSm" style={{ color: '#64748b', marginBottom: spacing.md, fontWeight: '700', letterSpacing: 0.5 }}>
                         EXERCISES COMPLETED
                       </AppText>
                       
-                      {session.completedExercisesData.map((ex: any, i: number) => (
-                        <View key={i} style={styles.mockSummaryRow}>
-                          <View style={[styles.mockSummaryIcon, { backgroundColor: (ex.color || colors.primary) + '1A' }]}>
-                            <Ionicons name={(ex.icon || 'barbell-outline') as any} size={18} color={ex.color || colors.primary} />
+                      {(session.exercises || (session as any).completedExercisesData).map((ex: any, i: number) => {
+                        const setsToRender = ex.sets && Array.isArray(ex.sets) ? ex.sets : Array.from({ length: ex.sets || 0 }).map((_, idx) => ({ setNumber: idx + 1 }));
+                        return (
+                          <View key={i} style={styles.mockSummaryRow}>
+                            <View style={[styles.mockSummaryIcon, { backgroundColor: (ex.color || colors.primary) + '1A' }]}>
+                              <Ionicons name={(ex.icon || 'barbell-outline') as any} size={18} color={ex.color || colors.primary} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <AppText variant="bodyMd" style={{ fontWeight: '600', color: '#0f172a' }}>{ex.name}</AppText>
+                              <AppText variant="labelSm" style={{ color: '#64748b', marginTop: 2, marginBottom: spacing.xs }}>
+                                {setsToRender.length} Sets • {ex.reps || (setsToRender[0]?.repsCompleted)} Reps • {ex.accuracy}% Accuracy • {Math.floor(((ex.durationSeconds !== undefined ? ex.durationSeconds : ex.durationSec) || 0) / 60)}:{(((ex.durationSeconds !== undefined ? ex.durationSeconds : ex.durationSec) || 0) % 60).toString().padStart(2, '0')}
+                              </AppText>
+                              
+                              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 2 }}>
+                                {setsToRender.map((set: any, setIdx: number) => {
+                                  const videoUri = set.videoUrl || set.videoLocalPath;
+                                  const thumbUri = getVideoThumbnailUri(set.videoUrl, set.videoLocalPath);
+                                  return (
+                                    <TouchableOpacity 
+                                      key={setIdx} 
+                                      style={styles.mockThumbBox}
+                                      onPress={() => {
+                                        if (videoUri) setSelectedVideoUrl(videoUri);
+                                      }}
+                                    >
+                                      <View style={styles.mockThumbVideo}>
+                                        {thumbUri ? (
+                                          <Image source={{ uri: thumbUri }} style={{ width: '100%', height: '100%', borderRadius: 6 }} />
+                                        ) : (
+                                          <Ionicons name={videoUri ? "play-circle" : "videocam-outline"} size={16} color={videoUri ? "#fff" : "#64748b"} />
+                                        )}
+                                      </View>
+                                      <AppText style={{ fontSize: 9, color: '#64748b', textAlign: 'center', marginTop: 2 }}>Set {set.setNumber || (setIdx + 1)}</AppText>
+                                    </TouchableOpacity>
+                                  );
+                                })}
+                              </ScrollView>
+                            </View>
+                            <Ionicons name="checkmark-circle" size={20} color="#16a34a" style={{ alignSelf: 'flex-start', marginTop: 2, marginLeft: spacing.sm }} />
                           </View>
-                          <View style={{ flex: 1 }}>
-                            <AppText variant="bodyMd" style={{ fontWeight: '600', color: '#0f172a' }}>{ex.name}</AppText>
-                            <AppText variant="labelSm" style={{ color: '#64748b', marginTop: 2, marginBottom: spacing.xs }}>
-                              {ex.sets} Sets • {ex.reps} Reps • {ex.accuracy}% Accuracy • {Math.floor((ex.durationSeconds || 0) / 60)}:{((ex.durationSeconds || 0) % 60).toString().padStart(2, '0')}
-                            </AppText>
-                            
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 2 }}>
-                              {Array.from({ length: ex.sets || 0 }).map((_, setIdx) => (
-                                <View key={setIdx} style={styles.mockThumbBox}>
-                                  <View style={styles.mockThumbVideo}>
-                                    <Ionicons name="play-circle" size={16} color="#fff" />
-                                  </View>
-                                  <AppText style={{ fontSize: 9, color: '#64748b', textAlign: 'center', marginTop: 2 }}>Set {setIdx + 1}</AppText>
-                                </View>
-                              ))}
-                            </ScrollView>
-                          </View>
-                          <Ionicons name="checkmark-circle" size={20} color="#16a34a" style={{ alignSelf: 'flex-start', marginTop: 2, marginLeft: spacing.sm }} />
-                        </View>
-                      ))}
+                        );
+                      })}
                     </>
                   ) : null}
 
@@ -464,7 +485,11 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
         })()}
 
       </ScrollView>
-
+      <VideoPlaybackModal
+        visible={!!selectedVideoUrl}
+        videoUri={selectedVideoUrl || ''}
+        onClose={() => setSelectedVideoUrl(null)}
+      />
     </SafeAreaView>
   );
 };

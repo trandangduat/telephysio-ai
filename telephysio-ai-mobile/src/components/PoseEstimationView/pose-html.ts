@@ -274,8 +274,8 @@ export const POSE_HTML = `<!DOCTYPE html>
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'user',    // front camera by default
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            width: { ideal: 430 },
+            height: { ideal: 932 },
             frameRate: { ideal: 30, max: 30 },
           },
           audio: false,
@@ -295,8 +295,8 @@ export const POSE_HTML = `<!DOCTYPE html>
           onFrame: async () => {
             await pose.send({ image: video });
           },
-          width: 640,
-          height: 480,
+          width: video.videoWidth || 430,
+          height: video.videoHeight || 932,
         });
         camera.start();
 

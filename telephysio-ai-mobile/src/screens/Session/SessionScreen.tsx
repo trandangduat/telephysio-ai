@@ -27,6 +27,9 @@ import {
 } from "../../services/firebase";
 import type { Session, TreatmentPlan } from "../../services/firebase/types";
 import { NotificationBell } from "../../components/NotificationBell";
+import { Image } from "react-native";
+import { VideoPlaybackModal } from "../../components/VideoPlaybackModal";
+import { getVideoThumbnailUri } from "../../utils/videoUtils";
 
 // ─── Helper ─────────────────────────────────────────────────────────────────
 
@@ -75,8 +78,10 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
   const [activeTab, setActiveTab] = useState<"video" | "review">("video");
   const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
 
+  // For backward compatibility, fallback to the last set's video
   const videoUrl = (session as any)?.videoUrl || null;
 
   const togglePlay = async () => {
@@ -118,7 +123,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     : undefined;
 
   const completedExercisesData: Array<any> =
-    (session as any).completedExercisesData ?? [];
+    (session as any).exercises ?? (session as any).completedExercisesData ?? [];
   const exercises_list: string[] = (session as any).exerciseList ?? [];
   const hasDetailedExercises = completedExercisesData.length > 0;
   const hasExerciseList = exercises_list.length > 0;
@@ -237,7 +242,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                         })()
                       }}
                       style={detail.video}
-                      resizeMode={ResizeMode.CONTAIN}
+                      resizeMode={ResizeMode.COVER}
                       onPlaybackStatusUpdate={(s) => setStatus(s)}
                       shouldPlay={false}
                       useNativeControls={false}
@@ -283,7 +288,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                   {hasDetailedExercises ? (
                     <View style={{ gap: 14 }}>
                       {completedExercisesData.map((ex: any, i: number) => {
-                        const setCount = ex.sets ?? 0;
+                        const setCount = Array.isArray(ex.sets) ? ex.sets.length : (ex.sets ?? 0);
                         const repCount = ex.reps ?? 0;
                         const accuracy = ex.accuracy ?? 0;
                         const durationText = formatDurationSeconds(ex.durationSeconds);
@@ -322,19 +327,39 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                                   style={detail.exerciseThumbs}
                                   contentContainerStyle={detail.exerciseThumbsContent}
                                 >
-                                  {Array.from({ length: setCount }).map((_, setIdx) => (
-                                    <View key={setIdx} style={detail.exerciseThumbBox}>
-                                      <View style={detail.exerciseThumbVideo}>
-                                        <Ionicons name="play-circle" size={16} color="#fff" />
-                                      </View>
-                                      <AppText
-                                        variant="labelSm"
-                                        style={detail.exerciseThumbLabel}
-                                      >
-                                        Set {setIdx + 1}
-                                      </AppText>
-                                    </View>
-                                  ))}
+                                  {(() => {
+                                    const setsToRender = ex.sets && Array.isArray(ex.sets) 
+                                      ? ex.sets 
+                                      : Array.from({ length: setCount }).map((_, idx) => ({ setNumber: idx + 1 }));
+                                    
+                                    return setsToRender.map((set: any, setIdx: number) => {
+                                      const vUri = set.videoUrl || set.videoLocalPath;
+                                      const tUri = getVideoThumbnailUri(set.videoUrl, set.videoLocalPath);
+                                      return (
+                                        <TouchableOpacity 
+                                          key={setIdx} 
+                                          style={detail.exerciseThumbBox}
+                                          onPress={() => {
+                                            if (vUri) setSelectedVideoUrl(vUri);
+                                          }}
+                                        >
+                                          <View style={detail.exerciseThumbVideo}>
+                                            {tUri ? (
+                                              <Image source={{ uri: tUri }} style={{ width: '100%', height: '100%', borderRadius: 6 }} />
+                                            ) : (
+                                              <Ionicons name={vUri ? "play-circle" : "videocam-outline"} size={16} color={vUri ? "#fff" : "#64748b"} />
+                                            )}
+                                          </View>
+                                          <AppText
+                                            variant="labelSm"
+                                            style={detail.exerciseThumbLabel}
+                                          >
+                                            Set {set.setNumber || (setIdx + 1)}
+                                          </AppText>
+                                        </TouchableOpacity>
+                                      );
+                                    });
+                                  })()}
                                 </ScrollView>
                               )}
                             </View>
@@ -474,6 +499,11 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
           </ScrollView>
         </SafeAreaView>
       </View>
+      <VideoPlaybackModal
+        visible={!!selectedVideoUrl}
+        videoUri={selectedVideoUrl || ''}
+        onClose={() => setSelectedVideoUrl(null)}
+      />
     </Modal>
   );
 };

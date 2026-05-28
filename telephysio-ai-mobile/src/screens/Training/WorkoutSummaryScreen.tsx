@@ -18,7 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -37,6 +37,8 @@ import {
     updateSessionEffort,
 } from '../../services/firebase';
 import type { Assignment, ExerciseRecord, SetRecord } from '../../services/firebase/types';
+import { VideoPlaybackModal } from '../../components/VideoPlaybackModal';
+import { getVideoThumbnailUri } from '../../utils/videoUtils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutSummary'>;
 
@@ -56,6 +58,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(true);
     const [sessionId, setSessionId] = useState<string | null>(null);
+    const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
     // Workout stats
     const [assignment, setAssignment] = useState<Assignment | null>(null);
@@ -95,12 +98,6 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                     // Build Exercises & Sets Records from Incomplete Session
                     const exercisesList = sessionData.completedExercises || [];
                     setCompletedExercises(exercisesList);
-
-                    // Use the last exercise's Cloudinary URL as the session-level videoUrl
-                    // (each exercise's video was already uploaded in ExerciseResultScreen)
-                    const sessionVideoUrl = exercisesList.length > 0
-                        ? (exercisesList[exercisesList.length - 1].videoUrl ?? null)
-                        : null;
 
                     // Calculate accuracy and sums (Workout Flow Spec section 10)
                     let totalAcc = 0;
@@ -226,9 +223,6 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             console.error("Failed to select perceived effort:", err);
         }
     };
-
-
-
 
     const handleDone = () => {
         navigation.replace('MainTabs');
@@ -382,18 +376,33 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                                     style={styles.thumbScroll}
                                     contentContainerStyle={styles.thumbScrollContent}
                                 >
-                                    {ex.sets.map((s, setIdx) => (
-                                        <View key={setIdx} style={styles.thumbVideoBox}>
-                                            <View style={styles.thumbVideoPlaceholder}>
-                                                <AppText style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>
-                                                    {s.accuracy}%
+                                    {ex.sets.map((s, setIdx) => {
+                                        const videoUri = s.videoUrl || s.videoLocalPath;
+                                        const thumbUri = getVideoThumbnailUri(s.videoUrl, s.videoLocalPath);
+                                        return (
+                                            <TouchableOpacity 
+                                                key={setIdx} 
+                                                style={styles.thumbVideoBox}
+                                                onPress={() => {
+                                                    if (videoUri) setSelectedVideoUrl(videoUri);
+                                                }}
+                                            >
+                                                <View style={styles.thumbVideoPlaceholder}>
+                                                    {thumbUri ? (
+                                                        <Image source={{ uri: thumbUri }} style={{ width: '100%', height: '100%', borderRadius: 8, opacity: 0.6 }} />
+                                                    ) : null}
+                                                    <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'center' }}>
+                                                        <AppText style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>
+                                                            {s.accuracy}%
+                                                        </AppText>
+                                                    </View>
+                                                </View>
+                                                <AppText variant="labelSm" style={styles.thumbSetLabel}>
+                                                    Set {s.setNumber} ({s.repsCompleted}r)
                                                 </AppText>
-                                            </View>
-                                            <AppText variant="labelSm" style={styles.thumbSetLabel}>
-                                                Set {s.setNumber} ({s.repsCompleted}r)
-                                            </AppText>
-                                        </View>
-                                    ))}
+                                            </TouchableOpacity>
+                                        );
+                                    })}
                                 </ScrollView>
                             </View>
                             <Ionicons name="checkmark-circle" size={22} color="#16a34a" style={styles.rowCheckmark} />
@@ -411,6 +420,12 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                     style={{ width: '100%' }}
                 />
             </View>
+
+            <VideoPlaybackModal
+                visible={!!selectedVideoUrl}
+                videoUri={selectedVideoUrl || ''}
+                onClose={() => setSelectedVideoUrl(null)}
+            />
         </SafeAreaView>
     );
 };
