@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
@@ -27,6 +28,7 @@ export const TemplateEditorScreen: React.FC = () => {
   const navigation = useNavigation<TemplateEditorNavProp>();
   const route = useRoute<TemplateEditorRouteProp>();
   const { uid } = useAuth();
+  const { t } = useTranslation();
 
   const templateId = route.params?.templateId;
   const isEditing = !!templateId;
@@ -61,7 +63,7 @@ export const TemplateEditorScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading template:', error);
-      Alert.alert('Error', 'Failed to load template.');
+      Alert.alert(t('doctor.templateEditor.error'), 'Failed to load template.');
     } finally {
       setLoading(false);
     }
@@ -92,11 +94,11 @@ export const TemplateEditorScreen: React.FC = () => {
   const handleSave = async () => {
     if (!uid) return;
     if (!name.trim()) {
-      Alert.alert('Validation', 'Please enter a template name.');
+      Alert.alert(t('doctor.templateEditor.validation'), t('doctor.templateEditor.errorNoName'));
       return;
     }
     if (exercises.length === 0) {
-      Alert.alert('Validation', 'Please add at least one exercise.');
+      Alert.alert(t('doctor.templateEditor.validation'), t('doctor.templateEditor.errorNoExercises'));
       return;
     }
 
@@ -111,7 +113,7 @@ export const TemplateEditorScreen: React.FC = () => {
           exercises,
           totalDuration,
         });
-        Alert.alert('Success', 'Template updated successfully.');
+        Alert.alert(t('doctor.templateEditor.success'), t('doctor.templateEditor.updateSuccess'));
       } else {
         await createExerciseTemplate({
           doctorId: uid,
@@ -120,12 +122,12 @@ export const TemplateEditorScreen: React.FC = () => {
           exercises,
           totalDuration,
         });
-        Alert.alert('Success', 'Template created successfully.');
+        Alert.alert(t('doctor.templateEditor.success'), t('doctor.templateEditor.createSuccess'));
       }
       navigation.goBack();
     } catch (error) {
       console.error('Error saving template:', error);
-      Alert.alert('Error', 'Failed to save template. Please try again.');
+      Alert.alert(t('doctor.templateEditor.error'), t('doctor.templateEditor.saveError'));
     } finally {
       setSaving(false);
     }
@@ -147,7 +149,7 @@ export const TemplateEditorScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <AppText variant="headlineMd" style={styles.headerTitle}>
-          {isEditing ? 'Edit Template' : 'Create Template'}
+          {isEditing ? t('doctor.templateEditor.editTemplate') : t('doctor.templateEditor.newTemplate')}
         </AppText>
         <TouchableOpacity
           style={[styles.saveHeaderBtn, saving && { opacity: 0.6 }]}
@@ -157,7 +159,7 @@ export const TemplateEditorScreen: React.FC = () => {
           {saving ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>Save</AppText>
+            <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>{t('doctor.templateEditor.saveTemplate')}</AppText>
           )}
         </TouchableOpacity>
       </View>
@@ -165,10 +167,10 @@ export const TemplateEditorScreen: React.FC = () => {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Template Name */}
         <View style={styles.field}>
-          <AppText variant="labelMd" style={styles.label}>Template Name</AppText>
+          <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.templateName')}</AppText>
           <TextInput
             style={styles.input}
-            placeholder="e.g. ACL Recovery - Phase 2"
+            placeholder={t('doctor.templateEditor.namePlaceholder')}
             placeholderTextColor="#94a3b8"
             value={name}
             onChangeText={setName}
@@ -177,10 +179,10 @@ export const TemplateEditorScreen: React.FC = () => {
 
         {/* Description */}
         <View style={styles.field}>
-          <AppText variant="labelMd" style={styles.label}>Description (optional)</AppText>
+          <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.description')}</AppText>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Brief description of this exercise protocol..."
+            placeholder={t('doctor.templateEditor.descPlaceholder')}
             placeholderTextColor="#94a3b8"
             multiline
             numberOfLines={3}
@@ -192,11 +194,11 @@ export const TemplateEditorScreen: React.FC = () => {
         {/* Exercises Section */}
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
-            <AppText variant="labelMd" style={styles.sectionLabel}>EXERCISES ({exercises.length})</AppText>
+            <AppText variant="labelMd" style={styles.sectionLabel}>{t('doctor.templateEditor.exercisesTitle', { count: exercises.length })}</AppText>
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setPickerVisible(true)}>
             <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-            <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>Add</AppText>
+            <AppText variant="labelMd" style={{ color: colors.primary, fontWeight: '700' }}>{t('doctor.templateEditor.addExercise')}</AppText>
           </TouchableOpacity>
         </View>
 
@@ -213,10 +215,10 @@ export const TemplateEditorScreen: React.FC = () => {
           <View style={styles.emptyCard}>
             <Ionicons name="barbell-outline" size={40} color="#cbd5e1" />
             <AppText variant="bodyMd" style={{ color: '#94a3b8', marginTop: spacing.sm }}>
-              No exercises added yet.
+              {t('doctor.templateEditor.noExercises')}
             </AppText>
             <TouchableOpacity style={styles.emptyAddBtn} onPress={() => setPickerVisible(true)}>
-              <AppText variant="labelMd" style={{ color: colors.primary }}>Add First Exercise</AppText>
+              <AppText variant="labelMd" style={{ color: colors.primary }}>{t('doctor.templateEditor.addFirstExerciseBtn')}</AppText>
             </TouchableOpacity>
           </View>
         )}
@@ -226,7 +228,7 @@ export const TemplateEditorScreen: React.FC = () => {
           <View style={styles.totalRow}>
             <Ionicons name="time-outline" size={18} color="#64748b" />
             <AppText variant="bodyMd" style={{ color: '#475569' }}>
-              Total Duration: <AppText variant="labelMd" style={{ color: colors.primary }}>{calculateTotalDuration()}</AppText>
+              {t('doctor.templateEditor.totalDurationLabel')} <AppText variant="labelMd" style={{ color: colors.primary }}>{calculateTotalDuration()}</AppText>
             </AppText>
           </View>
         )}

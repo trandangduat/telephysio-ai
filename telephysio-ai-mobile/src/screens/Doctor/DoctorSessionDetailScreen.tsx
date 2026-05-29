@@ -21,6 +21,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
+import { useTranslation } from "react-i18next";
 
 import { AppText } from "../../components/ui";
 import { colors, spacing } from "../../theme";
@@ -34,6 +35,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute<ScreenRouteProp>();
   const { session, patientName } = route.params;
+  const { t } = useTranslation();
 
   const videoRef = useRef<Video>(null);
   const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
@@ -103,7 +105,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={24} color={colors.primary} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <AppText variant="headlineMd" style={styles.headerTitle}>Review Session</AppText>
+            <AppText variant="headlineMd" style={styles.headerTitle}>{t('doctor.sessionDetail.title')}</AppText>
             <AppText variant="bodySm" style={styles.headerSubtitle}>{patientName} · {dateStr}</AppText>
           </View>
           <View style={{ width: 40 }} />
@@ -113,15 +115,15 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           {/* Quick Stats */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <AppText variant="labelSm" style={styles.statLabel}>ACCURACY</AppText>
+              <AppText variant="labelSm" style={styles.statLabel}>{t('doctor.sessionDetail.accuracy')}</AppText>
               <AppText variant="headlineMd" style={[styles.statValue, { color: colors.primary }]}>{accuracy}%</AppText>
             </View>
             <View style={styles.statBox}>
-              <AppText variant="labelSm" style={styles.statLabel}>DURATION</AppText>
+              <AppText variant="labelSm" style={styles.statLabel}>{t('doctor.sessionDetail.duration')}</AppText>
               <AppText variant="headlineMd" style={styles.statValue}>{session.totalDuration || session.duration || '0 min'}</AppText>
             </View>
             <View style={styles.statBox}>
-              <AppText variant="labelSm" style={styles.statLabel}>PAIN LVL</AppText>
+              <AppText variant="labelSm" style={styles.statLabel}>{t('doctor.sessionDetail.painLvl')}</AppText>
               <AppText variant="headlineMd" style={[styles.statValue, { color: (session.averagePain || 0) > 5 ? colors.error : colors.onSurface }]}>
                 {session.averagePain || session.painLevel || 0}/10
               </AppText>
@@ -132,7 +134,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="videocam" size={20} color={colors.primary} />
-              <AppText variant="labelMd" style={styles.cardTitle}>Session Recording</AppText>
+              <AppText variant="labelMd" style={styles.cardTitle}>{t('doctor.sessionDetail.sessionRecording')}</AppText>
             </View>
             
             {hasExerciseVideos ? (
@@ -159,7 +161,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
                 ))}
               </View>
             ) : session.videoUrl ? (
-              <TouchableOpacity activeOpacity={0.8} onPress={() => setActiveVideo({ url: session.videoUrl!, name: "Session Video" })}>
+              <TouchableOpacity activeOpacity={0.8} onPress={() => setActiveVideo({ url: session.videoUrl!, name: t('doctor.sessionDetail.sessionRecording') })}>
                 <View style={styles.videoContainer}>
                   <Video
                     source={{ uri: resolveVideoUrl(session.videoUrl) }}
@@ -175,7 +177,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
             ) : (
               <View style={styles.noVideo}>
                 <Ionicons name="videocam-off-outline" size={48} color={colors.outline} />
-                <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, marginTop: 8 }}>No video recorded for this session</AppText>
+                <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, marginTop: 8 }}>{t('doctor.sessionDetail.noVideo')}</AppText>
               </View>
             )}
           </View>
@@ -184,14 +186,14 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="analytics" size={20} color={colors.primary} />
-              <AppText variant="labelMd" style={styles.cardTitle}>Exercise Breakdown</AppText>
+              <AppText variant="labelMd" style={styles.cardTitle}>{t('doctor.sessionDetail.exerciseBreakdown')}</AppText>
             </View>
             <View style={styles.exerciseList}>
               {(session.exercises ? session.exercises.map(e => e.exerciseName) : (session.exerciseList || ["Squat", "Knee Extension"])).map((ex, i) => (
                 <View key={i} style={styles.exerciseItem}>
                   <View style={styles.exDot} />
                   <AppText variant="bodyMd" style={styles.exName}>{ex}</AppText>
-                  <AppText variant="labelSm" style={styles.exMeta}>Completed</AppText>
+                  <AppText variant="labelSm" style={styles.exMeta}>{t('doctor.sessionDetail.completed')}</AppText>
                 </View>
               ))}
             </View>
@@ -215,12 +217,12 @@ export const DoctorSessionDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="chatbox-ellipses" size={20} color={colors.primary} />
-              <AppText variant="labelMd" style={styles.cardTitle}>Clinical Feedback</AppText>
+              <AppText variant="labelMd" style={styles.cardTitle}>{t('doctor.sessionDetail.clinicalFeedback')}</AppText>
             </View>
             <TextInput
               style={styles.feedbackInput}
               multiline
-              placeholder="Write your advice, corrections, or encouragement here..."
+              placeholder={t('doctor.sessionDetail.feedbackPlaceholder')}
               placeholderTextColor={colors.outline}
               value={feedback}
               onChangeText={setFeedback}
@@ -235,7 +237,7 @@ export const DoctorSessionDetailScreen: React.FC = () => {
               ) : (
                 <>
                   <Ionicons name="send" size={18} color={colors.onPrimary} />
-                  <AppText variant="labelMd" style={styles.submitBtnText}>Share Feedback</AppText>
+                  <AppText variant="labelMd" style={styles.submitBtnText}>{t('doctor.sessionDetail.shareFeedback')}</AppText>
                 </>
               )}
             </TouchableOpacity>

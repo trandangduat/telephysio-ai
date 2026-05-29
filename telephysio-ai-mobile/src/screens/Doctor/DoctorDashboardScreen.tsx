@@ -22,6 +22,7 @@ import { AppText } from "../../components/ui";
 import { colors, spacing } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
 import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
+import { useTranslation } from 'react-i18next';
 import {
   getUser,
   getDoctorAssignments,
@@ -44,6 +45,7 @@ interface PatientCard {
 export const DoctorDashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardNavProp>();
   const { userName, uid } = useAuth();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -125,9 +127,9 @@ export const DoctorDashboardScreen: React.FC = () => {
 
   const getGreeting = () => {
     const h = new Date().getHours();
-    if (h < 12) return "Good morning,";
-    if (h < 18) return "Good afternoon,";
-    return "Good evening,";
+    if (h < 12) return t('doctor.dashboard.goodMorning');
+    if (h < 18) return t('doctor.dashboard.goodAfternoon');
+    return t('doctor.dashboard.goodEvening');
   };
 
   const getStatusColor = (card: PatientCard) => {
@@ -138,10 +140,10 @@ export const DoctorDashboardScreen: React.FC = () => {
   };
 
   const getStatusLabel = (card: PatientCard) => {
-    if (card.todayTotal === 0) return "No tasks today";
-    if (card.todayCompleted === card.todayTotal) return "All done ✓";
-    if (card.todayCompleted > 0) return `${card.todayCompleted}/${card.todayTotal} done`;
-    return "Not started";
+    if (card.todayTotal === 0) return t('doctor.dashboard.noTasksToday');
+    if (card.todayCompleted === card.todayTotal) return t('doctor.dashboard.allDone');
+    if (card.todayCompleted > 0) return t('doctor.dashboard.tasksDone', { completed: card.todayCompleted, total: card.todayTotal });
+    return t('doctor.dashboard.notStarted');
   };
 
   if (loading) {
@@ -160,7 +162,7 @@ export const DoctorDashboardScreen: React.FC = () => {
           <Ionicons name="medical" size={20} color={colors.primary} />
           <AppText variant="labelMd" style={styles.logoText}>TelePhysioAI</AppText>
           <View style={styles.roleBadge}>
-            <AppText variant="labelSm" style={{ color: "#fff", fontWeight: "700", fontSize: 9 }}>DOCTOR</AppText>
+            <AppText variant="labelSm" style={{ color: "#fff", fontWeight: "700", fontSize: 9 }}>{t('doctor.doctorRole')}</AppText>
           </View>
         </View>
         <View style={styles.topBarIcons}>
@@ -177,7 +179,7 @@ export const DoctorDashboardScreen: React.FC = () => {
           <AppText variant="bodyMd" style={styles.greeting}>{getGreeting()}</AppText>
           <AppText variant="headlineLg" style={styles.doctorName}>{userName}</AppText>
           <AppText variant="bodySm" style={styles.subtitle}>
-            {patients.length} patient{patients.length !== 1 ? "s" : ""} assigned
+            {t('doctor.dashboard.patientsAssigned', { count: patients.length })}
           </AppText>
         </View>
 
@@ -186,7 +188,7 @@ export const DoctorDashboardScreen: React.FC = () => {
           <Ionicons name="search-outline" size={18} color="#94a3b8" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by email or name..."
+            placeholder={t('doctor.searchPlaceholder')}
             placeholderTextColor="#94a3b8"
             value={searchText}
             onChangeText={setSearchText}
@@ -201,7 +203,7 @@ export const DoctorDashboardScreen: React.FC = () => {
 
         {/* Section Header */}
         <View style={styles.sectionHeader}>
-          <AppText variant="headlineMd" style={styles.sectionTitle}>My Patients</AppText>
+          <AppText variant="headlineMd" style={styles.sectionTitle}>{t('doctor.dashboard.myPatients')}</AppText>
           <View style={styles.countBadge}>
             <AppText variant="labelSm" style={{ color: colors.primary }}>{filtered.length}</AppText>
           </View>
@@ -212,7 +214,7 @@ export const DoctorDashboardScreen: React.FC = () => {
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={48} color="#cbd5e1" />
             <AppText variant="bodyMd" style={{ color: "#94a3b8", marginTop: 12 }}>
-              {searchText ? "No patients match your search." : "No patients assigned yet."}
+              {searchText ? t('doctor.dashboard.noPatientsMatch') : t('doctor.dashboard.noPatientsAssigned')}
             </AppText>
           </View>
         ) : (
@@ -233,7 +235,7 @@ export const DoctorDashboardScreen: React.FC = () => {
                   <AppText variant="labelMd" style={styles.patientName}>{card.profile.displayName}</AppText>
                   <AppText variant="bodySm" style={styles.patientEmail}>{card.profile.email}</AppText>
                   <AppText variant="bodySm" style={styles.assignmentCount}>
-                    {card.assignments.length} assignment{card.assignments.length !== 1 ? "s" : ""}
+                    {t('doctor.dashboard.assignments', { count: card.assignments.length })}
                   </AppText>
                 </View>
               </View>

@@ -37,6 +37,7 @@ import type {
 } from "../../services/firebase/types";
 import { getIncompleteSession } from "../../services/firebase";
 import { NotificationBell } from "../../components/NotificationBell";
+import { useTranslation } from "react-i18next";
 
 type HomeNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, "Home">,
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { userName, uid } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -108,12 +110,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  const protocolTitle = activeAssignment?.templateName || plan?.condition || "No Active Protocol";
+  const protocolTitle = activeAssignment?.templateName || plan?.condition || t("home.noActiveProtocol");
   const protocolSubtitle = activeAssignment
-    ? `${activeAssignment.exercises.length} exercises • ${activeAssignment.totalDuration || "0 min"}`
+    ? t("home.setsReps", { sets: activeAssignment.exercises.length, reps: activeAssignment.totalDuration || "0 min" })
     : plan
     ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}`
-    : "Please contact your doctor.";
+    : t("home.contactDoctor");
 
   const movementScore = progress?.movementScore || 0;
   const timeActive = progress?.timeActiveMinutes || 0;
@@ -122,7 +124,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const sessionsTarget = progress?.sessionsTarget || 3;
   const aiInsight =
     progress?.aiInsight ||
-    "Complete a session to get your AI recovery insight.";
+    t("progress.aiInsight");
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -153,14 +155,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* Header Greeting */}
         <View style={styles.header}>
           <AppText variant="headlineXl" style={styles.greetingTitle}>
-            Good Morning, {userName || "there"}.
+            {t("home.goodMorning", { name: userName || "there" })}
           </AppText>
           <AppText
             variant="bodySm"
             color={colors.onSurfaceVariant}
             style={styles.greetingSubtitle}
           >
-            Here is your daily physical therapy overview.
+            {t("home.dailyOverview")}
           </AppText>
         </View>
 
@@ -171,11 +173,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.heroTag}>
                 <Ionicons name="flash" size={12} color={colors.primary} />
                 <AppText variant="labelSm" style={styles.heroTagText}>
-                  TODAY'S PLAN
+                  {t("home.todaysPlan")}
                 </AppText>
               </View>
               <AppText variant="headlineMd" style={styles.heroTitle} numberOfLines={2}>
-                {activeAssignment ? activeAssignment.templateName : "Rest Day"}
+                {activeAssignment ? activeAssignment.templateName : t("home.restDay")}
               </AppText>
               
               <View style={styles.heroMeta}>
@@ -184,7 +186,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     <View style={styles.heroMetaItem}>
                       <Ionicons name="barbell-outline" size={14} color="#64748b" />
                       <AppText variant="bodySm" style={styles.heroMetaText}>
-                        {activeAssignment.exercises.length} exercises
+                        {activeAssignment.exercises.length} {t("common.sets")}
                       </AppText>
                     </View>
                     <View style={styles.heroMetaItem}>
@@ -196,7 +198,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   </>
                 ) : (
                   <AppText variant="bodySm" style={{ color: "#64748b" }}>
-                    No assigned routines for today. Enjoy your break!
+                    {t("home.noRoutine")}
                   </AppText>
                 )}
               </View>
@@ -230,7 +232,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => navigation.navigate("Workout")}
             >
               <AppText variant="labelSm" style={styles.heroFooterText}>
-                {incompleteSession ? "Session In-Progress • Tap to resume" : "Ready to Start • Tap to play"}
+                {incompleteSession ? t("home.inProgressTap") : t("home.readyTap")}
               </AppText>
               <Ionicons name="chevron-forward" size={14} color={colors.primary} />
             </TouchableOpacity>

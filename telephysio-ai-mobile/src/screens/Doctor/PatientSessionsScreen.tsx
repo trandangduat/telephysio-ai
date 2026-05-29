@@ -18,6 +18,7 @@ import { colors, spacing } from "../../theme";
 import type { DoctorStackParamList } from "../../navigation/types";
 import { getPatientSessions } from "../../services/firebase";
 import type { Session } from "../../services/firebase/types";
+import { useTranslation } from "react-i18next";
 
 type DayOption = {
   key: string;
@@ -51,6 +52,7 @@ export const PatientSessionsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
   const route = useRoute<RouteProp<DoctorStackParamList, "PatientSessions">>();
   const { patientId, patientName } = route.params;
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -125,7 +127,7 @@ export const PatientSessionsScreen: React.FC = () => {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <AppText variant="headlineMd" style={styles.headerTitle}>Sessions</AppText>
+        <AppText variant="headlineMd" style={styles.headerTitle}>{t('doctor.sessions.title')}</AppText>
         <View style={styles.badge}>
           <AppText variant="labelMd" style={{ color: colors.primary }}>
             {sessions.length}
@@ -202,10 +204,10 @@ export const PatientSessionsScreen: React.FC = () => {
                     {/* Styled like the badges in Patient Details */}
                     <View style={styles.sessionStatsRow}>
                       <View style={styles.statBadge}>
-                        <AppText variant="labelMd" style={styles.statBadgeText}>{completed} exercises</AppText>
+                        <AppText variant="labelMd" style={styles.statBadgeText}>{t('doctor.assignments.exercisesCount', { count: completed })}</AppText>
                       </View>
                       <View style={[styles.statBadge, {backgroundColor: colors.surfaceContainerLow}]}>
-                        <AppText variant="labelMd" style={[styles.statBadgeText, {color: colors.primary}]}>{accuracy}% accuracy</AppText>
+                        <AppText variant="labelMd" style={[styles.statBadgeText, {color: colors.primary}]}>{accuracy}% {t('doctor.patientDetail.accuracy').toLowerCase()}</AppText>
                       </View>
                       <View style={styles.statBadge}>
                         <AppText variant="labelMd" style={styles.statBadgeText}>{duration}</AppText>
@@ -220,7 +222,7 @@ export const PatientSessionsScreen: React.FC = () => {
             <View style={styles.emptyState}>
               <Ionicons name="calendar-outline" size={48} color={colors.outlineVariant} />
               <AppText variant="bodyMd" style={{ color: colors.onSurfaceVariant, marginTop: 12 }}>
-                No sessions recorded on this date.
+                {t('doctor.sessions.noSessions')}
               </AppText>
             </View>
           )}
@@ -272,7 +274,7 @@ export const PatientSessionsScreen: React.FC = () => {
               })}
             </View>
             <TouchableOpacity style={styles.calendarDoneBtn} onPress={() => setShowDatePicker(false)}>
-              <AppText variant="labelMd" style={{ color: colors.onPrimary, fontWeight: "600" }}>Done</AppText>
+              <AppText variant="labelMd" style={{ color: colors.onPrimary, fontWeight: "600" }}>{t('report.done')}</AppText>
             </TouchableOpacity>
           </View>
         </View>

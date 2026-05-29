@@ -39,6 +39,7 @@ import {
 import type { Assignment, ExerciseRecord, SetRecord } from '../../services/firebase/types';
 import { VideoPlaybackModal } from '../../components/VideoPlaybackModal';
 import { getVideoThumbnailUri } from '../../utils/videoUtils';
+import { useTranslation } from 'react-i18next';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutSummary'>;
 
@@ -54,6 +55,7 @@ function getMETValue(exerciseName: string): number {
 export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => {
     const { assignmentId, recordVideo } = route.params || { assignmentId: '', recordVideo: false };
     const { uid } = useAuth();
+    const { t } = useTranslation();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(true);
@@ -233,10 +235,10 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             <SafeAreaView style={[styles.safe, styles.center]}>
                 <ActivityIndicator size="large" color={colors.primary} />
                 <AppText variant="headlineMd" style={{ marginTop: 16, color: colors.primary, fontWeight: '700' }}>
-                    Processing Results...
+                    {t('summary.processingTitle')}
                 </AppText>
                 <AppText variant="bodySm" style={{ marginTop: 8, color: '#64748b', textAlign: 'center', paddingHorizontal: 40 }}>
-                    Saving metadata, updating logs, running MET calculations, and closing the active session state.
+                    {t('summary.processingDesc')}
                 </AppText>
             </SafeAreaView>
         );
@@ -250,9 +252,9 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                     <View style={styles.trophyIcon}>
                         <Ionicons name="trophy" size={48} color="#eab308" />
                     </View>
-                    <AppText variant="headlineXl" style={styles.title}>Buổi Tập Hoàn Thành!</AppText>
+                    <AppText variant="headlineXl" style={styles.title}>{t('summary.title')}</AppText>
                     <AppText variant="bodyMd" style={styles.subtitle}>
-                        Chúc mừng bạn đã kết thúc xuất sắc lộ trình bài tập được giao.
+                        {t('summary.subtitle')}
                     </AppText>
                 </View>
 
@@ -263,7 +265,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                         <AppText variant="headlineLg" style={{ color: colors.primary, fontWeight: '800', marginTop: 4 }}>
                             {overallAccuracy}%
                         </AppText>
-                        <AppText variant="labelSm" style={styles.statLabel}>Độ Chính Xác</AppText>
+                        <AppText variant="labelSm" style={styles.statLabel}>{t('summary.accuracy')}</AppText>
                     </View>
 
                     <View style={styles.statCard}>
@@ -271,7 +273,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                         <AppText variant="headlineLg" style={{ color: '#0f172a', fontWeight: '800', marginTop: 4 }}>
                             {Math.floor(totalTime / 60)}m {totalTime % 60}s
                         </AppText>
-                        <AppText variant="labelSm" style={styles.statLabel}>Tổng Thời Gian</AppText>
+                        <AppText variant="labelSm" style={styles.statLabel}>{t('summary.totalTime')}</AppText>
                     </View>
 
                     <View style={styles.statCard}>
@@ -279,17 +281,17 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                         <AppText variant="headlineLg" style={{ color: '#f97316', fontWeight: '800', marginTop: 4 }}>
                             {calories} kcal
                         </AppText>
-                        <AppText variant="labelSm" style={styles.statLabel}>Năng Lượng</AppText>
+                        <AppText variant="labelSm" style={styles.statLabel}>{t('summary.calories')}</AppText>
                     </View>
                 </View>
 
                 {/* Perceived Effort Card */}
                 <View style={styles.effortCard}>
                     <AppText variant="labelMd" style={styles.cardTitle}>
-                        ĐÁNH GIÁ MỨC ĐỘ NỖ LỰC (PERCEIVED EFFORT)
+                        {t('summary.effortTitle')}
                     </AppText>
                     <AppText variant="bodySm" style={styles.cardSubtitle}>
-                        Nỗ lực tập hôm nay của bạn cảm thấy như thế nào? Bác sĩ sẽ dùng thông số này để điều chỉnh cường độ bài tập.
+                        {t('summary.effortDesc')}
                     </AppText>
                     <View style={styles.effortButtonRow}>
                         <TouchableOpacity
@@ -307,7 +309,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                                 color={effort === "easy" ? "#fff" : "#14b8a6"}
                             />
                             <AppText variant="labelMd" style={[styles.effortBtnText, effort === "easy" && { color: "#fff" }]}>
-                                Dễ Dàng
+                                {t('summary.effortEasy')}
                             </AppText>
                         </TouchableOpacity>
 
@@ -326,7 +328,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                                 color={effort === "normal" ? "#fff" : "#3b82f6"}
                             />
                             <AppText variant="labelMd" style={[styles.effortBtnText, effort === "normal" && { color: "#fff" }]}>
-                                Vừa Sức
+                                {t('summary.effortNormal')}
                             </AppText>
                         </TouchableOpacity>
 
@@ -345,7 +347,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                                 color={effort === "hard" ? "#fff" : "#ef4444"}
                             />
                             <AppText variant="labelMd" style={[styles.effortBtnText, effort === "hard" && { color: "#fff" }]}>
-                                Khó Khăn
+                                {t('summary.effortHard')}
                             </AppText>
                         </TouchableOpacity>
                     </View>
@@ -353,7 +355,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
 
                 {/* Exercises Breakdown */}
                 <View style={styles.exercisesList}>
-                    <AppText variant="labelMd" style={styles.listTitle}>CHI TIẾT BÀI TẬP ĐÃ TẬP</AppText>
+                    <AppText variant="labelMd" style={styles.listTitle}>{t('summary.exerciseDetails')}</AppText>
                     {completedExercises.map((ex, i) => (
                         <View key={i} style={styles.exerciseRow}>
                             <View style={[styles.exIcon, { backgroundColor: colors.primary + '1A' }]}>
@@ -366,7 +368,11 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                             <View style={styles.exInfo}>
                                 <AppText variant="bodyMd" style={styles.exName}>{ex.exerciseName}</AppText>
                                 <AppText variant="labelSm" style={styles.exDetail}>
-                                    {ex.sets.length} Sets • {ex.sets.reduce((sum, s) => sum + (s.repsCompleted || 0), 0)} Reps • {ex.accuracy}% Accuracy
+                                    {t('summary.exerciseMeta', {
+                                        sets: ex.sets.length,
+                                        reps: ex.sets.reduce((sum, s) => sum + (s.repsCompleted || 0), 0),
+                                        accuracy: ex.accuracy
+                                    })}
                                 </AppText>
 
                                 {/* Horizontal set details row */}
@@ -398,7 +404,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                                                     </View>
                                                 </View>
                                                 <AppText variant="labelSm" style={styles.thumbSetLabel}>
-                                                    Set {s.setNumber} ({s.repsCompleted}r)
+                                                    {t('summary.setLabel', { set: s.setNumber, reps: s.repsCompleted })}
                                                 </AppText>
                                             </TouchableOpacity>
                                         );
@@ -414,7 +420,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             {/* Done Footer */}
             <View style={styles.footer}>
                 <AppButton
-                    label="Về Trang Chủ"
+                    label={t('summary.returnHome')}
                     size="lg"
                     onPress={handleDone}
                     style={{ width: '100%' }}

@@ -2,15 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
 import { AppText } from '../../../components/ui';
 import { colors, spacing } from '../../../theme';
 import type { Exercise, ExerciseDifficulty } from '../../../services/firebase/types';
-
-const DIFFICULTIES: { key: ExerciseDifficulty; label: string; emoji: string }[] = [
-  { key: 'easy', label: 'Easy', emoji: '😊' },
-  { key: 'medium', label: 'Medium', emoji: '😐' },
-  { key: 'hard', label: 'Hard', emoji: '🔥' },
-];
 
 const REST_OPTIONS = [30, 60, 90, 120];
 
@@ -27,6 +22,14 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
   onClose,
   onSave,
 }) => {
+  const { t } = useTranslation();
+  
+  const DIFFICULTIES: { key: ExerciseDifficulty; label: string; emoji: string }[] = [
+    { key: 'easy', label: t('doctor.templateEditor.easy'), emoji: '😊' },
+    { key: 'medium', label: t('doctor.templateEditor.medium'), emoji: '😐' },
+    { key: 'hard', label: t('doctor.templateEditor.hard'), emoji: '🔥' },
+  ];
+
   const [sets, setSets] = useState(3);
   const [reps, setReps] = useState(10);
   const [difficulty, setDifficulty] = useState<ExerciseDifficulty>('medium');
@@ -53,7 +56,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
       difficulty,
       restBetweenSets,
       notes,
-      duration: `${sets * 2} mins`,
+      duration: `${sets * 2} ${t('doctor.templateEditor.mins')}`,
     });
     onClose();
   };
@@ -74,7 +77,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
         <View style={styles.sheet}>
           {/* Header */}
           <View style={styles.header}>
-            <AppText variant="headlineMd" style={styles.title}>Configure: {exercise.name}</AppText>
+            <AppText variant="headlineMd" style={styles.title}>{t('doctor.templateEditor.configure', { name: exercise.name })}</AppText>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color="#475569" />
             </TouchableOpacity>
@@ -83,7 +86,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Sets */}
             <View style={styles.section}>
-              <AppText variant="labelMd" style={styles.label}>Sets</AppText>
+              <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.sets')}</AppText>
               <View style={styles.counterRow}>
                 <TouchableOpacity style={styles.counterBtn} onPress={() => adjustSets(-1)}>
                   <Ionicons name="remove" size={20} color={colors.primary} />
@@ -99,7 +102,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 
             {/* Reps */}
             <View style={styles.section}>
-              <AppText variant="labelMd" style={styles.label}>Reps</AppText>
+              <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.reps')}</AppText>
               <View style={styles.counterRow}>
                 <TouchableOpacity style={styles.counterBtn} onPress={() => adjustReps(-1)}>
                   <Ionicons name="remove" size={20} color={colors.primary} />
@@ -115,7 +118,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 
             {/* Difficulty */}
             <View style={styles.section}>
-              <AppText variant="labelMd" style={styles.label}>Difficulty</AppText>
+              <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.difficulty')}</AppText>
               <View style={styles.diffRow}>
                 {DIFFICULTIES.map(d => (
                   <TouchableOpacity
@@ -134,7 +137,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 
             {/* Rest Between Sets */}
             <View style={styles.section}>
-              <AppText variant="labelMd" style={styles.label}>Rest Between Sets</AppText>
+              <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.restBetweenSets')}</AppText>
               <View style={styles.restRow}>
                 {REST_OPTIONS.map(sec => (
                   <TouchableOpacity
@@ -143,7 +146,7 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
                     onPress={() => setRestBetweenSets(sec)}
                   >
                     <AppText variant="labelSm" style={{ color: restBetweenSets === sec ? '#fff' : '#475569', fontWeight: '600' }}>
-                      {sec}s
+                      {sec}{t('doctor.templateEditor.sec')}
                     </AppText>
                   </TouchableOpacity>
                 ))}
@@ -152,10 +155,10 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 
             {/* Notes */}
             <View style={styles.section}>
-              <AppText variant="labelMd" style={styles.label}>Notes (optional)</AppText>
+              <AppText variant="labelMd" style={styles.label}>{t('doctor.templateEditor.notesOptional')}</AppText>
               <TextInput
                 style={styles.textArea}
-                placeholder="E.g. Keep back straight, avoid knee valgus..."
+                placeholder={t('doctor.templateEditor.notesPlaceholder')}
                 placeholderTextColor="#94a3b8"
                 multiline
                 numberOfLines={3}
@@ -168,11 +171,11 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
           {/* Actions */}
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <AppText variant="labelMd" style={{ color: '#475569' }}>Cancel</AppText>
+              <AppText variant="labelMd" style={{ color: '#475569' }}>{t('doctor.templateEditor.cancel')}</AppText>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-              <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>Add to Template</AppText>
+              <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>{t('doctor.templateEditor.addToTemplate')}</AppText>
             </TouchableOpacity>
           </View>
         </View>

@@ -13,6 +13,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession } from '../../services/firebase';
 import { uploadSetsVideosInBackground } from '../../services/firebase/videoService';
 import type { Assignment, Exercise, SetRecord, ExerciseRecord } from '../../services/firebase/types';
+import { useTranslation } from 'react-i18next';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseResult'>;
 
@@ -25,6 +26,7 @@ function accuracyColor(acc: number): string {
 export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => {
   const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets, recordVideo, setDurations: routeSetDurations, setsData, videoResult } = route.params || { recordVideo: false };
   const { uid } = useAuth();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -317,13 +319,13 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <AppText variant="headlineMd" style={styles.title}>Exercise Complete!</AppText>
+        <AppText variant="headlineMd" style={styles.title}>{t('result.title')}</AppText>
         <AppText variant="bodyMd" style={styles.subtitle}>{exercise?.name}</AppText>
       </View>
 
       <View style={styles.content}>
         <AppText variant="labelSm" style={{ color: '#64748b', marginBottom: spacing.sm, fontWeight: '700', letterSpacing: 0.5 }}>
-          SETS SUMMARY
+          {t('result.setsSummary')}
         </AppText>
 
         <ScrollView style={styles.setsScroll} contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
@@ -339,9 +341,9 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
               </View>
               
               <View style={{ flex: 1, gap: 2 }}>
-                <AppText variant="bodyMd" style={{ fontWeight: '700', color: '#0f172a' }}>Set {s.setNum}</AppText>
+                <AppText variant="bodyMd" style={{ fontWeight: '700', color: '#0f172a' }}>{t('result.setNum', { num: s.setNum })}</AppText>
                 <AppText variant="bodySm" style={{ color: '#64748b', fontWeight: '500' }}>
-                  {s.reps} reps • {Math.floor(s.duration / 60)}:{(s.duration % 60).toString().padStart(2, '0')}
+                  {t('result.repsDuration', { reps: s.reps, duration: `${Math.floor(s.duration / 60)}:${(s.duration % 60).toString().padStart(2, '0')}` })}
                 </AppText>
               </View>
 
@@ -350,7 +352,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
                   {s.accuracy}%
                 </AppText>
                 <AppText style={{ color: '#94a3b8', fontSize: 9, fontWeight: '700', letterSpacing: 0.3 }}>
-                  ACCURACY
+                  {t('result.accuracy')}
                 </AppText>
               </View>
             </TouchableOpacity>
@@ -360,7 +362,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
 
       <View style={styles.footer}>
         <AppButton 
-          label={assignment && exerciseIndex + 1 >= assignment.exercises.length ? "Finish Workout" : "Next Exercise"}
+          label={assignment && exerciseIndex + 1 >= assignment.exercises.length ? t('result.finishWorkout') : t('result.nextExercise')}
           size="lg"
           onPress={handleNext}
           disabled={saving}
@@ -386,10 +388,10 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
               
               <View style={styles.modalHeaderDetails}>
                 <AppText variant="headlineMd" style={styles.modalTitle} numberOfLines={1}>
-                  {exercise?.name || 'Exercise Playback'}
+                  {exercise?.name || t('result.playbackTitle')}
                 </AppText>
                 <AppText variant="bodySm" style={styles.modalSubtitle}>
-                  Set {selectedSet?.setNum} • {selectedSet?.reps} reps
+                  {t('result.setSubtitle', { setNum: selectedSet?.setNum, reps: selectedSet?.reps })}
                 </AppText>
               </View>
 
@@ -398,7 +400,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
                 <AppText style={[styles.modalAccuracyVal, { color: selectedSet ? accuracyColor(selectedSet.accuracy) : '#fff' }]}>
                   {selectedSet?.accuracy}%
                 </AppText>
-                <AppText style={styles.modalAccuracyLbl}>ACCURACY</AppText>
+                <AppText style={styles.modalAccuracyLbl}>{t('result.accuracy')}</AppText>
               </View>
             </View>
 
@@ -436,7 +438,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
                       borderColor: 'rgba(255,255,255,0.3)'
                     }}
                   >
-                    <AppText style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Toàn bộ Set</AppText>
+                    <AppText style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>{t('result.wholeSet')}</AppText>
                   </TouchableOpacity>
                   {(selectedSet as any).repTimestamps.map((r: any) => (
                     <TouchableOpacity
@@ -451,7 +453,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
                         borderColor: 'rgba(255,255,255,0.3)'
                       }}
                     >
-                      <AppText style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>Rep {r.rep}</AppText>
+                      <AppText style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>{t('result.repNum', { num: r.rep })}</AppText>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>

@@ -118,10 +118,10 @@ export const DoctorPatientsScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <AppText variant="headlineLg" style={styles.pageTitle}>
-            Patients Progress
+            {t('doctor.patients.patientsProgress')}
           </AppText>
           <AppText variant="bodyMd" style={styles.pageSubtitle}>
-            Track recovery of all patients
+            {t('doctor.patients.trackRecovery')}
           </AppText>
         </View>
 
@@ -130,7 +130,7 @@ export const DoctorPatientsScreen: React.FC = () => {
           <Ionicons name="search" size={20} color="#94a3b8" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search patients or conditions..."
+            placeholder={t('doctor.patients.searchPlaceholder')}
             placeholderTextColor="#94a3b8"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -144,7 +144,7 @@ export const DoctorPatientsScreen: React.FC = () => {
               {patients.length}
             </AppText>
             <AppText variant="bodySm" style={styles.summaryLabel}>
-              Total
+              {t('doctor.patients.total')}
             </AppText>
           </View>
           <View style={styles.summaryDivider} />
@@ -156,7 +156,7 @@ export const DoctorPatientsScreen: React.FC = () => {
               {patients.filter((p) => p.status === "on-track").length}
             </AppText>
             <AppText variant="bodySm" style={styles.summaryLabel}>
-              On Track
+              {t('doctor.patients.onTrack')}
             </AppText>
           </View>
           <View style={styles.summaryDivider} />
@@ -168,7 +168,7 @@ export const DoctorPatientsScreen: React.FC = () => {
               {patients.filter((p) => p.status === "at-risk").length}
             </AppText>
             <AppText variant="bodySm" style={styles.summaryLabel}>
-              At Risk
+              {t('doctor.patients.atRisk')}
             </AppText>
           </View>
         </View>
@@ -198,7 +198,7 @@ export const DoctorPatientsScreen: React.FC = () => {
                     {patient.displayName}
                   </AppText>
                   <AppText variant="bodySm" style={styles.patientCondition}>
-                    {patient.plan?.condition || 'No active plan'} {patient.plan && `· Week ${patient.plan.currentWeek} · Phase ${patient.plan.currentPhase}`}
+                    {patient.plan?.condition || t('doctor.patients.noActivePlan')} {patient.plan && `· Week ${patient.plan.currentWeek} · Phase ${patient.plan.currentPhase}`}
                   </AppText>
                 </View>
                 <View
@@ -223,7 +223,7 @@ export const DoctorPatientsScreen: React.FC = () => {
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
                   <AppText variant="bodySm" style={styles.progressLabel}>
-                    Overall Progress
+                    {t('doctor.patients.overallProgress')}
                   </AppText>
                   <AppText variant="labelMd" style={{ color: colors.primary }}>
                     {progress}%
@@ -243,7 +243,7 @@ export const DoctorPatientsScreen: React.FC = () => {
                 <View style={styles.statItem}>
                   <Ionicons name="calendar-outline" size={14} color="#64748b" />
                   <AppText variant="bodySm" style={styles.statText}>
-                    -- sessions
+                    {t('doctor.patients.sessionsLabel')}
                   </AppText>
                 </View>
                 <View style={styles.statItem}>
@@ -253,13 +253,13 @@ export const DoctorPatientsScreen: React.FC = () => {
                     color="#64748b"
                   />
                   <AppText variant="bodySm" style={styles.statText}>
-                    --% accuracy
+                    {t('doctor.patients.accuracyLabel')}
                   </AppText>
                 </View>
                 <View style={styles.statItem}>
                   <Ionicons name="time-outline" size={14} color="#64748b" />
                   <AppText variant="bodySm" style={styles.statText}>
-                    Recently Active
+                    {t('doctor.patients.recentlyActive')}
                   </AppText>
                 </View>
               </View>
@@ -267,7 +267,7 @@ export const DoctorPatientsScreen: React.FC = () => {
           );
         }) : (
           <AppText variant="bodyMd" style={{ color: "#64748b", padding: spacing.md, textAlign: 'center' }}>
-            No patients found.
+            {t('doctor.patients.noPatientsFound')}
           </AppText>
         )}
       </ScrollView>
