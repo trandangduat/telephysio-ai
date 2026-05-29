@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { AppText } from '../../components/ui';
 import { colors, spacing, radius } from '../../theme';
@@ -31,35 +32,37 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
   const [recordVideo, setRecordVideo] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!uid || !assignmentId) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const assignments = await getPatientAssignments(uid, 'active');
-        const active = assignments.find(a => a.id === assignmentId);
-        
-        if (active) {
-          setAssignment(active);
-          // Fetch doctor name
-          if (active.doctorId) {
-            const doctor = await getUser(active.doctorId);
-            setDoctorName(doctor?.displayName || 'Your therapist');
-          }
-          // Fetch incomplete session
-          const incSession = await getIncompleteSession(uid, active.id);
-          setIncompleteSession(incSession);
+  useFocusEffect(
+    useCallback(() => {
+      async function loadData() {
+        if (!uid || !assignmentId) {
+          setLoading(false);
+          return;
         }
-      } catch (error) {
-        console.error('Error loading details:', error);
-      } finally {
-        setLoading(false);
+        try {
+          const assignments = await getPatientAssignments(uid, 'active');
+          const active = assignments.find(a => a.id === assignmentId);
+          
+          if (active) {
+            setAssignment(active);
+            // Fetch doctor name
+            if (active.doctorId) {
+              const doctor = await getUser(active.doctorId);
+              setDoctorName(doctor?.displayName || 'Your therapist');
+            }
+            // Fetch incomplete session
+            const incSession = await getIncompleteSession(uid, active.id);
+            setIncompleteSession(incSession);
+          }
+        } catch (error) {
+          console.error('Error loading details:', error);
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-    loadData();
-  }, [uid, assignmentId]);
+      loadData();
+    }, [uid, assignmentId])
+  );
 
   if (loading) {
     return (

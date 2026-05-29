@@ -151,30 +151,35 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         }
     }, [paused, isResting]);
 
-    // Live Video Recording effects
     useEffect(() => {
         let isMounted = true;
-        async function initRecording() {
-            if (recordVideo && assignmentId) {
+        async function startSetRecording() {
+            if (recordVideo && assignmentId && !isResting && !isFinishing) {
                 try {
-                    console.log(`[TrainingScreen] Mounting: auto-starting video recording for ${assignmentId}`);
-                    await startRecording(assignmentId);
+                    console.log(`[TrainingScreen] Auto-starting video recording for ${assignmentId}, set ${currentSet}`);
+                    await startRecording(assignmentId, currentSet);
                     recordingStartTimeRef.current = Date.now();
                     lastRepEndMs.current = 0;
                     setVideoStartMs.current = 0;
                 } catch (err) {
-                    console.error("[TrainingScreen] Failed to start recording on mount:", err);
+                    console.error("[TrainingScreen] Failed to start recording:", err);
                 }
             }
         }
-        initRecording();
+        startSetRecording();
         return () => {
             isMounted = false;
+        };
+    }, [assignmentId, recordVideo, currentSet, isResting, isFinishing]);
+
+    // Unmount cleanup
+    useEffect(() => {
+        return () => {
             if (recordVideo) {
                 stopRecording().catch(err => console.warn("[TrainingScreen] Failed to stop recording on unmount:", err));
             }
         };
-    }, [assignmentId, recordVideo]);
+    }, [recordVideo]);
 
     useEffect(() => {
         if (!recordVideo) return;
@@ -205,14 +210,8 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         const totalRepsCompleted = finalSets.reduce((sum, s) => sum + s.repsCompleted, 0);
 
         let videoResult = null;
-        if (recordVideo) {
-            try {
-                console.log("[TrainingScreen] Stopping video recording...");
-                videoResult = await stopRecording();
-            } catch (err) {
-                console.error("[TrainingScreen] Failed to stop recording inside handleNextExercise:", err);
-            }
-        }
+        // videoResult is now null as videos are stored per-set in setsData.
+
 
         try {
             // Just navigate to ExerciseResult
@@ -237,11 +236,25 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         }
     }, [uid, exercise, assignmentId, exerciseIndex, averageAccuracy, elapsed, recordVideo, navigation]);
 
-    const handleCompleteSet = useCallback(() => {
+    const handleCompleteSet = useCallback(async () => {
         if (isFinishingRef.current || isResting || isFinishing) {
             console.log("[TrainingScreen] handleCompleteSet skipped: already resting or finishing");
             return;
         }
+
+        let videoLocalPath = null;
+        if (recordVideo) {
+            try {
+                console.log(`[TrainingScreen] Stopping video recording for set ${currentSet}...`);
+                const result = await stopRecording();
+                if (result && result.videoPath) {
+                    videoLocalPath = result.videoPath;
+                }
+            } catch (err) {
+                console.error("[TrainingScreen] Failed to stop recording inside handleCompleteSet:", err);
+            }
+        }
+
         const currentSetDuration = elapsed - lastSetElapsed;
         const nowVideoMs = recordingStartTimeRef.current ? (Date.now() - recordingStartTimeRef.current) : 0;
         const currentSetData = {
@@ -252,6 +265,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
             repTimestamps: [...currentSetRepTimestamps.current],
             videoStartMs: setVideoStartMs.current,
             videoEndMs: nowVideoMs,
+            videoLocalPath,
         };
 
         // Reset tracking for next set
@@ -277,7 +291,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         } else {
             handleNextExercise(updatedSets);
         }
-    }, [currentSet, totalSets, exercise, elapsed, lastSetElapsed, currentRep, averageAccuracy, completedSets, handleNextExercise, isResting, isFinishing]);
+    }, [currentSet, totalSets, exercise, elapsed, lastSetElapsed, currentRep, averageAccuracy, completedSets, handleNextExercise, isResting, isFinishing, recordVideo]);
 
     const handleCompleteSetRef = useRef(handleCompleteSet);
     useEffect(() => {

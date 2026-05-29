@@ -82,6 +82,8 @@ export interface SetRecord {
   weightKg: number | null;      // null if bodyweight
   accuracy: number;             // % accuracy (0-100)
   notes: string | null;
+  videoLocalPath?: string | null;
+  videoUrl?: string | null;
 }
 
 export interface ExerciseRecord {
@@ -115,9 +117,13 @@ export interface Session {
   caloriesBurned?: number;      // MET based calorie formula
   completionRate?: number;      // 0.0 - 1.0
   perceivedEffort?: "easy" | "normal" | "hard" | null;
+  averagePain?: number;         // 0-10
+  painLevel?: number;           // 0-10
   exercises?: ExerciseRecord[]; // detailed exercises list
   date: Timestamp;
   doctorFeedback?: string | null; // Doctor's note for this session
+  doctorName?: string | null;
+  reviewedAt?: Timestamp;
   feedbackUpdatedAt?: Timestamp;
 
   // Additional backward compatibility fields for legacy UI:

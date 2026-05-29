@@ -10,7 +10,8 @@ import { AppText, AppButton } from '../../components/ui';
 import { colors, spacing, radius } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession, uploadVideoToCloudinary } from '../../services/firebase';
+import { getPatientAssignments, getIncompleteSession, saveIncompleteSession, updateIncompleteSession } from '../../services/firebase';
+import { uploadSetsVideosInBackground } from '../../services/firebase/videoService';
 import type { Assignment, Exercise, SetRecord, ExerciseRecord } from '../../services/firebase/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseResult'>;
@@ -59,14 +60,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         loadData();
     }, [uid, assignmentId, exerciseIndex]);
 
-  // Use videoResult.videoPath directly (passed from TrainingScreen after stopRecording)
-  useEffect(() => {
-    if (!recordVideo) return;
-    if (videoResult?.videoPath) {
-      console.log('[ExerciseResultScreen] Using videoResult.videoPath:', videoResult.videoPath);
-      setVideoUri(videoResult.videoPath);
-    }
-  }, [recordVideo, videoResult]);
+  // Video URI will be set per selected set in handleOpenVideo
 
   const handleNext = async () => {
     if (!uid || !assignment) return;
@@ -88,23 +82,20 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         durationSec: s.duration,
         weightKg: null,
         accuracy: s.accuracy,
-        notes: null
+        notes: null,
+        videoLocalPath: s.videoLocalPath ?? null,
+        videoUrl: null, // Will be populated by background upload
       }));
 
-      // Upload per-exercise video to Cloudinary and attach URL to ExerciseRecord
-      let exerciseVideoUrl: string | undefined;
-      let exerciseVideoLocalPath: string | undefined;
-      if (recordVideo && videoResult?.videoPath) {
-        try {
-          console.log(`[ExerciseResult] Uploading video for exercise ${exerciseIndex}...`);
-          const uploadId = `${assignmentId}_ex${exerciseIndex}_${Date.now()}`;
-          exerciseVideoUrl = await uploadVideoToCloudinary(videoResult.videoPath, uploadId);
-          exerciseVideoLocalPath = videoResult.videoPath;
-          console.log(`[ExerciseResult] Video uploaded: ${exerciseVideoUrl}`);
-        } catch (uploadErr) {
-          console.error('[ExerciseResult] Failed to upload exercise video:', uploadErr);
-          // Non-blocking: continue saving record without video URL
-        }
+      // Fire and forget upload process
+      if (recordVideo && uid) {
+        uploadSetsVideosInBackground(
+          uid,
+          assignmentId,
+          exerciseIndex,
+          setsRecords,
+          recordVideo
+        ).catch(err => console.error("Background video upload failed:", err));
       }
 
       const newExerciseRecord: ExerciseRecord = {
@@ -114,8 +105,8 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         sets: setsRecords,
         accuracy: Math.round(accuracy),
         completedAt: new Date().toISOString(),
-        videoUrl: exerciseVideoUrl ?? null,
-        videoLocalPath: exerciseVideoLocalPath ?? null,
+        videoUrl: null,
+        videoLocalPath: null,
       };
 
       const nextIndex = exerciseIndex + 1;
@@ -165,6 +156,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         videoStartMs: (s as any).videoStartMs ?? null,
         videoEndMs: (s as any).videoEndMs ?? null,
         repTimestamps: (s as any).repTimestamps ?? [],
+        videoLocalPath: (s as any).videoLocalPath ?? null,
       }))
     : (() => {
         const numSets = Math.max(1, sets);
@@ -196,6 +188,7 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
             reps: repsPerSet,
             accuracy: setAccuracy,
             duration: setDuration,
+            videoLocalPath: undefined as string | undefined,
           };
         });
       })();
@@ -204,6 +197,11 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     setSelectedSet(set);
     setSelectedRep(null);
     setPlaybackStatus(null);
+    if (set.videoLocalPath) {
+      setVideoUri(set.videoLocalPath);
+    } else {
+      setVideoUri('');
+    }
   };
 
   const handleCloseVideo = () => {
@@ -245,10 +243,6 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     if (selectedRep !== null && ss.repTimestamps && ss.repTimestamps.length > 0) {
       const rep = ss.repTimestamps.find((r: any) => r.rep === selectedRep);
       if (rep) return { start: rep.start, end: rep.end };
-    }
-    // Use set-level timestamps if available
-    if (ss.videoStartMs != null && ss.videoEndMs != null && ss.videoEndMs > ss.videoStartMs) {
-      return { start: ss.videoStartMs, end: ss.videoEndMs };
     }
     return null;
   }, [selectedSet, selectedRep]);

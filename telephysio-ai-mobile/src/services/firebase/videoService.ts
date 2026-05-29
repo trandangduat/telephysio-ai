@@ -21,6 +21,7 @@ let isRecordingPaused = false;
 let recordingStartTime: number | null = null;
 let recordingPauseOffset = 0;
 let currentAssignmentId: string | null = null;
+let currentSetNumber: number = 1;
 
 interface StopRecordingResult {
   videoPath: string;
@@ -89,28 +90,38 @@ async function ensureDirectoryExists(dir: string) {
  * Trả về absolute path tạm thời để lưu vào IncompleteSession.videoPath.
  * 
  * @param assignmentId ID của bài tập được giao
+ * @param setNumber Optional set number for the recording (defaults to 1)
  */
-export async function startRecording(assignmentId: string): Promise<string> {
-  console.log(`[VideoService] startRecording called for assignmentId: ${assignmentId}`);
+export async function startRecording(assignmentId: string, setNumber: number = 1): Promise<string> {
+  console.log(`[VideoService] startRecording called for assignmentId: ${assignmentId}, set: ${setNumber}`);
 
   isRecordingActive = true;
   isRecordingPaused = false;
   recordingStartTime = Date.now();
   recordingPauseOffset = 0;
   currentAssignmentId = assignmentId;
+  currentSetNumber = setNumber;
   lastStopResult = null;
 
   // On web, the actual recording is handled by MediaRecorder inside the pose-html iframe.
   // We only track state here. No file system operations needed.
-  if (Platform.OS === 'web') {
-    console.log(`[VideoService] Web platform: recording state initialized. Actual capture runs in iframe.`);
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    console.log("[VideoService] Web platform: sending START_RECORDING to iframe.");
+    const iframeWindow = (window as any).__poseIframe;
+    if (iframeWindow) {
+      try {
+        iframeWindow.postMessage(JSON.stringify({ type: 'START_RECORDING' }), '*');
+      } catch (err) {
+        console.warn("[VideoService] Failed to send START_RECORDING to iframe:", err);
+      }
+    }
     return '';
   }
 
   const dateStr = getFormattedDate();
   const dir = getLocalVideoDirectory();
   await ensureDirectoryExists(dir);
-  const tempPath = `${dir}${assignmentId}_${dateStr}_temp.mp4`;
+  const tempPath = `${dir}${assignmentId}_set${setNumber}_${dateStr}_temp.mp4`;
 
   console.log(`[VideoService] Active recording started. Temp path: ${tempPath}`);
   return tempPath;
@@ -193,11 +204,12 @@ export async function stopRecording(): Promise<StopRecordingResult> {
   }
   const durationSec = Math.round(totalDurationMs / 1000);
   const assignmentId = currentAssignmentId || "asgn_temp";
+  const setNumber = currentSetNumber;
   const dateStr = getFormattedDate();
 
   // Relative paths for Firestore reference
-  const relativeVideoPath = `videos/${assignmentId}_${dateStr}.mp4`;
-  const relativeThumbnailPath = `videos/${assignmentId}_${dateStr}_thumb.jpg`;
+  const relativeVideoPath = `videos/${assignmentId}_set${setNumber}_${dateStr}.mp4`;
+  const relativeThumbnailPath = `videos/${assignmentId}_set${setNumber}_${dateStr}_thumb.jpg`;
 
   // Reset internal state
   isRecordingActive = false;
@@ -263,9 +275,9 @@ export async function stopRecording(): Promise<StopRecordingResult> {
   const dir = getLocalVideoDirectory();
   await ensureDirectoryExists(dir);
 
-  const videoPath = `${dir}${assignmentId}_${dateStr}.mp4`;
-  const thumbnailPath = `${dir}${assignmentId}_${dateStr}_thumb.jpg`;
-  const tempPath = `${dir}${assignmentId}_${dateStr}_temp.mp4`;
+  const videoPath = `${dir}${assignmentId}_set${setNumber}_${dateStr}.mp4`;
+  const thumbnailPath = `${dir}${assignmentId}_set${setNumber}_${dateStr}_thumb.jpg`;
+  const tempPath = `${dir}${assignmentId}_set${setNumber}_${dateStr}_temp.mp4`;
 
   const simulatedSizeMB = parseFloat((Math.max(1, durationSec) * 1.5).toFixed(2));
 
@@ -397,10 +409,8 @@ export async function uploadVideoToCloudinary(
 
     console.log(`[VideoService] Video upload success! Public URL: ${data.secure_url}`);
     
-    // Tối ưu hóa delivery (tương đương f_auto, q_auto trong snippet)
-    const optimizeUrl = data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
-    
-    return optimizeUrl;
+    // Return original secure_url to prevent black screen while Cloudinary transcodes f_auto
+    return data.secure_url;
   } catch (err) {
     console.error("[VideoService] Failed to upload video to Cloudinary:", err);
     throw err;
@@ -466,3 +476,69 @@ export async function uploadThumbnailToCloudinary(
   }
 }
 
+
+import { SetRecord } from './types';
+import { db } from './config';
+import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+
+export async function uploadSetsVideosInBackground(
+  uid: string,
+  assignmentId: string,
+  exerciseIndex: number,
+  setsRecords: SetRecord[],
+  recordVideo: boolean
+) {
+  if (!recordVideo) return;
+
+  const uploadPromises = setsRecords.map(async (set) => {
+    if (!set.videoLocalPath) return set;
+    try {
+      const uploadId = `${assignmentId}_ex${exerciseIndex}_set${set.setNumber}_${Date.now()}`;
+      const url = await uploadVideoToCloudinary(set.videoLocalPath, uploadId);
+      return { ...set, videoUrl: url };
+    } catch (err) {
+      console.error(`Failed to upload set ${set.setNumber}`, err);
+      return set;
+    }
+  });
+
+  const updatedSets = await Promise.all(uploadPromises);
+
+  try {
+    const incQuery = query(collection(db, 'incomplete_sessions'), where('patientId', '==', uid), where('assignmentId', '==', assignmentId));
+    const incSnap = await getDocs(incQuery);
+    if (!incSnap.empty) {
+      const docRef = incSnap.docs[0].ref;
+      const data = incSnap.docs[0].data();
+      const completedExercises = data.completedExercises || [];
+      const completedExercisesData = data.completedExercisesData || [];
+      if (completedExercises[exerciseIndex]) {
+        completedExercises[exerciseIndex].sets = updatedSets;
+        completedExercises[exerciseIndex].videoUrl = updatedSets[updatedSets.length - 1]?.videoUrl || null;
+        if (completedExercisesData[exerciseIndex]) {
+          completedExercisesData[exerciseIndex].sets = updatedSets;
+          completedExercisesData[exerciseIndex].videoUrl = updatedSets[updatedSets.length - 1]?.videoUrl || null;
+        }
+        await updateDoc(docRef, { completedExercises, completedExercisesData });
+        console.log(`[VideoService] Background upload updated IncompleteSession ${docRef.id}`);
+      }
+    }
+
+    const sessQuery = query(collection(db, 'sessions'), where('patientId', '==', uid), where('assignmentId', '==', assignmentId));
+    const sessSnap = await getDocs(sessQuery);
+    if (!sessSnap.empty) {
+      const docsList = sessSnap.docs.sort((a, b) => b.data().date.toMillis() - a.data().date.toMillis());
+      const docRef = docsList[0].ref;
+      const data = docsList[0].data();
+      const exercises = data.exercises || [];
+      if (exercises[exerciseIndex]) {
+        exercises[exerciseIndex].sets = updatedSets;
+        exercises[exerciseIndex].videoUrl = updatedSets[updatedSets.length - 1]?.videoUrl || null;
+        await updateDoc(docRef, { exercises });
+        console.log(`[VideoService] Background upload updated Session ${docRef.id}`);
+      }
+    }
+  } catch (dbErr) {
+    console.error("[VideoService] Failed to update Firestore with background upload URLs:", dbErr);
+  }
+}
