@@ -21,6 +21,7 @@ import { AppText } from "../../components/ui";
 import { colors, spacing, typography, radius } from "../../theme";
 import type { RootStackParamList } from "../../navigation/types";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import {
   getPatientSessions,
   getActiveTreatmentPlan,
@@ -80,6 +81,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
+  const { t } = useTranslation();
 
   // For backward compatibility, fallback to the last set's video
   const videoUrl = (session as any)?.videoUrl || null;
@@ -117,7 +119,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
 
   const doctorReview: string | undefined = (session as any).doctorFeedback;
   const doctorName: string =
-    (session as any).doctorName ?? "Assigned Doctor";
+    (session as any).doctorName ?? t("session.assignedDoctor");
   const reviewDate: string | undefined = (session as any).reviewedAt
     ? formatDate((session as any).reviewedAt)
     : undefined;
@@ -144,7 +146,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
             </TouchableOpacity>
             <View style={{ alignItems: 'center' }}>
               <AppText variant="headlineMd" style={detail.headerTitle}>
-                Session Summary
+                {t("session.summary")}
               </AppText>
               <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2 }}>
                 {formatDate((session as any).date)}
@@ -162,17 +164,17 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
             <View style={[detail.statsRow, { marginTop: 24, marginBottom: 16 }]}>
               <StatCard
                 icon="barbell-outline"
-                label="Exercises"
+                label={t("session.exercises")}
                 value={`${exercises}`}
               />
               <StatCard
                 icon="time-outline"
-                label="Duration"
+                label={t("session.duration")}
                 value={`${duration}`}
               />
               <StatCard
                 icon="analytics-outline"
-                label="Accuracy"
+                label={t("session.accuracy")}
                 value={`${accuracy}%`}
                 valueColor={accuracyColor(accuracy)}
               />
@@ -197,7 +199,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                     activeTab === "video" && { color: colors.primary },
                   ]}
                 >
-                  Exercise Recordings
+                  {t("session.exerciseRecordings")}
                 </AppText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -217,7 +219,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                     activeTab === "review" && { color: colors.primary },
                   ]}
                 >
-                  Doctor's Review
+                  {t("session.doctorReview")}
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -283,7 +285,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                   <View style={detail.card}>
                     <View style={detail.cardHeader}>
                       <Ionicons name="fitness" size={20} color={colors.primary} />
-                      <AppText variant="labelMd" style={detail.cardTitle}>Exercises Completed</AppText>
+                      <AppText variant="labelMd" style={detail.cardTitle}>{t("session.exercisesCompleted")}</AppText>
                   </View>
                   {hasDetailedExercises ? (
                     <View style={{ gap: 14 }}>
@@ -318,7 +320,12 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                                 variant="labelSm"
                                 style={detail.exerciseSummaryMeta}
                               >
-                                {setCount} Sets • {repCount} Reps • {accuracy}% Accuracy • {durationText}
+                                {t("session.setRepAccuracyDuration", {
+                                  sets: setCount,
+                                  reps: repCount,
+                                  accuracy: accuracy,
+                                  duration: durationText
+                                })}
                               </AppText>
                               {setCount > 0 && (
                                 <ScrollView
@@ -354,7 +361,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                                             variant="labelSm"
                                             style={detail.exerciseThumbLabel}
                                           >
-                                            Set {set.setNumber || (setIdx + 1)}
+                                            {t("session.setNum", { num: set.setNumber || (setIdx + 1) })}
                                           </AppText>
                                         </TouchableOpacity>
                                       );
@@ -379,7 +386,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                         <View key={i} style={detail.exerciseItem}>
                           <View style={detail.exDot} />
                           <AppText variant="bodyMd" style={detail.exName}>{ex}</AppText>
-                          <AppText variant="labelSm" style={detail.exMeta}>Completed</AppText>
+                          <AppText variant="labelSm" style={detail.exMeta}>{t("session.completedBadge")}</AppText>
                         </View>
                       ))}
                     </View>
@@ -391,10 +398,10 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                         color="#94a3b8"
                       />
                       <AppText variant="labelMd" style={detail.noExerciseTitle}>
-                        No exercise recordings yet
+                        {t("session.noRecordingsTitle")}
                       </AppText>
                       <AppText variant="bodySm" style={detail.noExerciseDesc}>
-                        This session does not include any detailed exercise recordings.
+                        {t("session.noRecordingsDesc")}
                       </AppText>
                     </View>
                   )}
@@ -410,7 +417,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                   <View style={detail.card}>
                     <View style={detail.cardHeader}>
                       <Ionicons name="analytics" size={20} color={colors.primary} />
-                      <AppText variant="labelMd" style={detail.cardTitle}>Form Analysis</AppText>
+                      <AppText variant="labelMd" style={detail.cardTitle}>{t("session.formAnalysis")}</AppText>
                     </View>
                     <View style={detail.breakdownList}>
                       {Object.entries((session as any).formBreakdown).map(
@@ -439,7 +446,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                 <View style={detail.card}>
                   <View style={detail.cardHeader}>
                     <Ionicons name="chatbox-ellipses" size={20} color={colors.primary} />
-                    <AppText variant="labelMd" style={detail.cardTitle}>Clinical Feedback</AppText>
+                    <AppText variant="labelMd" style={detail.cardTitle}>{t("session.clinicalFeedback")}</AppText>
                   </View>
                   {doctorReview ? (
                     <>
@@ -453,7 +460,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                           </AppText>
                           {reviewDate && (
                             <AppText variant="labelSm" style={detail.reviewDate}>
-                              Reviewed on {reviewDate}
+                              {t("session.reviewedOn", { date: reviewDate })}
                             </AppText>
                           )}
                         </View>
@@ -467,7 +474,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                             variant="labelSm"
                             style={{ color: colors.primary, marginLeft: 4 }}
                           >
-                            Verified
+                            {t("session.verified")}
                           </AppText>
                         </View>
                       </View>
@@ -485,11 +492,10 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                         color="#94a3b8"
                       />
                       <AppText variant="labelMd" style={detail.noReviewTitle}>
-                        No review yet
+                        {t("session.noReviewTitle")}
                       </AppText>
                       <AppText variant="bodySm" style={detail.noReviewDesc}>
-                        Your doctor hasn't left a review for this session yet.
-                        Please check back later.
+                        {t("session.noReviewDesc")}
                       </AppText>
                     </View>
                   )}
@@ -534,6 +540,7 @@ export const SessionScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { uid } = useAuth();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -608,10 +615,10 @@ export const SessionScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <AppText variant="headlineLg" style={styles.pageTitle}>
-          Session History
+          {t("session.historyTitle")}
         </AppText>
         <AppText variant="bodyMd" style={styles.pageSubtitle}>
-          Review videos and doctor's feedback for each of your sessions.
+          {t("session.historySubtitle")}
         </AppText>
 
         {/* ── Featured latest session ── */}
@@ -634,14 +641,14 @@ export const SessionScreen: React.FC = () => {
                   style={{ marginRight: 4 }}
                 />
                 <AppText variant="labelSm" style={{ color: "#fff" }}>
-                  Latest Session
+                  {t("session.latestSession")}
                 </AppText>
               </View>
             </View>
 
             <View style={styles.featuredBody}>
               <AppText variant="labelSm" style={styles.featuredEyebrow}>
-                REVIEW SESSION
+                {t("session.reviewSession")}
               </AppText>
               <AppText variant="headlineMd" style={styles.featuredTitle}>
                 {formatDate((latestSession as any).date)}
@@ -650,7 +657,7 @@ export const SessionScreen: React.FC = () => {
               <View style={styles.featuredMeta}>
                 <MetaPill
                   icon="barbell-outline"
-                  text={`${(latestSession as any).exercisesCompleted ?? (latestSession as any).completedExercises ?? 0} exercises`}
+                  text={`${(latestSession as any).exercisesCompleted ?? (latestSession as any).completedExercises ?? 0} ${t("common.exercises", { defaultValue: "exercises" })}`}
                 />
                 <MetaPill
                   icon="time-outline"
@@ -658,7 +665,7 @@ export const SessionScreen: React.FC = () => {
                 />
                 <MetaPill
                   icon="analytics-outline"
-                  text={`${Math.round((latestSession as any).accuracyScore ?? (latestSession as any).accuracy ?? 0)}% accuracy`}
+                  text={`${Math.round((latestSession as any).accuracyScore ?? (latestSession as any).accuracy ?? 0)}% ${t("common.accuracy", { defaultValue: "accuracy" })}`}
                 />
               </View>
 
@@ -666,14 +673,14 @@ export const SessionScreen: React.FC = () => {
                 <View style={styles.doctorSnippet}>
                   <Ionicons name="medical" size={12} color={colors.primary} />
                   <AppText variant="bodySm" style={styles.doctorSnippetText}>
-                    Doctor feedback available
+                    {t("session.doctorFeedbackAvailable")}
                   </AppText>
                 </View>
               )}
 
               <View style={styles.viewDetailRow}>
                 <AppText variant="labelMd" style={{ color: colors.primary }}>
-                  View Details
+                  {t("session.viewDetails")}
                 </AppText>
                 <Ionicons
                   name="arrow-forward"
@@ -687,7 +694,7 @@ export const SessionScreen: React.FC = () => {
         ) : (
           <View style={styles.emptyCard}>
             <AppText variant="bodyMd" style={{ color: "#64748b" }}>
-              No sessions recorded yet.
+              {t("session.noSessions")}
             </AppText>
           </View>
         )}
@@ -696,14 +703,17 @@ export const SessionScreen: React.FC = () => {
         {treatmentPlan && (
           <View style={styles.goalCard}>
             <AppText variant="labelMd" style={{ color: "#e0e7ff" }}>
-              Goal · {treatmentPlan.condition}
+              {t("session.goal", { condition: treatmentPlan.condition })}
             </AppText>
             <AppText
               variant="bodySm"
               style={{ color: "#e0e7ff", marginBottom: spacing.md }}
             >
-              Phase {treatmentPlan.currentPhase} · Week{" "}
-              {treatmentPlan.currentWeek}/{treatmentPlan.totalWeeks}
+              {t("session.phaseWeek", {
+                phase: treatmentPlan.currentPhase,
+                week: treatmentPlan.currentWeek,
+                totalWeeks: treatmentPlan.totalWeeks
+              })}
             </AppText>
             <View style={styles.goalRow}>
               <AppText style={styles.goalPercent}>
@@ -725,10 +735,10 @@ export const SessionScreen: React.FC = () => {
                 style={{ color: "#e0e7ff", marginLeft: 8 }}
               >
                 {treatmentPlan.status === "on-track"
-                  ? "You're on track!"
+                  ? t("session.onTrack")
                   : treatmentPlan.status === "ahead"
-                    ? "You're ahead of schedule!"
-                    : "Try to be more consistent!"}
+                    ? t("session.ahead")
+                    : t("session.consistent")}
               </AppText>
             </View>
           </View>
@@ -738,7 +748,7 @@ export const SessionScreen: React.FC = () => {
         {olderSessions.length > 0 && (
           <>
             <AppText variant="labelMd" style={styles.listSectionTitle}>
-              PREVIOUS SESSIONS
+              {t("session.previousSessions")}
             </AppText>
             {olderSessions.map((session) => {
               const acc = Math.round(
@@ -775,7 +785,7 @@ export const SessionScreen: React.FC = () => {
                         {formatDate((session as any).date)}
                       </AppText>
                       <AppText variant="bodySm" style={styles.listMeta}>
-                        {exCount} exercises · {dur}
+                        {exCount} {t("common.exercises", { defaultValue: "exercises" })} · {dur}
                       </AppText>
                       <View style={styles.badgeRow}>
                         {hasVideo && (
@@ -785,7 +795,7 @@ export const SessionScreen: React.FC = () => {
                               size={10}
                               color={colors.primary}
                             />
-                            <AppText style={styles.badgeText}>Video</AppText>
+                            <AppText style={styles.badgeText}>{t("session.videoBadge")}</AppText>
                           </View>
                         )}
                         {hasReview && (
@@ -798,7 +808,7 @@ export const SessionScreen: React.FC = () => {
                             <AppText
                               style={[styles.badgeText, { color: "#059669" }]}
                             >
-                              Reviewed
+                              {t("session.reviewedBadge")}
                             </AppText>
                           </View>
                         )}
@@ -816,7 +826,7 @@ export const SessionScreen: React.FC = () => {
                       {acc}%
                     </AppText>
                     <AppText variant="labelSm" style={styles.listAccLabel}>
-                      accuracy
+                      {t("common.accuracy", { defaultValue: "accuracy" })}
                     </AppText>
                     <Ionicons
                       name="chevron-forward"
@@ -837,11 +847,10 @@ export const SessionScreen: React.FC = () => {
             <Ionicons name="videocam-outline" size={24} color={colors.primary} />
           </View>
           <AppText variant="labelMd" style={styles.infoTitle}>
-            Videos recorded automatically
+            {t("session.videoRecorded")}
           </AppText>
           <AppText variant="bodySm" style={styles.infoDesc}>
-            Each session is recorded and analyzed by AI for posture. Your doctor
-            will review and leave feedback to adjust your recovery plan.
+            {t("session.videoRecordedDesc")}
           </AppText>
         </View>
       </ScrollView>

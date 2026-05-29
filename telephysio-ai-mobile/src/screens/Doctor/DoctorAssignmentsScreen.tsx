@@ -84,16 +84,16 @@ export const DoctorAssignmentsScreen: React.FC = () => {
 
     if (Platform.OS === 'web') {
       // eslint-disable-next-line no-alert
-      if (window.confirm(`Delete "${tpl.name}"? This cannot be undone.`)) {
+      if (window.confirm(`${t('doctor.assignments.deleteConfirmTitle')}: "${tpl.name}"?`)) {
         doDelete();
       }
     } else {
       Alert.alert(
-        'Delete Template',
-        `Are you sure you want to delete "${tpl.name}"?`,
+        t('doctor.assignments.deleteConfirmTitle'),
+        t('doctor.assignments.deleteConfirmMessage', { name: tpl.name }),
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: doDelete },
+          { text: t('doctor.assignments.cancel'), style: 'cancel' },
+          { text: t('doctor.assignments.delete'), style: 'destructive', onPress: doDelete },
         ]
       );
     }
@@ -127,17 +127,17 @@ export const DoctorAssignmentsScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <AppText variant="headlineLg" style={styles.pageTitle}>
-            Exercise Templates
+            {t('doctor.assignments.title')}
           </AppText>
           <AppText variant="bodyMd" style={styles.pageSubtitle}>
-            Create reusable exercise groups for patient care plans
+            {t('doctor.assignments.subtitle')}
           </AppText>
         </View>
 
         {/* Tab Description */}
         <View style={styles.tabDescContainer}>
           <AppText variant="bodySm" style={styles.tabDescText}>
-            Customized exercise groups that can be reused across patients
+            {t('doctor.assignments.tabDesc')}
           </AppText>
         </View>
 
@@ -159,7 +159,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                 variant="labelMd"
                 style={{ color: colors.primary, fontWeight: "700" }}
               >
-                Create New Template
+                {t('doctor.assignments.createTemplate')}
               </AppText>
             </TouchableOpacity>
 
@@ -190,8 +190,8 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                       {tpl.name}
                     </AppText>
                     <AppText variant="bodySm" style={styles.templateMeta}>
-                      {tpl.exercises?.length || 0} exercises · {tpl.totalDuration || '0 min'} ·{" "}
-                      {tpl.patientCount || 0} patients
+                      {t('doctor.assignments.exercisesCount', { count: tpl.exercises?.length || 0 })} · {tpl.totalDuration || '0 min'} ·{" "}
+                      {t('doctor.assignments.patientsCount', { count: tpl.patientCount || 0 })}
                     </AppText>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -204,7 +204,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                   >
                     <Ionicons name="pencil-outline" size={16} color="#475569" />
                     <AppText variant="labelSm" style={{ color: "#475569" }}>
-                      Edit
+                      {t('doctor.assignments.edit')}
                     </AppText>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -213,14 +213,14 @@ export const DoctorAssignmentsScreen: React.FC = () => {
                   >
                     <Ionicons name="trash-outline" size={16} color="#ef4444" />
                     <AppText variant="labelSm" style={{ color: "#ef4444" }}>
-                      Delete
+                      {t('doctor.assignments.delete')}
                     </AppText>
                   </TouchableOpacity>
                 </View>
               </View>
             )) : (
               <AppText variant="bodyMd" style={{ color: "#64748b", padding: spacing.md, textAlign: 'center' }}>
-                No templates found. Create one to get started.
+                {t('doctor.assignments.noTemplates')}
               </AppText>
             )}
           </>

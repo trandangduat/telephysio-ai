@@ -116,7 +116,7 @@ export const PatientDetailScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <AppText variant="headlineMd" style={styles.navTitle}>
-          Patient Details
+          {t('doctor.patientDetail.title')}
         </AppText>
         <View style={{ width: 28 }} />
       </View>
@@ -137,8 +137,8 @@ export const PatientDetailScreen: React.FC = () => {
             </AppText>
             <AppText variant="bodySm" style={styles.profileCondition}>
               {plan
-                ? `${plan.condition} · Week ${plan.currentWeek} · Phase ${plan.currentPhase}`
-                : "No active plan"}
+                ? `${plan.condition} · ${t('doctor.patientDetail.weekLabel', { num: plan.currentWeek })} · Phase ${plan.currentPhase}`
+                : t('doctor.patientDetail.noActivePlan')}
             </AppText>
             <View style={styles.profileBadges}>
               <View style={[styles.badge, { backgroundColor: "#dcfce7" }]}>
@@ -147,8 +147,8 @@ export const PatientDetailScreen: React.FC = () => {
                   style={{ color: "#166534", fontSize: 10 }}
                 >
                   {plan?.status === "on-track"
-                    ? "On Track"
-                    : plan?.status || "Active"}
+                    ? t('doctor.patientDetail.onTrack')
+                    : plan?.status || t('doctor.patientDetail.active')}
                 </AppText>
               </View>
               <View style={[styles.badge, { backgroundColor: "#e0f2fe" }]}>
@@ -156,7 +156,7 @@ export const PatientDetailScreen: React.FC = () => {
                   variant="labelSm"
                   style={{ color: colors.primary, fontSize: 10 }}
                 >
-                  {sessionsCount} Sessions
+                  {t('doctor.patientDetail.sessionsCount', { count: sessionsCount })}
                 </AppText>
               </View>
             </View>
@@ -167,25 +167,25 @@ export const PatientDetailScreen: React.FC = () => {
         <View style={styles.quickStats}>
           {[
             {
-              label: "Accuracy",
+              label: t('doctor.patientDetail.accuracy'),
               value: `${accuracy}%`,
               icon: "analytics",
               color: colors.primary,
             },
             {
-              label: "Sessions",
+              label: t('doctor.patientDetail.sessions'),
               value: `${sessionsCount}`,
               icon: "calendar",
               color: "#0f766e",
             },
             {
-              label: "Streak",
+              label: t('doctor.patientDetail.streak'),
               value: `${progress?.weeklyConsistency ? Math.round((progress.weeklyConsistency / 100) * 7) : 0}d`,
               icon: "flame",
               color: "#b45309",
             },
             {
-              label: "Pain Avg",
+              label: t('doctor.patientDetail.painAvg'),
               value: `${avgPain}/10`,
               icon: "pulse",
               color: "#dc2626",
@@ -210,7 +210,7 @@ export const PatientDetailScreen: React.FC = () => {
         <View style={styles.card}>
           <View style={styles.chartHeader}>
             <AppText variant="headlineMd" style={styles.cardTitle}>
-              Recovery Progress
+              {t('doctor.patientDetail.recoveryProgress')}
             </AppText>
             <View style={styles.toggleGroup}>
               {["ROM", "Pain", "Accuracy"].map((tab) => (
@@ -237,10 +237,10 @@ export const PatientDetailScreen: React.FC = () => {
           <View style={styles.chartArea}>
             <View style={styles.chartLine} />
             <View style={styles.chartLabels}>
-              <AppText style={styles.chartLabelText}>Week 1</AppText>
-              <AppText style={styles.chartLabelText}>Week 3</AppText>
-              <AppText style={styles.chartLabelText}>Week 5</AppText>
-              <AppText style={styles.chartLabelText}>Now</AppText>
+              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.weekLabel', { num: 1 })}</AppText>
+              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.weekLabel', { num: 3 })}</AppText>
+              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.weekLabel', { num: 5 })}</AppText>
+              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.nowLabel')}</AppText>
             </View>
           </View>
         </View>
@@ -256,7 +256,7 @@ export const PatientDetailScreen: React.FC = () => {
               variant="labelMd"
               style={{ color: "#fff", fontWeight: "700" }}
             >
-              Assign
+              {t('doctor.patientDetail.assign')}
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -272,7 +272,7 @@ export const PatientDetailScreen: React.FC = () => {
               variant="labelMd"
               style={{ color: colors.primary, fontWeight: "700" }}
             >
-              View Sessions
+              {t('doctor.patientDetail.viewSessions')}
             </AppText>
           </TouchableOpacity>
         </View>

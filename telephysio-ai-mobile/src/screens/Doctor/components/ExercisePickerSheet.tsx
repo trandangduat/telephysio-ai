@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
 import { AppText } from '../../../components/ui';
 import { colors, spacing } from '../../../theme';
 import { getGlobalExercises } from '../../../services/firebase';
 import type { Exercise } from '../../../services/firebase/types';
-
-const CATEGORIES = ['All', 'Lower Body', 'Upper Body', 'Core'];
 
 interface ExercisePickerSheetProps {
   visible: boolean;
@@ -22,10 +21,18 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
   onSelect,
   excludeIds = [],
 }) => {
+  const { t } = useTranslation();
+  const CATEGORIES = [
+    t('doctor.templateEditor.all'),
+    t('doctor.templateEditor.lowerBody'),
+    t('doctor.templateEditor.upperBody'),
+    t('doctor.templateEditor.core')
+  ];
+
   const [loading, setLoading] = useState(true);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
 
   useEffect(() => {
     if (visible) {
@@ -47,7 +54,10 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
 
   const filtered = exercises.filter(ex => {
     const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === 'All' || ex.category === activeCategory;
+    const matchesCategory = activeCategory === t('doctor.templateEditor.all') || 
+      (activeCategory === t('doctor.templateEditor.lowerBody') && ex.category === 'Lower Body') ||
+      (activeCategory === t('doctor.templateEditor.upperBody') && ex.category === 'Upper Body') ||
+      (activeCategory === t('doctor.templateEditor.core') && ex.category === 'Core');
     const notExcluded = !excludeIds.includes(ex.id);
     return matchesSearch && matchesCategory && notExcluded;
   });
@@ -63,7 +73,7 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
         <View style={styles.sheet}>
           {/* Header */}
           <View style={styles.header}>
-            <AppText variant="headlineMd" style={styles.title}>Select Exercise</AppText>
+            <AppText variant="headlineMd" style={styles.title}>{t('doctor.templateEditor.selectExercise')}</AppText>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color="#475569" />
             </TouchableOpacity>
@@ -74,7 +84,7 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
             <Ionicons name="search" size={20} color="#64748b" />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search exercises..."
+              placeholder={t('doctor.templateEditor.searchExercises')}
               placeholderTextColor="#94a3b8"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -109,14 +119,14 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
                   <View style={styles.exerciseInfo}>
                     <AppText variant="labelMd" style={styles.exerciseName}>{ex.name}</AppText>
                     <AppText variant="bodySm" style={styles.exerciseMeta}>
-                      {ex.category || 'General'} - Default: {ex.sets}x{ex.reps}
+                      {ex.category || t('doctor.templateEditor.general')} - {t('doctor.templateEditor.defaultSetsReps', { sets: ex.sets, reps: ex.reps })}
                     </AppText>
                   </View>
                   <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
                 </TouchableOpacity>
               )) : (
                 <AppText variant="bodyMd" style={{ color: '#64748b', textAlign: 'center', marginTop: spacing.xl }}>
-                  No exercises found.
+                  {t('doctor.templateEditor.noExercisesFound')}
                 </AppText>
               )}
             </ScrollView>

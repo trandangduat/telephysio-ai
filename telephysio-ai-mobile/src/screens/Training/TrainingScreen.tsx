@@ -15,6 +15,7 @@ import { AppText } from '../../components/ui';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { getPatientAssignments, startRecording, pauseRecording, resumeRecording, stopRecording } from '../../services/firebase';
 import type { Assignment, Exercise } from '../../services/firebase/types';
 import { PoseEstimationView, PoseAnalyzer } from '../../components/PoseEstimationView';
@@ -25,6 +26,7 @@ type TrainingProps = NativeStackScreenProps<RootStackParamList, 'Training'>;
 export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) => {
     const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
     const { uid } = useAuth();
+    const { t } = useTranslation();
     const [isFullScreen, setIsFullScreen] = useState(true); // Toggle state
     const [currentRep, setCurrentRep] = useState(0);
     const [currentSet, setCurrentSet] = useState(1);
@@ -335,17 +337,17 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                     {poseError ? (
                         <View style={[styles.poseBadge, styles.poseBadgeError]}>
                             <Ionicons name="warning-outline" size={14} color="#fca5a5" />
-                            <AppText variant="labelMd" style={{ color: '#fca5a5', marginLeft: 4 }}>Camera Unavailable</AppText>
+                            <AppText variant="labelMd" style={{ color: '#fca5a5', marginLeft: 4 }}>{t('training.cameraUnavailable')}</AppText>
                         </View>
                     ) : poseDetected ? (
                         <View style={styles.poseBadge}>
                             <Ionicons name="checkmark-circle" size={14} color="#a7f3d0" />
-                            <AppText variant="labelMd" style={{ color: '#fff', marginLeft: 4 }}>Pose Detected · {liveFps} fps</AppText>
+                            <AppText variant="labelMd" style={{ color: '#fff', marginLeft: 4 }}>{t('training.poseDetected', { fps: liveFps })}</AppText>
                         </View>
                     ) : (
                         <View style={[styles.poseBadge, styles.poseBadgeLoading]}>
                             <ActivityIndicator size="small" color="#fde68a" />
-                            <AppText variant="labelMd" style={{ color: '#fde68a', marginLeft: 6 }}>Starting AI…</AppText>
+                            <AppText variant="labelMd" style={{ color: '#fde68a', marginLeft: 6 }}>{t('training.startingAI')}</AppText>
                         </View>
                     )}
                 </View>
@@ -359,7 +361,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         <View style={styles.timerContainer}>
                             <View style={styles.fsLiveBadge}>
                                 <View style={styles.fsLiveDot} />
-                                <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>LIVE</AppText>
+                                <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>{t('training.live')}</AppText>
                             </View>
                             <AppText variant="bodyMd" style={styles.timerText}>{formatTime(currentSetElapsed)}</AppText>
                         </View>
@@ -374,14 +376,14 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                 {/* BOTTOM SHEET */}
                 <View style={styles.bottomSheet}>
                     <View style={styles.sheetHeader}>
-                        <AppText variant="labelMd" style={styles.grayLabel}>CURRENT SET</AppText>
-                        <AppText variant="labelMd" style={styles.grayLabel}>REPS</AppText>
+                        <AppText variant="labelMd" style={styles.grayLabel}>{t('training.currentSet')}</AppText>
+                        <AppText variant="labelMd" style={styles.grayLabel}>{t('training.reps')}</AppText>
                     </View>
 
                     <View style={styles.dataRow}>
                         <View style={{ flex: 1 }}>
                             <AppText variant="headlineXl" style={styles.exerciseName}>{exercise?.name || 'Exercise'}</AppText>
-                            <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2, fontWeight: '600' }}>Remaining: {remainingSets} sets</AppText>
+                            <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2, fontWeight: '600' }}>{t('training.remainingSets', { sets: remainingSets })}</AppText>
                         </View>
                         <View style={styles.repContainer}>
                             <AppText style={styles.repBig}>{currentRep}</AppText>
@@ -395,13 +397,13 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                             <View style={styles.fsFeedbackDot} />
                         </View>
                         <AppText variant="bodySm" style={styles.fsFeedbackText}>
-                            {poseError ? 'Camera unavailable' : poseDetected ? coachFeedback : 'Starting posture tracking...'}
+                            {poseError ? t('training.cameraUnavailable') : poseDetected ? coachFeedback : t('training.startingAI')}
                         </AppText>
                     </View>
 
                     <View style={styles.progressContainer}>
                         <View style={styles.progressHeader}>
-                            <AppText variant="labelMd" style={styles.grayLabel}>Form Accuracy</AppText>
+                            <AppText variant="labelMd" style={styles.grayLabel}>{t('training.formAccuracy')}</AppText>
                             <AppText variant="labelMd" style={styles.accuracyValue}>{formAccuracy}%</AppText>
                         </View>
                         <View style={styles.progressBarTrack}>
@@ -438,14 +440,14 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                             <Ionicons name="stopwatch-outline" size={36} color={colors.primary} />
                         </View>
 
-                        <AppText variant="labelMd" style={styles.restLabel}>RESTING PERIOD</AppText>
+                        <AppText variant="labelMd" style={styles.restLabel}>{t('training.restingPeriod')}</AppText>
 
                         <AppText variant="headlineXl" style={styles.restTimerDigits}>
                             {formatTime(restTimeLeft)}
                         </AppText>
 
                         <AppText variant="bodySm" style={styles.restSubtext}>
-                            Up Next: Set {currentSet + 1} of {totalSets}
+                            {t('training.upNextSet', { set: currentSet + 1, total: totalSets })}
                         </AppText>
 
                         <View style={styles.restActionRow}>
@@ -463,7 +465,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                                 onPress={() => setRestTimeLeft(0)}
                                 activeOpacity={0.8}
                             >
-                                <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>Skip Rest</AppText>
+                                <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>{t('training.skipRest')}</AppText>
                                 <Ionicons name="arrow-forward" size={16} color="#fff" style={{ marginLeft: 4 }} />
                             </TouchableOpacity>
                         </View>
@@ -504,17 +506,17 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         <View style={styles.badgeGroup}>
                             <View style={styles.liveBadge}>
                                 <View style={styles.liveDot} />
-                                <AppText variant="labelSm" style={styles.badgeText}>LIVE</AppText>
+                                <AppText variant="labelSm" style={styles.badgeText}>{t('training.live')}</AppText>
                             </View>
                             {poseDetected ? (
                                 <View style={styles.trackingBadge}>
                                     <Ionicons name="radio-outline" size={14} color="#fff" />
-                                    <AppText variant="labelSm" style={styles.badgeText}>AI Active · {liveFps} fps</AppText>
+                                    <AppText variant="labelSm" style={styles.badgeText}>{t('training.aiActive', { fps: liveFps })}</AppText>
                                 </View>
                             ) : (
                                 <View style={[styles.trackingBadge, { backgroundColor: 'rgba(245,158,11,0.8)' }]}>
                                     <ActivityIndicator size="small" color="#fff" />
-                                    <AppText variant="labelSm" style={[styles.badgeText, { marginLeft: 6 }]}>Loading AI…</AppText>
+                                    <AppText variant="labelSm" style={[styles.badgeText, { marginLeft: 6 }]}>{t('training.loadingAI')}</AppText>
                                 </View>
                             )}
                         </View>
@@ -529,9 +531,9 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                             <Ionicons name={poseDetected ? "checkmark" : "hourglass-outline"} size={16} color={poseDetected ? '#047857' : '#d97706'} />
                         </View>
                         <View style={styles.analysisTextCol}>
-                            <AppText variant="labelMd" style={styles.analysisLabel}>POSE ANALYSIS</AppText>
+                            <AppText variant="labelMd" style={styles.analysisLabel}>{t('training.poseAnalysis')}</AppText>
                             <AppText variant="bodySm" style={styles.analysisText}>
-                                {poseError ? 'Camera access required for AI tracking' : poseDetected ? coachFeedback : 'Waiting for AI model to load…'}
+                                {poseError ? t('training.cameraRequired') : poseDetected ? coachFeedback : t('training.waitingForAI')}
                             </AppText>
                         </View>
                     </View>
@@ -539,10 +541,10 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
 
                 {/* CURRENT EXERCISE CARD */}
                 <View style={styles.card}>
-                    <AppText variant="labelMd" style={styles.grayLabel}>CURRENT EXERCISE</AppText>
+                    <AppText variant="labelMd" style={styles.grayLabel}>{t('training.currentExercise')}</AppText>
                     <View style={styles.exerciseRow}>
                         <AppText style={styles.exerciseName}>{exercise?.name || 'Exercise'}</AppText>
-                        <AppText style={styles.setInfo}>Remaining: {remainingSets} sets</AppText>
+                        <AppText style={styles.setInfo}>{t('training.remainingSets', { sets: remainingSets })}</AppText>
                     </View>
 
                     <View style={styles.progressBarTrackNormal}>
@@ -550,8 +552,8 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                     </View>
 
                     <View style={styles.repInfoRow}>
-                        <AppText variant="labelSm" style={styles.repInfoText}>{currentRep} Reps Completed</AppText>
-                        <AppText variant="labelSm" style={styles.repInfoText}>{totalReps} Reps Goal</AppText>
+                        <AppText variant="labelSm" style={styles.repInfoText}>{currentRep} {t('training.repsCompleted')}</AppText>
+                        <AppText variant="labelSm" style={styles.repInfoText}>{totalReps} {t('training.repsGoal')}</AppText>
                     </View>
                 </View>
 
@@ -559,13 +561,13 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                 <View style={styles.statsRow}>
                     <View style={[styles.card, styles.statCard]}>
                         <Ionicons name="refresh" size={24} color={colors.primary} style={styles.statIcon} />
-                        <AppText variant="labelMd" style={styles.statLabel}>REPS</AppText>
+                        <AppText variant="labelMd" style={styles.statLabel}>{t('training.reps')}</AppText>
                         <AppText style={styles.statValue}>{currentRep}</AppText>
                     </View>
 
                     <View style={[styles.card, styles.statCard]}>
                         <Ionicons name="stats-chart" size={24} color="#047857" style={styles.statIcon} />
-                        <AppText variant="labelMd" style={styles.statLabel}>ACCURACY</AppText>
+                        <AppText variant="labelMd" style={styles.statLabel}>{t('training.accuracy')}</AppText>
                         <AppText style={[styles.statValue, { color: '#047857' }]}>{formAccuracy}%</AppText>
                     </View>
                 </View>
@@ -578,7 +580,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                     <TouchableOpacity style={styles.pauseButton} onPress={() => setPaused(!paused)}>
                         <Ionicons name={paused ? "play" : "pause"} size={20} color="#fff" style={{ marginRight: 8 }} />
                         <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>
-                            {paused ? "RESUME" : "PAUSE"}
+                            {paused ? t('training.resume') : t('training.pause')}
                         </AppText>
                     </TouchableOpacity>
 
@@ -602,14 +604,14 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                             <Ionicons name="stopwatch-outline" size={36} color={colors.primary} />
                         </View>
 
-                        <AppText variant="labelMd" style={styles.restLabel}>RESTING PERIOD</AppText>
+                        <AppText variant="labelMd" style={styles.restLabel}>{t('training.restingPeriod')}</AppText>
 
                         <AppText variant="headlineXl" style={styles.restTimerDigits}>
                             {formatTime(restTimeLeft)}
                         </AppText>
 
                         <AppText variant="bodySm" style={styles.restSubtext}>
-                            Up Next: Set {currentSet + 1} of {totalSets}
+                            {t('training.upNextSet', { set: currentSet + 1, total: totalSets })}
                         </AppText>
 
                         <View style={styles.restActionRow}>
@@ -627,7 +629,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                                 onPress={() => setRestTimeLeft(0)}
                                 activeOpacity={0.8}
                             >
-                                <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>Skip Rest</AppText>
+                                <AppText variant="labelSm" style={{ color: '#fff', fontWeight: '700' }}>{t('training.skipRest')}</AppText>
                                 <Ionicons name="arrow-forward" size={16} color="#fff" style={{ marginLeft: 4 }} />
                             </TouchableOpacity>
                         </View>

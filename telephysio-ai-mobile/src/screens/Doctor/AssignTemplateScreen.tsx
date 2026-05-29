@@ -20,6 +20,7 @@ import { Timestamp } from 'firebase/firestore';
 import { AppText } from '../../components/ui';
 import { colors, spacing } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import type { DoctorStackParamList } from '../../navigation/types';
 import type { ExerciseTemplate, Assignment, Exercise } from '../../services/firebase/types';
 import {
@@ -44,6 +45,7 @@ export const AssignTemplateScreen: React.FC = () => {
   const navigation = useNavigation<AssignTemplateNavProp>();
   const route = useRoute<AssignTemplateRouteProp>();
   const { uid } = useAuth();
+  const { t } = useTranslation();
 
   const patientId = route.params?.patientId;
   const patientName = (route.params as any)?.patientName || 'Patient';
@@ -217,7 +219,7 @@ export const AssignTemplateScreen: React.FC = () => {
                       </View>
                     ))}
                     {assignmentsToday.length > 2 && (
-                       <AppText style={styles.moreText}>+{assignmentsToday.length - 2} more</AppText>
+                       <AppText style={styles.moreText}>{t('doctor.assignTemplate.moreText', { count: assignmentsToday.length - 2 })}</AppText>
                     )}
                   </TouchableOpacity>
                 );
@@ -286,7 +288,7 @@ export const AssignTemplateScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <AppText variant="headlineMd" style={styles.headerTitle}>
-          Assign Session
+          {t('doctor.assignTemplate.title')}
         </AppText>
       </View>
 
@@ -324,27 +326,27 @@ export const AssignTemplateScreen: React.FC = () => {
                 {assigning ? (
                   <ActivityIndicator color={colors.onPrimary} size="small" />
                 ) : (
-                  <AppText style={styles.saveBtnText}>Save</AppText>
+                  <AppText style={styles.saveBtnText}>{t('doctor.assignTemplate.saveBtn')}</AppText>
                 )}
               </View>
             </TouchableOpacity>
           </View>
           
           <ScrollView contentContainerStyle={styles.modalContent}>
-            <View style={styles.titleInputContainer}>
+             <View style={styles.titleInputContainer}>
                <TextInput
                  style={styles.titleInput}
-                 placeholder="Add title"
+                 placeholder={t('doctor.assignTemplate.addTitlePlaceholder')}
                  placeholderTextColor={colors.outline}
                  value={assignmentTitle}
                  onChangeText={setAssignmentTitle}
                />
-            </View>
+             </View>
 
             <View style={styles.inputGroup}>
               <Ionicons name="person-outline" size={24} color={colors.outline} style={styles.inputIcon} />
               <View style={styles.inputBody}>
-                 <AppText style={styles.inputLabel}>Patient</AppText>
+                 <AppText style={styles.inputLabel}>{t('doctor.assignTemplate.patientLabel')}</AppText>
                  <AppText style={styles.inputValue}>{patientName}</AppText>
               </View>
             </View>
@@ -352,7 +354,7 @@ export const AssignTemplateScreen: React.FC = () => {
             <View style={styles.inputGroup}>
               <Ionicons name="document-text-outline" size={24} color={colors.outline} style={styles.inputIcon} />
               <View style={styles.inputBody}>
-                <AppText style={styles.inputLabel}>Template (Required)</AppText>
+                <AppText style={styles.inputLabel}>{t('doctor.assignTemplate.templateLabel')}</AppText>
                 
                 <View style={styles.templatesWrap}>
                   {selectedTemplateIds.map(tid => {
@@ -372,7 +374,7 @@ export const AssignTemplateScreen: React.FC = () => {
                      style={styles.selectTemplateBtn}
                      onPress={() => setIsTemplateSearchVisible(true)}
                    >
-                     <AppText style={styles.selectTemplateBtnText}>+ Template</AppText>
+                     <AppText style={styles.selectTemplateBtnText}>{t('doctor.assignTemplate.addTemplateBtn')}</AppText>
                    </TouchableOpacity>
                 </View>
               </View>
@@ -381,13 +383,13 @@ export const AssignTemplateScreen: React.FC = () => {
             <View style={styles.inputGroup}>
               <Ionicons name="time-outline" size={24} color={colors.outline} style={styles.inputIcon} />
               <View style={styles.inputBody}>
-                 <AppText style={styles.inputLabel}>Date & Time</AppText>
+                 <AppText style={styles.inputLabel}>{t('doctor.assignTemplate.dateTimeLabel')}</AppText>
                  <AppText style={styles.inputValue}>
                    {selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                  </AppText>
                  
                  <View style={styles.hourSelectorRow}>
-                   <AppText style={styles.hourSelectorLabel}>Hour:</AppText>
+                   <AppText style={styles.hourSelectorLabel}>{t('doctor.assignTemplate.hourLabel')}</AppText>
                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourScroll}>
                      {Array.from({length: 24}, (_, i) => i).map(h => (
                        <TouchableOpacity
@@ -421,16 +423,16 @@ export const AssignTemplateScreen: React.FC = () => {
                <TouchableOpacity onPress={() => setIsTemplateSearchVisible(false)}>
                   <Ionicons name="close" size={28} color={colors.onSurface} />
                </TouchableOpacity>
-               <AppText style={styles.searchModalTitle}>Select Templates</AppText>
+               <AppText style={styles.searchModalTitle}>{t('doctor.assignTemplate.selectTemplateTitle')}</AppText>
                <TouchableOpacity onPress={() => setIsTemplateSearchVisible(false)}>
-                 <AppText style={{ color: colors.primary, fontWeight: '600', fontSize: 16 }}>Done</AppText>
+                 <AppText style={{ color: colors.primary, fontWeight: '600', fontSize: 16 }}>{t('report.done')}</AppText>
                </TouchableOpacity>
             </View>
             <View style={styles.searchBarContainer}>
                <Ionicons name="search" size={20} color={colors.outline} style={styles.searchIcon} />
                <TextInput
                   style={styles.searchBarInput}
-                  placeholder="Search templates..."
+                  placeholder={t('doctor.assignTemplate.searchTemplates')}
                   placeholderTextColor={colors.outline}
                   value={templateSearchQuery}
                   onChangeText={setTemplateSearchQuery}
@@ -460,7 +462,7 @@ export const AssignTemplateScreen: React.FC = () => {
                })}
                {filteredTemplates.length === 0 && (
                   <View style={styles.emptyState}>
-                     <AppText style={styles.emptyStateText}>No templates found</AppText>
+                     <AppText style={styles.emptyStateText}>{t('doctor.assignTemplate.noTemplates')}</AppText>
                   </View>
                )}
             </ScrollView>

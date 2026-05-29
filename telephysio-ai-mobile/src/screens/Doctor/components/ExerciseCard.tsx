@@ -2,14 +2,15 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
 import { AppText } from '../../../components/ui';
 import { colors, spacing, typography } from '../../../theme';
 import type { Exercise, ExerciseDifficulty } from '../../../services/firebase/types';
 
-const DIFFICULTY_CONFIG: Record<ExerciseDifficulty, { label: string; color: string; bg: string }> = {
-  easy: { label: 'Easy', color: '#166534', bg: '#dcfce7' },
-  medium: { label: 'Medium', color: '#b45309', bg: '#fef3c7' },
-  hard: { label: 'Hard', color: '#991b1b', bg: '#fef2f2' },
+const DIFFICULTY_STYLES: Record<ExerciseDifficulty, { color: string; bg: string }> = {
+  easy: { color: '#166534', bg: '#dcfce7' },
+  medium: { color: '#b45309', bg: '#fef3c7' },
+  hard: { color: '#991b1b', bg: '#fef2f2' },
 };
 
 interface ExerciseCardProps {
@@ -25,7 +26,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onRemove,
   showRemove = true,
 }) => {
-  const diffConfig = exercise.difficulty ? DIFFICULTY_CONFIG[exercise.difficulty] : null;
+  const { t } = useTranslation();
+  const diffStyle = exercise.difficulty ? DIFFICULTY_STYLES[exercise.difficulty] : null;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
@@ -36,17 +38,21 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
         <View style={styles.info}>
           <AppText variant="labelMd" style={styles.name}>{exercise.name}</AppText>
           <AppText variant="bodySm" style={styles.meta}>
-            {exercise.sets} sets x {exercise.reps} reps{exercise.duration ? ` - ${exercise.duration}` : ''}
+            {exercise.sets} {t('doctor.templateEditor.sets').toLowerCase()} x {exercise.reps} {t('doctor.templateEditor.reps').toLowerCase()}{exercise.duration ? ` - ${exercise.duration}` : ''}
           </AppText>
           <View style={styles.tagsRow}>
             {exercise.category && (
               <View style={styles.categoryTag}>
-                <AppText variant="labelSm" style={styles.categoryText}>{exercise.category}</AppText>
+                <AppText variant="labelSm" style={styles.categoryText}>
+                  {exercise.category === 'Lower Body' ? t('doctor.templateEditor.lowerBody') :
+                   exercise.category === 'Upper Body' ? t('doctor.templateEditor.upperBody') :
+                   exercise.category === 'Core' ? t('doctor.templateEditor.core') : exercise.category}
+                </AppText>
               </View>
             )}
-            {diffConfig && (
-              <View style={[styles.diffTag, { backgroundColor: diffConfig.bg }]}>
-                <AppText variant="labelSm" style={[styles.diffText, { color: diffConfig.color }]}>{diffConfig.label}</AppText>
+            {diffStyle && (
+              <View style={[styles.diffTag, { backgroundColor: diffStyle.bg }]}>
+                <AppText variant="labelSm" style={[styles.diffText, { color: diffStyle.color }]}>{t(`doctor.templateEditor.${exercise.difficulty}` as any)}</AppText>
               </View>
             )}
           </View>
