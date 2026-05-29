@@ -13,8 +13,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Video, ResizeMode } from "expo-av";
+import type { AVPlaybackStatus } from "expo-av";
 
 import { AppText } from "../../components/ui";
 import { colors, spacing, typography, radius } from "../../theme";
@@ -26,8 +27,9 @@ import {
 } from "../../services/firebase";
 import type { Session, TreatmentPlan } from "../../services/firebase/types";
 import { NotificationBell } from "../../components/NotificationBell";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { Image } from "react-native";
+import { VideoPlaybackModal } from "../../components/VideoPlaybackModal";
+import { getVideoThumbnailUri } from "../../utils/videoUtils";
 
 // ─── Helper ─────────────────────────────────────────────────────────────────
 
@@ -52,6 +54,14 @@ function accuracyColor(acc: number): string {
   return "#dc2626";
 }
 
+function formatDurationSeconds(totalSeconds?: number): string {
+  if (totalSeconds === undefined || totalSeconds === null) return "—";
+  const safeSeconds = Number.isFinite(totalSeconds) ? Math.max(0, totalSeconds) : 0;
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = Math.floor(safeSeconds % 60);
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 // ─── Session Detail Modal ────────────────────────────────────────────────────
 
 interface SessionDetailModalProps {
@@ -65,9 +75,33 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
   visible,
   onClose,
 }) => {
-  const videoRef = useRef<Video>(null);
-  const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
   const [activeTab, setActiveTab] = useState<"video" | "review">("video");
+  const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+  const videoRef = useRef<Video>(null);
+
+  // For backward compatibility, fallback to the last set's video
+  const videoUrl = (session as any)?.videoUrl || null;
+
+  const togglePlay = async () => {
+    if (!videoRef.current) return;
+    try {
+      if (isPlaying) {
+        await videoRef.current.pauseAsync();
+      } else {
+        await videoRef.current.playAsync();
+      }
+    } catch (err) {
+      console.error("Failed to toggle play:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (status && status.isLoaded) {
+      setIsPlaying(status.isPlaying);
+    }
+  }, [status]);
 
   if (!session) return null;
 
@@ -80,27 +114,6 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     0;
   const duration =
     (session as any).duration ?? (session as any).totalDuration ?? "—";
-  const videoUrl: string | undefined = (session as any).videoUrl;
-
-  const isPlaying =
-    status && (status as any).isPlaying ? (status as any).isPlaying : false;
-
-  const togglePlay = async () => {
-    if (!videoRef.current || !status || !(status as any).isLoaded) {
-      console.warn("Video not loaded yet or invalid source.");
-      return;
-    }
-    
-    try {
-      if (isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
-      }
-    } catch (err) {
-      console.error("Playback error:", err);
-    }
-  };
 
   const doctorReview: string | undefined = (session as any).doctorFeedback;
   const doctorName: string =
@@ -109,7 +122,11 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     ? formatDate((session as any).reviewedAt)
     : undefined;
 
+  const completedExercisesData: Array<any> =
+    (session as any).exercises ?? (session as any).completedExercisesData ?? [];
   const exercises_list: string[] = (session as any).exerciseList ?? [];
+  const hasDetailedExercises = completedExercisesData.length > 0;
+  const hasExerciseList = exercises_list.length > 0;
 
   return (
     <Modal
@@ -123,40 +140,37 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
           {/* Header */}
           <View style={detail.header}>
             <TouchableOpacity onPress={onClose} style={detail.backBtn}>
-              <Ionicons name="arrow-back" size={20} color="#0f172a" />
+              <Ionicons name="close" size={24} color="#0f172a" />
             </TouchableOpacity>
-            <AppText variant="labelMd" style={detail.headerTitle}>
-              Session Details
-            </AppText>
+            <View style={{ alignItems: 'center' }}>
+              <AppText variant="headlineMd" style={detail.headerTitle}>
+                Session Summary
+              </AppText>
+              <AppText variant="bodySm" style={{ color: '#64748b', marginTop: 2 }}>
+                {formatDate((session as any).date)}
+              </AppText>
+            </View>
             <View style={{ width: 36 }} />
           </View>
 
           <ScrollView
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 40 }}
+            contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 16 }}
           >
-            {/* Session meta */}
-            <View style={detail.metaRow}>
-              <Ionicons name="calendar-outline" size={14} color="#64748b" />
-              <AppText variant="bodySm" style={detail.metaText}>
-                {formatDate((session as any).date)}
-              </AppText>
-            </View>
-
-            {/* Stats row */}
-            <View style={detail.statsRow}>
-              <StatChip
+            {/* Quick Stats overview like workout screen */}
+            <View style={[detail.statsRow, { marginTop: 24, marginBottom: 16 }]}>
+              <StatCard
                 icon="barbell-outline"
                 label="Exercises"
                 value={`${exercises}`}
               />
-              <StatChip
+              <StatCard
                 icon="time-outline"
                 label="Duration"
                 value={`${duration}`}
               />
-              <StatChip
+              <StatCard
                 icon="analytics-outline"
                 label="Accuracy"
                 value={`${accuracy}%`}
@@ -171,7 +185,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                 onPress={() => setActiveTab("video")}
               >
                 <Ionicons
-                  name="play-circle-outline"
+                  name="videocam-outline"
                   size={16}
                   color={activeTab === "video" ? colors.primary : "#64748b"}
                   style={{ marginRight: 6 }}
@@ -183,7 +197,7 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                     activeTab === "video" && { color: colors.primary },
                   ]}
                 >
-                  Session Video
+                  Exercise Recordings
                 </AppText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -218,12 +232,9 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                       source={{ 
                         uri: (() => {
                           if (Platform.OS !== 'web') return videoUrl || "";
-                          // On web: check global recorded videos dictionary, then use Firestore URL directly
                           let resolved = (typeof window !== 'undefined' && videoUrl && (window as any).__recordedVideos?.[videoUrl]) 
                             ? (window as any).__recordedVideos[videoUrl] 
                             : videoUrl;
-                          
-                          // Ensure relative local server paths start with / to load from root
                           if (resolved && !resolved.startsWith('http') && !resolved.startsWith('blob:') && !resolved.startsWith('/')) {
                             resolved = '/' + resolved;
                           }
@@ -231,14 +242,13 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                         })()
                       }}
                       style={detail.video}
-                      resizeMode={ResizeMode.CONTAIN}
+                      resizeMode={ResizeMode.COVER}
                       onPlaybackStatusUpdate={(s) => setStatus(s)}
                       shouldPlay={false}
                       useNativeControls={false}
                       onError={(error) => console.error("Video Error:", error)}
                       onLoadStart={() => console.log("Video Loading Started:", videoUrl)}
                     />
-                    {/* Custom play overlay */}
                     <TouchableOpacity
                       style={detail.playOverlay}
                       onPress={togglePlay}
@@ -250,7 +260,6 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                         </View>
                       )}
                     </TouchableOpacity>
-                    {/* Progress bar */}
                     {status && (status as any).durationMillis ? (
                       <View style={detail.progressTrack}>
                         <View
@@ -268,185 +277,254 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
                       </View>
                     ) : null}
                   </View>
-                ) : (
-                  <View style={detail.noVideoBox}>
-                    <Ionicons
-                      name="videocam-off-outline"
-                      size={36}
-                      color="#94a3b8"
-                    />
-                    <AppText variant="bodySm" style={detail.noVideoText}>
-                      Video is not available for this session.
-                    </AppText>
+                ) : null}
+                {/* Exercises list */}
+                <View style={{ marginTop: 16, gap: 16 }}>
+                  <View style={detail.card}>
+                    <View style={detail.cardHeader}>
+                      <Ionicons name="fitness" size={20} color={colors.primary} />
+                      <AppText variant="labelMd" style={detail.cardTitle}>Exercises Completed</AppText>
                   </View>
-                )}
+                  {hasDetailedExercises ? (
+                    <View style={{ gap: 14 }}>
+                      {completedExercisesData.map((ex: any, i: number) => {
+                        const setCount = Array.isArray(ex.sets) ? ex.sets.length : (ex.sets ?? 0);
+                        const repCount = ex.reps ?? 0;
+                        const accuracy = ex.accuracy ?? 0;
+                        const durationText = formatDurationSeconds(ex.durationSeconds);
 
-                {/* Exercise list */}
-                {exercises_list.length > 0 && (
-                  <View style={detail.section}>
-                    <AppText variant="labelMd" style={detail.sectionTitle}>
-                      EXERCISES PERFORMED
-                    </AppText>
-                    {exercises_list.map((ex, i) => (
-                      <View key={i} style={detail.exerciseRow}>
-                        <View style={detail.exBullet}>
-                          <AppText
-                            style={{ color: colors.primary, fontSize: 11 }}
-                          >
-                            {i + 1}
-                          </AppText>
+                        return (
+                          <View key={i} style={detail.exerciseSummaryRow}>
+                            <View
+                              style={[
+                                detail.exerciseSummaryIcon,
+                                { backgroundColor: (ex.color || colors.primary) + "1A" },
+                              ]}
+                            >
+                              <Ionicons
+                                name={(ex.icon || "barbell-outline") as any}
+                                size={18}
+                                color={ex.color || colors.primary}
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <AppText
+                                variant="bodyMd"
+                                style={detail.exerciseSummaryName}
+                              >
+                                {ex.name || `Exercise ${i + 1}`}
+                              </AppText>
+                              <AppText
+                                variant="labelSm"
+                                style={detail.exerciseSummaryMeta}
+                              >
+                                {setCount} Sets • {repCount} Reps • {accuracy}% Accuracy • {durationText}
+                              </AppText>
+                              {setCount > 0 && (
+                                <ScrollView
+                                  horizontal
+                                  showsHorizontalScrollIndicator={false}
+                                  style={detail.exerciseThumbs}
+                                  contentContainerStyle={detail.exerciseThumbsContent}
+                                >
+                                  {(() => {
+                                    const setsToRender = ex.sets && Array.isArray(ex.sets) 
+                                      ? ex.sets 
+                                      : Array.from({ length: setCount }).map((_, idx) => ({ setNumber: idx + 1 }));
+                                    
+                                    return setsToRender.map((set: any, setIdx: number) => {
+                                      const vUri = set.videoUrl || set.videoLocalPath;
+                                      const tUri = getVideoThumbnailUri(set.videoUrl, set.videoLocalPath);
+                                      return (
+                                        <TouchableOpacity 
+                                          key={setIdx} 
+                                          style={detail.exerciseThumbBox}
+                                          onPress={() => {
+                                            if (vUri) setSelectedVideoUrl(vUri);
+                                          }}
+                                        >
+                                          <View style={detail.exerciseThumbVideo}>
+                                            {tUri ? (
+                                              <Image source={{ uri: tUri }} style={{ width: '100%', height: '100%', borderRadius: 6 }} />
+                                            ) : (
+                                              <Ionicons name={vUri ? "play-circle" : "videocam-outline"} size={16} color={vUri ? "#fff" : "#64748b"} />
+                                            )}
+                                          </View>
+                                          <AppText
+                                            variant="labelSm"
+                                            style={detail.exerciseThumbLabel}
+                                          >
+                                            Set {set.setNumber || (setIdx + 1)}
+                                          </AppText>
+                                        </TouchableOpacity>
+                                      );
+                                    });
+                                  })()}
+                                </ScrollView>
+                              )}
+                            </View>
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={18}
+                              color="#16a34a"
+                              style={{ alignSelf: "flex-start", marginTop: 2 }}
+                            />
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : hasExerciseList ? (
+                    <View style={{ gap: 12 }}>
+                      {exercises_list.map((ex, i) => (
+                        <View key={i} style={detail.exerciseItem}>
+                          <View style={detail.exDot} />
+                          <AppText variant="bodyMd" style={detail.exName}>{ex}</AppText>
+                          <AppText variant="labelSm" style={detail.exMeta}>Completed</AppText>
                         </View>
-                        <AppText variant="bodySm" style={detail.exName}>
-                          {ex}
-                        </AppText>
-                      </View>
-                    ))}
-                  </View>
-                )}
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={detail.noExerciseBox}>
+                      <Ionicons
+                        name="file-tray-outline"
+                        size={32}
+                        color="#94a3b8"
+                      />
+                      <AppText variant="labelMd" style={detail.noExerciseTitle}>
+                        No exercise recordings yet
+                      </AppText>
+                      <AppText variant="bodySm" style={detail.noExerciseDesc}>
+                        This session does not include any detailed exercise recordings.
+                      </AppText>
+                    </View>
+                  )}
+                </View>
+              </View>
               </View>
             )}
 
             {/* ── REVIEW TAB ── */}
             {activeTab === "review" && (
-              <View style={detail.section}>
-                {doctorReview ? (
-                  <>
-                    {/* Doctor card */}
-                    <View style={detail.doctorCard}>
-                      <View style={detail.doctorAvatar}>
-                        <Ionicons name="person" size={18} color="#fff" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <AppText variant="labelMd" style={detail.doctorName}>
-                          {doctorName}
-                        </AppText>
-                        {reviewDate && (
-                          <AppText variant="labelSm" style={detail.reviewDate}>
-                            Reviewed on {reviewDate}
-                          </AppText>
-                        )}
-                      </View>
-                      <View style={detail.verifiedBadge}>
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={14}
-                          color={colors.primary}
-                        />
-                        <AppText
-                          variant="labelSm"
-                          style={{ color: colors.primary, marginLeft: 4 }}
-                        >
-                          Verified
-                        </AppText>
-                      </View>
+              <View style={{ marginTop: 16, gap: 16 }}>
+                {(session as any).formBreakdown && (
+                  <View style={detail.card}>
+                    <View style={detail.cardHeader}>
+                      <Ionicons name="analytics" size={20} color={colors.primary} />
+                      <AppText variant="labelMd" style={detail.cardTitle}>Form Analysis</AppText>
                     </View>
-
-                    {/* Review content */}
-                    <View style={detail.reviewBox}>
-                      <View style={detail.reviewIconRow}>
-                        <Ionicons
-                          name="medical"
-                          size={14}
-                          color={colors.primary}
-                        />
-                        <AppText
-                          variant="labelSm"
-                          style={detail.reviewBoxLabel}
-                        >
-                          DOCTOR'S FEEDBACK
-                        </AppText>
-                      </View>
-                      <AppText variant="bodyMd" style={detail.reviewText}>
-                        {doctorReview}
-                      </AppText>
-                    </View>
-
-                    {/* Accuracy breakdown if available */}
-                    {(session as any).formBreakdown && (
-                      <View style={detail.breakdownBox}>
-                        <AppText variant="labelMd" style={detail.sectionTitle}>
-                          FORM ANALYSIS
-                        </AppText>
-                        {Object.entries((session as any).formBreakdown).map(
-                          ([key, val]: [string, any]) => (
-                            <View key={key} style={detail.breakdownRow}>
-                              <AppText
-                                variant="bodySm"
-                                style={{ color: "#475569", flex: 1 }}
-                              >
-                                {key}
-                              </AppText>
-                              <View style={detail.breakdownTrack}>
-                                <View
-                                  style={[
-                                    detail.breakdownFill,
-                                    {
-                                      width: `${val}%`,
-                                      backgroundColor: accuracyColor(val),
-                                    },
-                                  ]}
-                                />
-                              </View>
-                              <AppText
-                                variant="labelSm"
-                                style={{
-                                  color: accuracyColor(val),
-                                  width: 36,
-                                  textAlign: "right",
-                                }}
-                              >
-                                {val}%
-                              </AppText>
+                    <View style={detail.breakdownList}>
+                      {Object.entries((session as any).formBreakdown).map(
+                        ([key, val]: [string, any]) => (
+                          <View key={key} style={detail.breakdownRow}>
+                            <AppText variant="bodySm" style={detail.breakdownKey}>{key}</AppText>
+                            <View style={detail.breakdownTrack}>
+                              <View
+                                style={[
+                                  detail.breakdownFill,
+                                  {
+                                    width: `${val}%`,
+                                    backgroundColor: accuracyColor(val),
+                                  },
+                                ]}
+                              />
                             </View>
-                          ),
-                        )}
-                      </View>
-                    )}
-                  </>
-                ) : (
-                  <View style={detail.noReviewBox}>
-                    <Ionicons
-                      name="hourglass-outline"
-                      size={36}
-                      color="#94a3b8"
-                    />
-                    <AppText variant="labelMd" style={detail.noReviewTitle}>
-                      No review yet
-                    </AppText>
-                    <AppText variant="bodySm" style={detail.noReviewDesc}>
-                      Your doctor hasn't left a review for this session yet.
-                      Please check back later.
-                    </AppText>
+                            <AppText variant="labelSm" style={[detail.breakdownVal, { color: accuracyColor(val) }]}>{val}%</AppText>
+                          </View>
+                        ),
+                      )}
+                    </View>
                   </View>
                 )}
+
+                <View style={detail.card}>
+                  <View style={detail.cardHeader}>
+                    <Ionicons name="chatbox-ellipses" size={20} color={colors.primary} />
+                    <AppText variant="labelMd" style={detail.cardTitle}>Clinical Feedback</AppText>
+                  </View>
+                  {doctorReview ? (
+                    <>
+                      <View style={detail.doctorCard}>
+                        <View style={detail.doctorAvatar}>
+                          <Ionicons name="person" size={18} color="#fff" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <AppText variant="labelMd" style={detail.doctorName}>
+                            {doctorName}
+                          </AppText>
+                          {reviewDate && (
+                            <AppText variant="labelSm" style={detail.reviewDate}>
+                              Reviewed on {reviewDate}
+                            </AppText>
+                          )}
+                        </View>
+                        <View style={detail.verifiedBadge}>
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={14}
+                            color={colors.primary}
+                          />
+                          <AppText
+                            variant="labelSm"
+                            style={{ color: colors.primary, marginLeft: 4 }}
+                          >
+                            Verified
+                          </AppText>
+                        </View>
+                      </View>
+                      <View style={detail.reviewBox}>
+                        <AppText variant="bodyMd" style={detail.reviewText}>
+                          {doctorReview}
+                        </AppText>
+                      </View>
+                    </>
+                  ) : (
+                    <View style={detail.noReviewBox}>
+                      <Ionicons
+                        name="hourglass-outline"
+                        size={36}
+                        color="#94a3b8"
+                      />
+                      <AppText variant="labelMd" style={detail.noReviewTitle}>
+                        No review yet
+                      </AppText>
+                      <AppText variant="bodySm" style={detail.noReviewDesc}>
+                        Your doctor hasn't left a review for this session yet.
+                        Please check back later.
+                      </AppText>
+                    </View>
+                  )}
+                </View>
               </View>
             )}
           </ScrollView>
         </SafeAreaView>
       </View>
+      <VideoPlaybackModal
+        visible={!!selectedVideoUrl}
+        videoUri={selectedVideoUrl || ''}
+        onClose={() => setSelectedVideoUrl(null)}
+      />
     </Modal>
   );
 };
 
-const StatChip = ({
+const StatCard = ({
   icon,
   label,
   value,
-  valueColor = "#0f172a",
+  valueColor = colors.primary,
 }: {
   icon: string;
   label: string;
   value: string;
   valueColor?: string;
 }) => (
-  <View style={detail.chip}>
-    <Ionicons name={icon as any} size={16} color={colors.primary} />
-    <AppText variant="labelSm" style={detail.chipLabel}>
-      {label}
-    </AppText>
-    <AppText variant="headlineMd" style={[detail.chipValue, { color: valueColor }]}>
-      {value}
-    </AppText>
+  <View style={detail.statCard}>
+    <View style={detail.statIconCircle}>
+      <Ionicons name={icon as any} size={20} color={colors.primary} />
+    </View>
+    <AppText variant="headlineMd" style={[detail.statValue, { color: valueColor }]}>{value}</AppText>
+    <AppText variant="labelSm" style={detail.statLabel}>{label}</AppText>
   </View>
 );
 
@@ -1083,7 +1161,92 @@ const detail = StyleSheet.create({
   },
   metaText: { color: "#64748b" },
 
+  // Video player
+  videoWrapper: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    backgroundColor: '#000',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: spacing.md,
+    position: 'relative',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  playOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  playCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressTrack: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+  },
+
   // Stats
+  
+  // New Card Styles
+  card: { 
+    backgroundColor: '#fff', 
+    borderRadius: 16, 
+    padding: spacing.lg, 
+    borderWidth: 1, 
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md },
+  cardTitle: { fontWeight: '600', fontSize: 16, color: '#0f172a' },
+  
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  statValue: { fontSize: 20, fontWeight: '800' },
+  statLabel: { color: '#64748b', fontSize: 11, fontWeight: '700', marginTop: 4 },
+
+  exerciseItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  exDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  exName: { flex: 1, fontWeight: '500', color: '#0f172a', fontSize: 14 },
+  exMeta: { color: colors.primary, fontWeight: '700', fontSize: 11 },
+
+  breakdownList: { gap: 12, paddingTop: spacing.xs },
+  breakdownKey: { flex: 1.5, color: '#475569', fontSize: 12, fontWeight: '500' },
+  breakdownVal: { flex: 0.8, textAlign: 'right', fontWeight: '700', fontSize: 12 },
+
   statsRow: {
     flexDirection: "row",
     gap: 10,
@@ -1124,55 +1287,61 @@ const detail = StyleSheet.create({
   tabActive: { backgroundColor: "#fff" },
   tabLabel: { color: "#64748b" },
 
-  // Video
-  videoWrapper: {
-    marginHorizontal: spacing.gutter,
-    marginTop: spacing.md,
+  // Exercise summary
+  exerciseSummaryRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  exerciseSummaryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 0,
+  },
+  exerciseSummaryName: { color: "#0f172a", fontWeight: "600" },
+  exerciseSummaryMeta: { color: "#64748b", marginTop: 2, marginBottom: spacing.xs },
+  exerciseThumbs: {
+    marginTop: spacing.xs,
+  },
+  exerciseThumbsContent: {
+    gap: spacing.sm,
+    paddingRight: spacing.md,
+  },
+  exerciseThumbBox: {
+    width: 72,
+    alignItems: "center",
+    gap: 4,
+  },
+  exerciseThumbVideo: {
+    width: 72,
+    height: 44,
+    backgroundColor: "#1e293b",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  exerciseThumbLabel: {
+    fontSize: 10,
+    color: "#475569",
+    fontWeight: "600",
+  },
+  noExerciseBox: {
+    backgroundColor: "#f8fafc",
     borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: "#000",
-    aspectRatio: 16 / 9,
-  },
-  video: { width: "100%", height: "100%" },
-  playOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    padding: spacing.lg,
     alignItems: "center",
-    justifyContent: "center",
-  },
-  playCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  progressTrack: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: "rgba(255,255,255,0.3)",
-  },
-  progressFill: { height: "100%", backgroundColor: colors.primary },
-
-  noVideoBox: {
-    marginHorizontal: spacing.gutter,
-    marginTop: spacing.md,
-    height: 160,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
     gap: 8,
     borderWidth: 1,
     borderColor: "#e2e8f0",
     borderStyle: "dashed",
   },
-  noVideoText: { color: "#94a3b8", textAlign: "center" },
+  noExerciseTitle: { color: "#475569", fontWeight: "700" },
+  noExerciseDesc: { color: "#94a3b8", textAlign: "center", lineHeight: 20 },
 
   // Section
   section: { paddingHorizontal: spacing.gutter, paddingTop: spacing.lg },
@@ -1199,7 +1368,6 @@ const detail = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  exName: { color: "#0f172a", flex: 1 },
 
   // Doctor card
   doctorCard: {

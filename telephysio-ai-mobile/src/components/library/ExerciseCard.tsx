@@ -27,7 +27,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onPress })
         {exercise.name}
       </AppText>
       <AppText variant="bodySm" color={colors.onSurfaceVariant}>
-        {exercise.duration} · {exercise.sets} hiệp × {exercise.reps} lần
+        {exercise.duration} · {exercise.sets} sets × {exercise.reps} reps
       </AppText>
       <View style={styles.badgeRow}>
         <Badge

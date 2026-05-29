@@ -82,6 +82,8 @@ export interface SetRecord {
   weightKg: number | null;      // null if bodyweight
   accuracy: number;             // % accuracy (0-100)
   notes: string | null;
+  videoLocalPath?: string | null;
+  videoUrl?: string | null;
 }
 
 export interface ExerciseRecord {
@@ -104,24 +106,27 @@ export interface Session {
   patientId: string;
   assignmentId: string;
   reps: number;                 // total reps completed in session
+  templateName?: string;        // Name of the assigned workout routine
+  exercisesCompleted: number;
+  completedExercises: number;   // Alias for UI compatibility
   accuracy: number;             // avg accuracy (0-100)
+  accuracyScore: number;        // Alias for UI compatibility
   duration: number;             // total seconds (excluding paused time)
+  durationSeconds: number;      // elapsed in TrainingScreen
+  totalDuration?: string;       // formatted string e.g. "42 min"
   caloriesBurned?: number;      // MET based calorie formula
   completionRate?: number;      // 0.0 - 1.0
   perceivedEffort?: "easy" | "normal" | "hard" | null;
+  averagePain?: number;         // 0-10
+  painLevel?: number;           // 0-10
   exercises?: ExerciseRecord[]; // detailed exercises list
   date: Timestamp;
   doctorFeedback?: string | null; // Doctor's note for this session
+  doctorName?: string | null;
+  reviewedAt?: Timestamp;
   feedbackUpdatedAt?: Timestamp;
 
-  // Backward compatibility fields for legacy UI:
-  exercisesCompleted?: number;
-  completedExercises?: number;
-  accuracyScore?: number;
-  durationSeconds?: number;
-  totalDuration?: string;
-  painLevel?: number;
-  averagePain?: number;
+  // Additional backward compatibility fields for legacy UI:
   videoUrl?: string;
   exerciseList?: string[];
   formBreakdown?: Record<string, number>;
