@@ -134,13 +134,6 @@ export const DoctorAssignmentsScreen: React.FC = () => {
           </AppText>
         </View>
 
-        {/* Tab Description */}
-        <View style={styles.tabDescContainer}>
-          <AppText variant="bodySm" style={styles.tabDescText}>
-            {t('doctor.assignments.tabDesc')}
-          </AppText>
-        </View>
-
         {loading ? (
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
         ) : (
