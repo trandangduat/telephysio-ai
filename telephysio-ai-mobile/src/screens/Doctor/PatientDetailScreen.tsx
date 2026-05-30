@@ -233,14 +233,14 @@ export const PatientDetailScreen: React.FC = () => {
           </View>
 
           {/* Chart */}
-          <View style={styles.chartContainer}>
+          <View style={styles.chartWrapper}>
             {/* Y-axis label */}
             <AppText variant="labelSm" style={styles.yAxisLabel}>
               {activeChart === "ROM" ? "Degrees (°)" : activeChart === "Pain" ? "Pain Level" : "Score (%)"}
             </AppText>
             <LineChart
               data={{
-                labels: ["W1", "W2", "W3", "W4", "W5", "Now"],
+                labels: ["W1", "W2", "W3", "W4", "W5", "W6"],
                 datasets: [
                   {
                     data: activeChart === "ROM" 
@@ -253,8 +253,8 @@ export const PatientDetailScreen: React.FC = () => {
                   }
                 ]
               }}
-              width={screenWidth - 32}
-              height={180}
+              width={screenWidth - 16}
+              height={200}
               chartConfig={{
                 backgroundColor: "#fff",
                 backgroundGradientFrom: "#fff",
@@ -393,11 +393,12 @@ const styles = StyleSheet.create({
   toggleBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   toggleBtnActive: { backgroundColor: colors.primary },
 
-  chartContainer: {
+  chartWrapper: {
     marginHorizontal: -spacing.lg,
     marginBottom: -spacing.lg,
     marginTop: spacing.sm,
     alignItems: "center",
+    overflow: "hidden",
   },
   chart: {
     borderRadius: 0,
