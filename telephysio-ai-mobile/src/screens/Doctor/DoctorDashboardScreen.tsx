@@ -19,7 +19,7 @@ import type { CompositeNavigationProp } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 import { AppText } from "../../components/ui";
-import { colors, spacing } from "../../theme";
+import { colors, spacing, typography } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
 import type { DoctorStackParamList, DoctorTabParamList } from "../../navigation/types";
 import { useTranslation } from 'react-i18next';
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#e2e8f0",
     boxShadow: "0 1px 4px rgba(0,93,182,0.06)",
   },
-  searchInput: { flex: 1, fontSize: 14, color: "#0f172a", fontFamily: "Inter" },
+  searchInput: { flex: 1, fontSize: 14, color: "#0f172a", fontFamily: typography.bodyMd.fontFamily },
 
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   sectionTitle: { color: "#0f172a", fontWeight: "700", fontSize: 18 },
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: "#dbeafe", alignItems: "center", justifyContent: "center",
   },
-  avatarInitial: { fontSize: 20, fontWeight: "800", color: colors.primary, fontFamily: "Manrope" },
+  avatarInitial: { fontSize: 20, fontWeight: "800", color: colors.primary, fontFamily: typography.headlineMd.fontFamily },
   patientName: { color: "#0f172a", fontWeight: "700", fontSize: 15 },
   patientEmail: { color: "#64748b", fontSize: 12 },
   assignmentCount: { color: "#94a3b8", fontSize: 11 },
