@@ -190,6 +190,45 @@ export const seedMockData = async () => {
     batch.set(planRef, planData);
     opCount++;
 
+    // --- Create additional mock patients ---
+    const additionalPatients = [
+      { uid: "mock-patient-1", name: "Nguyen Van A", email: "nguyenvana@demo.com" },
+      { uid: "mock-patient-2", name: "Tran Thi B", email: "tranthib@demo.com" },
+      { uid: "mock-patient-3", name: "Le Van C", email: "levanc@demo.com" }
+    ];
+
+    for (const ap of additionalPatients) {
+      const apRef = doc(collection(db, "users"), ap.uid);
+      batch.set(apRef, {
+        uid: ap.uid,
+        email: ap.email,
+        displayName: ap.name,
+        role: "patient",
+        dateOfBirth: "1990-01-01",
+        phone: "0123456789",
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+      opCount++;
+
+      const apPlanId = `plan-${ap.uid}`;
+      const apPlanRef = doc(collection(db, "treatment_plans"), apPlanId);
+      batch.set(apPlanRef, {
+        id: apPlanId,
+        patientId: ap.uid,
+        doctorId: doctorId,
+        condition: "General Rehab",
+        currentPhase: 1,
+        currentWeek: 1,
+        totalWeeks: 8,
+        status: "on-track",
+        progress: 10,
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+      opCount++;
+    }
+
     // --- Create Multiple Assignments ---
     console.log("Creating assignments...");
     const numAssignments = 5;
