@@ -132,6 +132,56 @@ export const seedMockData = async () => {
         color: "#FFB533",
         category: "Lower Body",
       },
+      {
+        id: "ex-6",
+        name: "Side Plank",
+        sets: 3,
+        reps: 1,
+        duration: "1 min",
+        icon: "accessibility-outline",
+        color: "#8B5CF6",
+        category: "Core",
+      },
+      {
+        id: "ex-7",
+        name: "Calf Raises",
+        sets: 3,
+        reps: 15,
+        duration: "4 mins",
+        icon: "walk-outline",
+        color: "#EC4899",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-8",
+        name: "Hip Abduction",
+        sets: 3,
+        reps: 12,
+        duration: "5 mins",
+        icon: "body-outline",
+        color: "#14B8A6",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-9",
+        name: "Wall Slides",
+        sets: 3,
+        reps: 10,
+        duration: "5 mins",
+        icon: "fitness-outline",
+        color: "#F97316",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-10",
+        name: "Step-Ups",
+        sets: 3,
+        reps: 10,
+        duration: "6 mins",
+        icon: "walk-outline",
+        color: "#06B6D4",
+        category: "Lower Body",
+      },
     ];
 
     // --- Create Exercises (Global) ---
@@ -145,22 +195,54 @@ export const seedMockData = async () => {
 
     // --- Create Exercise Templates (Doctor's Library) ---
     console.log("Creating exercise templates...");
-    const templateNames = ["Phục hồi dây chằng (ACL) - Cơ bản", "Giãn cơ vai gáy", "Phục hồi sụn chêm - Tuần 1-2"];
-    for (let t = 0; t < templateNames.length; t++) {
+    const templates = [
+      { 
+        name: "Phục hồi dây chằng (ACL) - Cơ bản", 
+        exercises: [exercises[0], exercises[1], exercises[7]] 
+      },
+      { 
+        name: "Giãn cơ vai gáy", 
+        exercises: [exercises[2], exercises[8]] 
+      },
+      { 
+        name: "Phục hồi sụn chêm - Tuần 1-2", 
+        exercises: [exercises[0], exercises[1], exercises[6]] 
+      },
+      { 
+        name: "Tăng cường cơ tứ đầu đùi", 
+        exercises: [exercises[0], exercises[1], exercises[4], exercises[9]] 
+      },
+      { 
+        name: "Phục hồi chức năng khớp gối - Nâng cao", 
+        exercises: [exercises[0], exercises[1], exercises[4], exercises[6], exercises[9]] 
+      },
+      { 
+        name: "Bài tập Core cho người cao tuổi", 
+        exercises: [exercises[3], exercises[5], exercises[4]] 
+      },
+      { 
+        name: "Phục hồi sau phẫu thuật đầu gối", 
+        exercises: [exercises[0], exercises[1], exercises[7], exercises[6]] 
+      },
+      { 
+        name: "Tăng cường sức mạnh vai", 
+        exercises: [exercises[2], exercises[8], exercises[3]] 
+      },
+      { 
+        name: "Bài tập cân bằng và thăng bằng", 
+        exercises: [exercises[3], exercises[5], exercises[9]] 
+      },
+    ];
+    for (let t = 0; t < templates.length; t++) {
       const templateId = `template-${doctorId}-${t}`;
       const templateRef = doc(collection(db, "exercise_templates"), templateId);
-      
-      // Pick 2-3 random exercises for the template
-      const selectedExercises = exercises
-        .sort(() => 0.5 - Math.random())
-        .slice(0, Math.floor(Math.random() * 2) + 2);
 
       const templateData = {
         id: templateId,
         doctorId: doctorId,
-        name: templateNames[t],
-        exercises: selectedExercises,
-        totalDuration: `${selectedExercises.length * 5} min`,
+        name: templates[t].name,
+        exercises: templates[t].exercises,
+        totalDuration: `${templates[t].exercises.length * 5} min`,
         patientCount: Math.floor(Math.random() * 5) + 1,
         createdAt: Timestamp.fromDate(new Date()),
         updatedAt: Timestamp.fromDate(new Date()),
