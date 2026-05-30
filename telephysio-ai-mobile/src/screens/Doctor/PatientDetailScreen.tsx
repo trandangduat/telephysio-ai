@@ -5,7 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
+import { LineChart } from "react-native-chart-kit";
+const screenWidth = Dimensions.get("window").width;
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -233,15 +236,45 @@ export const PatientDetailScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Chart Placeholder */}
+          {/* Chart */}
           <View style={styles.chartArea}>
-            <View style={styles.chartLine} />
-            <View style={styles.chartLabels}>
-              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.weekLabel', { num: 1 })}</AppText>
-              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.weekLabel', { num: 3 })}</AppText>
-              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.weekLabel', { num: 5 })}</AppText>
-              <AppText style={styles.chartLabelText}>{t('doctor.patientDetail.nowLabel')}</AppText>
-            </View>
+            <LineChart
+              data={{
+                labels: [t('doctor.patientDetail.weekLabel', { num: 1 }), t('doctor.patientDetail.weekLabel', { num: 3 }), t('doctor.patientDetail.weekLabel', { num: 5 }), t('doctor.patientDetail.nowLabel')],
+                datasets: [
+                  {
+                    data: activeChart === "ROM" 
+                      ? [30, 45, 60, progress?.romFlexion || 75] 
+                      : activeChart === "Pain" 
+                        ? [6, 4, 3, progress?.averagePain || 1] 
+                        : [50, 65, 80, progress?.movementScore || 90]
+                  }
+                ]
+              }}
+              width={screenWidth - spacing.gutter * 2 - spacing.lg * 2} // screen width minus padding
+              height={140}
+              chartConfig={{
+                backgroundColor: "#fff",
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`,
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: "4",
+                  strokeWidth: "2",
+                  stroke: colors.primary
+                }
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
+                borderRadius: 16
+              }}
+            />
           </View>
         </View>
 
@@ -361,25 +394,7 @@ const styles = StyleSheet.create({
   toggleBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   toggleBtnActive: { backgroundColor: colors.primary },
 
-  chartArea: { height: 140, justifyContent: "flex-end" },
-  chartLine: {
-    height: "100%",
-    borderBottomWidth: 2,
-    borderLeftWidth: 2,
-    borderColor: "#cbd5e1",
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-    borderRadius: 4,
-  },
-  chartLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingLeft: 10,
-  },
-  chartLabelText: { color: "#94a3b8", fontSize: 10 },
-
+  chartArea: { height: 160, justifyContent: "center", alignItems: "center", overflow: "hidden" },
   actionsRow: { flexDirection: "row", gap: spacing.md },
   actionPrimary: {
     flex: 1,
