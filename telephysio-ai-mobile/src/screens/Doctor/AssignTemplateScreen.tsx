@@ -45,6 +45,17 @@ const getAssignmentDate = (assignment: Assignment) =>
 const getSessionDate = (session: Session) =>
   (session.date as any)?.toDate?.() ?? new Date();
 
+const addDays = (date: Date, days: number) => {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+};
+
+const getDayKey = (date: Date) => {
+  const local = startOfDay(date);
+  return `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, "0")}-${String(local.getDate()).padStart(2, "0")}`;
+};
+
 export const AssignTemplateScreen: React.FC = () => {
   const navigation = useNavigation<AssignTemplateNavProp>();
   const route = useRoute<AssignTemplateRouteProp>();
@@ -244,51 +255,96 @@ export const AssignTemplateScreen: React.FC = () => {
       return startOfDay(d).getTime() === startOfDay(selectedDate).getTime();
     });
 
+    // Generate slider days around selected date
+    const sliderDays = Array.from({ length: 21 }, (_, index) => {
+      const date = addDays(selectedDate, index - 7);
+      const key = getDayKey(date);
+      const count = patientSessions.filter(s => getDayKey(getSessionDate(s)) === key).length;
+      return { key, date, count };
+    });
+
     return (
-      <ScrollView style={styles.dayViewScroll} contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={styles.dayHeader}>
-           <AppText variant="headlineMd" style={styles.dayHeaderTitle}>
-             {selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-           </AppText>
+      <View style={{ flex: 1 }}>
+        {/* Horizontal day slider */}
+        <View style={styles.daySliderContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daySlider}>
+            {sliderDays.map((day, index) => {
+              const active = getDayKey(selectedDate) === day.key;
+              const hasSessions = day.count > 0;
+              return (
+                <TouchableOpacity
+                  key={`${day.key}-${index}`}
+                  style={[styles.sliderDayNode, active && styles.sliderDayNodeActive]}
+                  onPress={() => setSelectedDate(startOfDay(day.date))}
+                  activeOpacity={0.85}
+                >
+                  <AppText variant="labelSm" style={[styles.sliderDayWeekday, active && styles.sliderDayTextActive]}>
+                    {day.date.toLocaleDateString(undefined, { weekday: "short" })}
+                  </AppText>
+                  <AppText variant="headlineMd" style={[styles.sliderDayNumber, active && styles.sliderDayTextActive]}>
+                    {day.date.getDate()}
+                  </AppText>
+                  {hasSessions && <View style={[styles.sliderSessionDot, active && styles.sliderSessionDotActive]} />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
-        <View style={styles.sessionsList}>
-          {sessionsToday.length === 0 ? (
-            <AppText variant="bodyMd" style={styles.noSessionsText}>
-              No sessions for this date.
-            </AppText>
-          ) : (
-            sessionsToday.map((session, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.sessionCard}
-                onPress={() => navigation.navigate("DoctorSessionDetail", { session, patientName })}
-              >
-                <View style={styles.sessionCardHeader}>
-                  <View style={styles.sessionIconBox}>
-                    <Ionicons name="fitness-outline" size={24} color={colors.primary} />
-                  </View>
-                  <View style={styles.sessionInfo}>
-                    <AppText variant="labelMd" style={styles.sessionTitle}>Session Completed</AppText>
-                    <AppText variant="bodySm" style={styles.sessionMeta}>
-                      {session.exercisesCompleted} exercises • {session.durationSeconds ? Math.floor(session.durationSeconds / 60) : 0} min
-                    </AppText>
-                  </View>
-                </View>
-                <View style={styles.sessionStats}>
-                  <View style={styles.statItem}>
-                    <AppText variant="labelMd" style={{ color: colors.primary }}>{session.accuracyScore}%</AppText>
-                    <AppText variant="labelSm" style={{ color: "#64748b" }}>Accuracy</AppText>
-                  </View>
-                  <View style={styles.statItem}>
-                    <AppText variant="labelMd" style={{ color: "#f59e0b" }}>{session.averagePain}/10</AppText>
-                    <AppText variant="labelSm" style={{ color: "#64748b" }}>Pain</AppText>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-      </ScrollView>
+
+        {/* Sessions list */}
+        <ScrollView style={styles.dayViewScroll} contentContainerStyle={{ paddingBottom: 100 }}>
+          <View style={styles.sessionsList}>
+            {sessionsToday.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-outline" size={48} color="#cbd5e1" />
+                <AppText variant="bodyMd" style={{ color: "#64748b", marginTop: 12 }}>
+                  No sessions for this date.
+                </AppText>
+              </View>
+            ) : (
+              sessionsToday.map((session, i) => {
+                const date = getSessionDate(session);
+                const completed = session.completedExercises || session.exercisesCompleted || 0;
+                const accuracy = Math.round(session.accuracyScore ?? session.accuracy ?? 0);
+                const duration = session.totalDuration || `${session.durationSeconds ? Math.floor(session.durationSeconds / 60) : 0} min`;
+
+                return (
+                  <TouchableOpacity
+                    key={session.id || i}
+                    style={styles.sessionCard}
+                    onPress={() => navigation.navigate("DoctorSessionDetail", { session, patientName })}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.sessionIconWrapper}>
+                      <Ionicons name="pulse-outline" size={24} color={colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <AppText variant="headlineMd" style={styles.sessionTitle}>
+                        {date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                      </AppText>
+                      <AppText variant="bodySm" style={styles.sessionTime}>
+                        {date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                      </AppText>
+                      <View style={styles.sessionStatsRow}>
+                        <View style={styles.statBadge}>
+                          <AppText variant="labelMd" style={styles.statBadgeText}>{completed} exercises</AppText>
+                        </View>
+                        <View style={[styles.statBadge, { backgroundColor: "#e0f2fe" }]}>
+                          <AppText variant="labelMd" style={[styles.statBadgeText, { color: colors.primary }]}>{accuracy}% accuracy</AppText>
+                        </View>
+                        <View style={styles.statBadge}>
+                          <AppText variant="labelMd" style={styles.statBadgeText}>{duration}</AppText>
+                        </View>
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </View>
+        </ScrollView>
+      </View>
     );
   };
 
@@ -478,8 +534,8 @@ export const AssignTemplateScreen: React.FC = () => {
                   );
                })}
                {filteredTemplates.length === 0 && (
-                  <View style={styles.emptyState}>
-                     <AppText style={styles.emptyStateText}>{t('doctor.assignTemplate.noTemplates')}</AppText>
+                  <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+                     <AppText style={{ color: colors.outline, fontSize: 16 }}>{t('doctor.assignTemplate.noTemplates')}</AppText>
                   </View>
                )}
             </ScrollView>
@@ -563,18 +619,39 @@ const styles = StyleSheet.create({
   moreText: { fontSize: 9, color: colors.outline, marginTop: 1 },
 
   dayViewScroll: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
-  dayHeader: { padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.surfaceContainerHighest },
-  dayHeaderTitle: { color: colors.onSurface, fontSize: 18, fontWeight: '600' },
+  daySliderContainer: { backgroundColor: colors.surfaceContainerLowest, paddingVertical: spacing.sm },
+  daySlider: { paddingHorizontal: spacing.gutter, gap: 6 },
+  sliderDayNode: { alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, minWidth: 48 },
+  sliderDayNodeActive: { backgroundColor: colors.primary },
+  sliderDayWeekday: { color: '#64748b', fontSize: 11, fontWeight: '500' },
+  sliderDayNumber: { color: '#0f172a', fontSize: 18, fontWeight: '700', marginTop: 2 },
+  sliderDayTextActive: { color: '#fff' },
+  sliderSessionDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#cbd5e1', marginTop: 4 },
+  sliderSessionDotActive: { backgroundColor: '#fff' },
+
   sessionsList: { padding: spacing.md, gap: spacing.md },
-  noSessionsText: { textAlign: 'center', color: '#64748b', marginTop: spacing.xl },
-  sessionCard: { backgroundColor: '#fff', borderRadius: 16, padding: spacing.md, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  sessionCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: spacing.md },
-  sessionIconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
-  sessionInfo: { flex: 1 },
-  sessionTitle: { color: '#0f172a', fontWeight: '700', fontSize: 16 },
-  sessionMeta: { color: '#64748b', marginTop: 2 },
-  sessionStats: { flexDirection: 'row', backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, gap: 16 },
-  statItem: { flex: 1, alignItems: 'center', gap: 2 },
+  emptyState: { alignItems: 'center', paddingVertical: 48 },
+  sessionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sessionIconWrapper: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
+  sessionTitle: { color: '#0f172a', fontWeight: '700', fontSize: 15 },
+  sessionTime: { color: '#64748b', fontSize: 12, marginTop: 2 },
+  sessionStatsRow: { flexDirection: 'row', gap: 6, marginTop: 8 },
+  statBadge: { backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100 },
+  statBadgeText: { color: '#15803d', fontSize: 10, fontWeight: '600' },
 
 
   fab: {
@@ -708,6 +785,4 @@ const styles = StyleSheet.create({
   searchResultTextContainer: { flex: 1 },
   searchResultName: { fontSize: 16, fontWeight: '500', color: colors.onSurface, marginBottom: 4 },
   searchResultMeta: { fontSize: 13, color: colors.outline },
-  emptyState: { padding: spacing.xl, alignItems: 'center' },
-  emptyStateText: { color: colors.outline, fontSize: 16 },
 });
