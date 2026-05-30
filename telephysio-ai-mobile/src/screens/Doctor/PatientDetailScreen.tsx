@@ -233,22 +233,24 @@ export const PatientDetailScreen: React.FC = () => {
           </View>
 
           {/* Chart */}
-          <View style={styles.chartArea}>
+          <View style={styles.chartContainer}>
             <LineChart
               data={{
-                labels: [t('doctor.patientDetail.weekLabel', { num: 1 }), t('doctor.patientDetail.weekLabel', { num: 3 }), t('doctor.patientDetail.weekLabel', { num: 5 }), t('doctor.patientDetail.nowLabel')],
+                labels: ["W1", "W3", "W5", "Now"],
                 datasets: [
                   {
                     data: activeChart === "ROM" 
                       ? [30, 45, 60, progress?.romFlexion || 75] 
                       : activeChart === "Pain" 
                         ? [6, 4, 3, avgPain || 1] 
-                        : [50, 65, 80, progress?.movementScore || 90]
+                        : [50, 65, 80, progress?.movementScore || 90],
+                    color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
+                    strokeWidth: 3,
                   }
                 ]
               }}
-              width={screenWidth - spacing.gutter * 2 - spacing.lg * 2} // screen width minus padding
-              height={140}
+              width={screenWidth - 64}
+              height={180}
               chartConfig={{
                 backgroundColor: "#fff",
                 backgroundGradientFrom: "#fff",
@@ -256,19 +258,30 @@ export const PatientDetailScreen: React.FC = () => {
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(100, 116, 139, ${opacity})`,
-                style: {
-                  borderRadius: 16
+                propsForBackgroundLines: {
+                  strokeDasharray: "5,5",
+                  stroke: "#e2e8f0",
+                  strokeWidth: 1,
                 },
                 propsForDots: {
-                  r: "4",
+                  r: "5",
                   strokeWidth: "2",
-                  stroke: colors.primary
-                }
+                  stroke: "#0f766e",
+                  fill: "#fff",
+                },
+                propsForLabels: {
+                  fontSize: 11,
+                  fontWeight: "500",
+                },
               }}
               bezier
+              withInnerLines={true}
+              withOuterLines={false}
+              withVerticalLines={false}
+              withHorizontalLines={true}
+              fromZero={activeChart === "Pain"}
               style={{
-                marginVertical: 8,
-                borderRadius: 16
+                borderRadius: 0,
               }}
             />
           </View>
@@ -374,7 +387,11 @@ const styles = StyleSheet.create({
   toggleBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   toggleBtnActive: { backgroundColor: colors.primary },
 
-  chartArea: { height: 160, justifyContent: "center", alignItems: "center", overflow: "hidden" },
+  chartContainer: {
+    marginHorizontal: -spacing.lg,
+    marginBottom: -spacing.lg,
+    marginTop: spacing.sm,
+  },
   actionsRow: { flexDirection: "row", gap: spacing.md },
   actionPrimary: {
     flex: 1,
