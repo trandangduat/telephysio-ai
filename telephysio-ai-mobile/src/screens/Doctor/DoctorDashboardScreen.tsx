@@ -178,9 +178,6 @@ export const DoctorDashboardScreen: React.FC = () => {
         <View style={styles.header}>
           <AppText variant="bodyMd" style={styles.greeting}>{getGreeting()}</AppText>
           <AppText variant="headlineLg" style={styles.doctorName}>{userName}</AppText>
-          <AppText variant="bodySm" style={styles.subtitle}>
-            {t('doctor.dashboard.patientsAssigned', { count: patients.length })}
-          </AppText>
         </View>
 
         {/* Search */}
