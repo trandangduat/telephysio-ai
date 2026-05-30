@@ -234,22 +234,26 @@ export const PatientDetailScreen: React.FC = () => {
 
           {/* Chart */}
           <View style={styles.chartContainer}>
+            {/* Y-axis label */}
+            <AppText variant="labelSm" style={styles.yAxisLabel}>
+              {activeChart === "ROM" ? "Degrees (°)" : activeChart === "Pain" ? "Pain Level" : "Score (%)"}
+            </AppText>
             <LineChart
               data={{
-                labels: ["W1", "W3", "W5", "Now"],
+                labels: ["W1", "W2", "W3", "W4", "W5", "Now"],
                 datasets: [
                   {
                     data: activeChart === "ROM" 
-                      ? [30, 45, 60, progress?.romFlexion || 75] 
+                      ? [30, 38, 45, 52, 60, progress?.romFlexion || 75] 
                       : activeChart === "Pain" 
-                        ? [6, 4, 3, avgPain || 1] 
-                        : [50, 65, 80, progress?.movementScore || 90],
+                        ? [6, 5, 4, 3, 2, avgPain || 1] 
+                        : [50, 58, 65, 72, 80, progress?.movementScore || 90],
                     color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
                     strokeWidth: 3,
                   }
                 ]
               }}
-              width={screenWidth - 64}
+              width={screenWidth - 32}
               height={180}
               chartConfig={{
                 backgroundColor: "#fff",
@@ -280,10 +284,12 @@ export const PatientDetailScreen: React.FC = () => {
               withVerticalLines={false}
               withHorizontalLines={true}
               fromZero={activeChart === "Pain"}
-              style={{
-                borderRadius: 0,
-              }}
+              style={styles.chart}
             />
+            {/* X-axis label */}
+            <AppText variant="labelSm" style={styles.xAxisLabel}>
+              Treatment Timeline (Weeks)
+            </AppText>
           </View>
         </View>
 
@@ -391,6 +397,25 @@ const styles = StyleSheet.create({
     marginHorizontal: -spacing.lg,
     marginBottom: -spacing.lg,
     marginTop: spacing.sm,
+    alignItems: "center",
+  },
+  chart: {
+    borderRadius: 0,
+  },
+  yAxisLabel: {
+    color: "#64748b",
+    fontSize: 10,
+    fontWeight: "600",
+    alignSelf: "flex-start",
+    marginLeft: spacing.lg + 8,
+    marginBottom: 4,
+  },
+  xAxisLabel: {
+    color: "#64748b",
+    fontSize: 10,
+    fontWeight: "600",
+    marginTop: 4,
+    marginBottom: spacing.md,
   },
   actionsRow: { flexDirection: "row", gap: spacing.md },
   actionPrimary: {

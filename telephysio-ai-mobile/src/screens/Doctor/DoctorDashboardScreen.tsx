@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ import {
   getUser,
   getDoctorAssignments,
 } from "../../services/firebase";
+import { seedMockData } from "../../services/firebase/seedService";
 import type { UserProfile, Assignment } from "../../services/firebase/types";
 import { NotificationBell } from "../../components/NotificationBell";
 
@@ -50,6 +52,36 @@ export const DoctorDashboardScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [patients, setPatients] = useState<PatientCard[]>([]);
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeed = async () => {
+    Alert.alert(
+      "Seed Demo Data",
+      "This will add demo patients, exercises, templates, and sessions. Continue?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Seed",
+          onPress: async () => {
+            setSeeding(true);
+            try {
+              const result = await seedMockData();
+              if (result) {
+                Alert.alert("Success", "Demo data seeded successfully! Pull to refresh.");
+                loadData();
+              } else {
+                Alert.alert("Error", "Failed to seed data. Check console for details.");
+              }
+            } catch (e) {
+              Alert.alert("Error", "Failed to seed data.");
+            } finally {
+              setSeeding(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const loadData = useCallback(async () => {
     if (!uid) { setLoading(false); return; }
@@ -246,8 +278,26 @@ export const DoctorDashboardScreen: React.FC = () => {
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </View>
             </TouchableOpacity>
-          ))
+          )          )
         )}
+
+        {/* Seed Demo Data Button */}
+        <TouchableOpacity
+          style={styles.seedBtn}
+          onPress={handleSeed}
+          disabled={seeding}
+        >
+          {seeding ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+              <AppText variant="labelMd" style={{ color: "#fff", fontWeight: "700" }}>
+                Seed Demo Data
+              </AppText>
+            </>
+          )}
+        </TouchableOpacity>
       </ScrollView>
 
     </SafeAreaView>
@@ -308,4 +358,8 @@ const styles = StyleSheet.create({
   cardRight: { alignItems: "flex-end", gap: 8 },
   statusPill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
+  seedBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    backgroundColor: "#6366f1", paddingVertical: 14, borderRadius: 16, marginTop: spacing.md,
+  },
 });
