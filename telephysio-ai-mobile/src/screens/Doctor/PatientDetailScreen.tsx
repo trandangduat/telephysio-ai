@@ -262,7 +262,7 @@ export const PatientDetailScreen: React.FC = () => {
                   datasets: [{ data, strokeWidth: 3 }],
                 };
               })()}
-              width={screenWidth - 32}
+              width={screenWidth + spacing.lg * 2}
               height={180}
               chartConfig={{
                 backgroundColor: "#fff",
@@ -270,7 +270,7 @@ export const PatientDetailScreen: React.FC = () => {
                 backgroundGradientTo: "#fff",
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
-                labelColor: () => "#1e293b",
+                labelColor: () => "rgba(100, 116, 139, 0.5)",
                 propsForBackgroundLines: {
                   stroke: "#f1f5f9",
                   strokeWidth: 1,
@@ -282,10 +282,10 @@ export const PatientDetailScreen: React.FC = () => {
                   fill: "#fff",
                 },
                 propsForLabels: {
-                  fontSize: 12,
-                  fontWeight: "600",
-                  fontFamily: "Inter_600SemiBold",
-                  fill: "#1e293b",
+                  fontSize: 10,
+                  fontWeight: "500",
+                  fontFamily: "Inter_500Medium",
+                  fill: "rgba(100, 116, 139, 0.5)",
                 },
               }}
               bezier={false}
