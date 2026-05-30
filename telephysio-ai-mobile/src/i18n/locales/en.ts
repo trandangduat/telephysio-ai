@@ -240,6 +240,7 @@ export default {
       streak: 'Streak',
       painAvg: 'Pain Avg',
       recoveryProgress: 'Recovery Progress',
+      noChartData: 'No actual data available for this metric yet.',
       weekLabel: 'Week {{num}}',
       nowLabel: 'Now',
       assign: 'Assign',

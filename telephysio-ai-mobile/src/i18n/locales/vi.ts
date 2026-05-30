@@ -240,6 +240,7 @@ export default {
       streak: 'Chuỗi',
       painAvg: 'Đau (TB)',
       recoveryProgress: 'Tiến Độ Phục Hồi',
+      noChartData: 'Chưa có dữ liệu thực tế cho chỉ số này.',
       weekLabel: 'Tuần {{num}}',
       nowLabel: 'Hiện tại',
       assign: 'Giao Bài',
