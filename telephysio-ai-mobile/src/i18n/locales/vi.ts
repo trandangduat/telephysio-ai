@@ -357,6 +357,9 @@ export default {
       addTitlePlaceholder: 'Thêm tiêu đề',
       saveBtn: 'Lưu',
       assignmentSuccess: 'Đã giao lộ trình cho bệnh nhân thành công.',
+      completedBadge: 'Đã xong',
+      scheduledBadge: 'Đã lên lịch',
+      viewSessionDetail: 'Xem chi tiết buổi tập',
     }
   },
 

@@ -42,8 +42,17 @@ const startOfDay = (date: Date) => {
 const getAssignmentDate = (assignment: Assignment) =>
   ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ?? null;
 
-const getSessionDate = (session: Session) =>
-  (session.date as any)?.toDate?.() ?? new Date();
+const getSessionTime = (session: Session) =>
+  (session.date as any)?.toMillis?.() ?? 0;
+
+const getLatestSessionForAssignment = (
+  assignmentId: string,
+  sessions: Session[],
+) => {
+  return sessions
+    .filter(session => session.assignmentId === assignmentId)
+    .sort((a, b) => getSessionTime(b) - getSessionTime(a))[0] ?? null;
+};
 
 export const AssignTemplateScreen: React.FC = () => {
   const navigation = useNavigation<AssignTemplateNavProp>();
@@ -244,10 +253,6 @@ export const AssignTemplateScreen: React.FC = () => {
       const d = getAssignmentDate(a);
       return d && startOfDay(d).getTime() === startOfDay(selectedDate).getTime();
     });
-    const sessionsToday = patientSessions.filter(s => {
-      const d = getSessionDate(s);
-      return startOfDay(d).getTime() === startOfDay(selectedDate).getTime();
-    });
 
     return (
       <ScrollView style={styles.dayViewScroll} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -263,10 +268,6 @@ export const AssignTemplateScreen: React.FC = () => {
               const d = getAssignmentDate(a);
               return d && d.getHours() === hour;
             });
-            const sessionsInHour = sessionsToday.filter(s => {
-              const d = getSessionDate(s);
-              return d && d.getHours() === hour;
-            });
 
             return (
               <View key={hour} style={styles.hourRow}>
@@ -275,32 +276,84 @@ export const AssignTemplateScreen: React.FC = () => {
                 </View>
                 <View style={styles.hourContent}>
                   <View style={styles.hourDivider} />
-                  {assignmentsInHour.map((assignment, i) => (
-                    <View key={`a-${i}`} style={styles.assignmentBlockDay}>
-                      <AppText variant="labelMd" style={styles.assignmentBlockTextDay}>{assignment.templateName}</AppText>
-                      <AppText variant="labelSm" style={styles.assignmentBlockTimeDay}>{assignment.totalDuration}</AppText>
-                    </View>
-                  ))}
-                  {sessionsInHour.map((session, i) => (
-                    <TouchableOpacity
-                      key={`s-${i}`}
-                      style={styles.sessionBlockDay}
-                      onPress={() => navigation.navigate("DoctorSessionDetail", { session, patientName })}
-                      activeOpacity={0.85}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="checkmark-circle" size={16} color="#15803d" />
-                        <AppText variant="labelMd" style={styles.sessionBlockTextDay}>
-                          Session completed
-                        </AppText>
+                  {assignmentsInHour.map((assignment) => {
+                    const completedSession = getLatestSessionForAssignment(
+                      assignment.id,
+                      patientSessions,
+                    );
+                    const isCompleted = !!completedSession || assignment.status === 'completed';
+
+                    return (
+                      <View
+                        key={assignment.id}
+                        style={[
+                          styles.assignmentBlockDay,
+                          isCompleted && styles.assignmentBlockDayCompleted,
+                        ]}
+                      >
+                        <View style={styles.assignmentBlockHeaderDay}>
+                          <View style={styles.assignmentTitleWrapDay}>
+                            <AppText
+                              variant="labelMd"
+                              style={[
+                                styles.assignmentBlockTextDay,
+                                isCompleted && styles.assignmentBlockTextDayCompleted,
+                              ]}
+                            >
+                              {assignment.templateName}
+                            </AppText>
+                            <AppText
+                              variant="labelSm"
+                              style={[
+                                styles.assignmentBlockTimeDay,
+                                isCompleted && styles.assignmentBlockTimeDayCompleted,
+                              ]}
+                            >
+                              {assignment.totalDuration}
+                              {completedSession
+                                ? ` • ${completedSession.exercisesCompleted || 0} exercises • ${Math.round(completedSession.accuracyScore ?? completedSession.accuracy ?? 0)}% accuracy`
+                                : ''}
+                            </AppText>
+                          </View>
+                          <View
+                            style={[
+                              styles.assignmentStatusBadgeDay,
+                              isCompleted && styles.assignmentStatusBadgeCompletedDay,
+                            ]}
+                          >
+                            <Ionicons
+                              name={isCompleted ? 'checkmark-circle' : 'time-outline'}
+                              size={14}
+                              color={isCompleted ? '#15803d' : colors.primary}
+                            />
+                            <AppText
+                              style={[
+                                styles.assignmentStatusTextDay,
+                                isCompleted && styles.assignmentStatusTextCompletedDay,
+                              ]}
+                            >
+                              {isCompleted
+                                ? t('doctor.assignTemplate.completedBadge')
+                                : t('doctor.assignTemplate.scheduledBadge')}
+                            </AppText>
+                          </View>
+                        </View>
+
+                        {completedSession && (
+                          <TouchableOpacity
+                            style={styles.viewSessionButtonDay}
+                            onPress={() => navigation.navigate("DoctorSessionDetail", { session: completedSession, patientName })}
+                            activeOpacity={0.85}
+                          >
+                            <Ionicons name="document-text-outline" size={15} color="#15803d" />
+                            <AppText style={styles.viewSessionButtonTextDay}>
+                              {t('doctor.assignTemplate.viewSessionDetail')}
+                            </AppText>
+                          </TouchableOpacity>
+                        )}
                       </View>
-                      <View style={styles.sessionBlockStats}>
-                        <AppText variant="labelSm" style={styles.sessionBlockStatText}>
-                          {session.exercisesCompleted || 0} exercises • {Math.round(session.accuracyScore ?? 0)}% accuracy
-                        </AppText>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
+                    );
+                  })}
                 </View>
               </View>
             );
@@ -599,21 +652,45 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
   },
-  assignmentBlockTextDay: { color: colors.onPrimaryContainer, fontWeight: '600', fontSize: 14 },
-  assignmentBlockTimeDay: { color: colors.onPrimaryContainer, fontSize: 12, opacity: 0.8, marginTop: 4 },
-  sessionBlockDay: {
-    marginTop: 20,
-    marginLeft: 8,
-    marginRight: 16,
+  assignmentBlockDayCompleted: {
     backgroundColor: '#f0fdf4',
-    borderRadius: 8,
-    padding: 8,
-    borderWidth: 1,
     borderColor: '#86efac',
   },
-  sessionBlockTextDay: { color: '#15803d', fontWeight: '600', fontSize: 14 },
-  sessionBlockStats: { marginTop: 4 },
-  sessionBlockStatText: { color: '#15803d', fontSize: 11, opacity: 0.8 },
+  assignmentBlockHeaderDay: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  assignmentTitleWrapDay: { flex: 1 },
+  assignmentBlockTextDay: { color: colors.onPrimaryContainer, fontWeight: '600', fontSize: 14 },
+  assignmentBlockTextDayCompleted: { color: '#14532d' },
+  assignmentBlockTimeDay: { color: colors.onPrimaryContainer, fontSize: 12, opacity: 0.8, marginTop: 4 },
+  assignmentBlockTimeDayCompleted: { color: '#166534' },
+  assignmentStatusBadgeDay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  assignmentStatusBadgeCompletedDay: { backgroundColor: '#dcfce7' },
+  assignmentStatusTextDay: { color: colors.primary, fontSize: 10, fontWeight: '700' },
+  assignmentStatusTextCompletedDay: { color: '#15803d' },
+  viewSessionButtonDay: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#dcfce7',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 10,
+  },
+  viewSessionButtonTextDay: { color: '#15803d', fontSize: 12, fontWeight: '700' },
 
 
   fab: {

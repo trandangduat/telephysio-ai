@@ -357,6 +357,9 @@ export default {
       addTitlePlaceholder: 'Add title',
       saveBtn: 'Save',
       assignmentSuccess: 'Successfully assigned template to patient.',
+      completedBadge: 'Completed',
+      scheduledBadge: 'Scheduled',
+      viewSessionDetail: 'View session details',
     }
   },
 
