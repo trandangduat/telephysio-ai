@@ -227,13 +227,31 @@ export const AssignTemplateScreen: React.FC = () => {
                     <AppText variant="labelMd" style={[styles.calendarDayText, isToday && styles.calendarDayTextToday]}>
                       {date.getDate()}
                     </AppText>
-                    {assignmentsToday.slice(0, 2).map((a, i) => (
-                      <View key={i} style={styles.assignmentBlockMonth}>
-                         <AppText style={styles.assignmentBlockTextMonth} numberOfLines={1}>
-                           {a.templateName}
-                         </AppText>
-                      </View>
-                    ))}
+                    {assignmentsToday.slice(0, 2).map((assignment) => {
+                      const isCompleted =
+                        !!getLatestSessionForAssignment(assignment.id, patientSessions) ||
+                        assignment.status === 'completed';
+
+                      return (
+                        <View
+                          key={assignment.id}
+                          style={[
+                            styles.assignmentBlockMonth,
+                            isCompleted && styles.assignmentBlockMonthCompleted,
+                          ]}
+                        >
+                          <AppText
+                            style={[
+                              styles.assignmentBlockTextMonth,
+                              isCompleted && styles.assignmentBlockTextMonthCompleted,
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {assignment.templateName}
+                          </AppText>
+                        </View>
+                      );
+                    })}
                     {assignmentsToday.length > 2 && (
                        <AppText style={styles.moreText}>{t('doctor.assignTemplate.moreText', { count: assignmentsToday.length - 2 })}</AppText>
                     )}
@@ -630,7 +648,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     width: '94%',
   },
+  assignmentBlockMonthCompleted: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#86efac',
+  },
   assignmentBlockTextMonth: { color: colors.onPrimary, fontSize: 9, textAlign: 'center', fontWeight: '500' },
+  assignmentBlockTextMonthCompleted: { color: '#15803d', fontWeight: '700' },
   moreText: { fontSize: 9, color: colors.outline, marginTop: 1 },
 
   dayViewScroll: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
