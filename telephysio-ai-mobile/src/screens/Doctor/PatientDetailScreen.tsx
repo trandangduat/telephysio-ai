@@ -7,7 +7,15 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from "react-native";
-import Svg, { Circle, Line, Path, Text as SvgText } from "react-native-svg";
+import Svg, {
+  Circle,
+  Defs,
+  Line,
+  LinearGradient,
+  Path,
+  Stop,
+  Text as SvgText,
+} from "react-native-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -307,10 +315,20 @@ const RecoveryLineChart = ({
   const path = coordinates
     .map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`)
     .join(" ");
+  const baselineY = CHART_PADDING.top + plotHeight;
+  const areaPath = coordinates.length > 1
+    ? `${path} L${coordinates[coordinates.length - 1].x},${baselineY} L${coordinates[0].x},${baselineY} Z`
+    : "";
   const ticks = [0, 0.25, 0.5, 0.75, 1];
 
   return (
     <Svg width={width} height={CHART_HEIGHT}>
+      <Defs>
+        <LinearGradient id="recoveryAreaGradient" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0%" stopColor="#0f766e" stopOpacity={0.24} />
+          <Stop offset="100%" stopColor="#0f766e" stopOpacity={0.03} />
+        </LinearGradient>
+      </Defs>
       {ticks.map((tick) => {
         const y = CHART_PADDING.top + plotHeight * tick;
         const value = yMax - (yMax - yMin) * tick;
@@ -354,6 +372,9 @@ const RecoveryLineChart = ({
         stroke="#e2e8f0"
         strokeWidth={1}
       />
+      {coordinates.length > 1 && (
+        <Path d={areaPath} fill="url(#recoveryAreaGradient)" />
+      )}
       {coordinates.length > 1 && (
         <Path
           d={path}
@@ -426,7 +447,7 @@ export const PatientDetailScreen: React.FC = () => {
   const { t } = useTranslation();
   const { width: windowWidth } = useWindowDimensions();
 
-  // Note: the route params should ideally include patientId from DoctorPatientsScreen navigation
+  // Note: the route params should include patientId from DoctorDashboardScreen navigation
   const { patientName, patientId } = route.params;
   const actualPatientId = patientId;
 

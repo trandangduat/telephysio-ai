@@ -3,7 +3,7 @@
  *
  * Tabs:
  *   - Dashboard (patient overview)
- *   - Assignments (exercise protocols)
+ *   - Exercise Templates (exercise protocols)
  */
 
 import React from "react";
@@ -24,7 +24,6 @@ const TAB_ICONS: Record<
 > = {
   Dashboard: { active: "grid", inactive: "grid-outline" },
   Assignments: { active: "clipboard", inactive: "clipboard-outline" },
-  Patients: { active: "person", inactive: "person-outline" },
 };
 
 export const DoctorTabNavigator: React.FC = () => {
@@ -60,7 +59,7 @@ export const DoctorTabNavigator: React.FC = () => {
       <Tab.Screen
         name="Assignments"
         component={DoctorAssignmentsScreen}
-        options={{ title: "Assignments", headerShown: false }}
+        options={{ title: t('doctor.assignments.title'), headerShown: false }}
       />
     </Tab.Navigator>
   );

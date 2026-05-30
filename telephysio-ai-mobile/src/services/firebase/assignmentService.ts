@@ -5,7 +5,7 @@
  *   - WorkoutScreen (mockExercises list → assignment.exercises)
  *   - HomeScreen (CURRENT PROTOCOL card → treatmentPlan)
  *   - DoctorAssignmentsScreen (templates, assign to patient)
- *   - DoctorPatientsScreen (condition, week, phase, progress, status)
+ *   - DoctorDashboardScreen (condition, week, phase, progress, status)
  */
 
 import {
@@ -41,7 +41,7 @@ export async function getActiveTreatmentPlan(patientId: string): Promise<Treatme
 }
 
 // ── Get All Plans for Doctor ────────────────────────
-// Called by DoctorPatientsScreen (patient cards with condition/week/phase/status)
+// Called by DoctorDashboardScreen (patient cards with condition/week/phase/status)
 export async function getDoctorTreatmentPlans(doctorId: string): Promise<TreatmentPlan[]> {
   console.log(`[Service] getDoctorTreatmentPlans called with doctorId: ${doctorId}`);
   const snap = await getDocs(
