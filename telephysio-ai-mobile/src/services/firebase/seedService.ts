@@ -274,9 +274,11 @@ export const seedMockData = async () => {
 
     // --- Create additional mock patients ---
     const additionalPatients = [
-      { uid: "mock-patient-1", name: "Nguyen Van A", email: "nguyenvana@demo.com" },
-      { uid: "mock-patient-2", name: "Tran Thi B", email: "tranthib@demo.com" },
-      { uid: "mock-patient-3", name: "Le Van C", email: "levanc@demo.com" }
+      { uid: "patient-nguyen-van-a", name: "Nguyễn Văn A", email: "nguyenvana@gmail.com", phone: "0901234567", dob: "1985-03-15", condition: "Phục hồi ACL sau phẫu thuật", phase: 2, week: 6, totalWeeks: 16, progress: 38 },
+      { uid: "patient-tran-thi-b", name: "Trần Thị B", email: "tranthib@gmail.com", phone: "0912345678", dob: "1990-07-22", condition: "Đau vai gáy mãn tính", phase: 1, week: 3, totalWeeks: 8, progress: 35 },
+      { uid: "patient-le-van-c", name: "Lê Văn C", email: "levanc@gmail.com", phone: "0923456789", dob: "1978-11-05", condition: "Thoái hóa khớp gối", phase: 3, week: 10, totalWeeks: 20, progress: 50 },
+      { uid: "patient-pham-thi-d", name: "Phạm Thị D", email: "phamthid@gmail.com", phone: "0934567890", dob: "1995-01-30", condition: "Phục hồi sụn chêm", phase: 1, week: 2, totalWeeks: 10, progress: 20 },
+      { uid: "patient-hoang-van-e", name: "Hoàng Văn E", email: "hoangvane@gmail.com", phone: "0945678901", dob: "1982-09-12", condition: "Đau lưng dưới", phase: 2, week: 5, totalWeeks: 12, progress: 42 },
     ];
 
     for (const ap of additionalPatients) {
@@ -286,8 +288,8 @@ export const seedMockData = async () => {
         email: ap.email,
         displayName: ap.name,
         role: "patient",
-        dateOfBirth: "1990-01-01",
-        phone: "0123456789",
+        dateOfBirth: ap.dob,
+        phone: ap.phone,
         createdAt: Timestamp.fromDate(new Date()),
         updatedAt: Timestamp.fromDate(new Date()),
       });
@@ -299,12 +301,12 @@ export const seedMockData = async () => {
         id: apPlanId,
         patientId: ap.uid,
         doctorId: doctorId,
-        condition: "General Rehab",
-        currentPhase: 1,
-        currentWeek: 1,
-        totalWeeks: 8,
+        condition: ap.condition,
+        currentPhase: ap.phase,
+        currentWeek: ap.week,
+        totalWeeks: ap.totalWeeks,
         status: "on-track",
-        progress: 10,
+        progress: ap.progress,
         createdAt: Timestamp.fromDate(new Date()),
         updatedAt: Timestamp.fromDate(new Date()),
       });
