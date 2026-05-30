@@ -234,73 +234,56 @@ export const PatientDetailScreen: React.FC = () => {
 
           {/* Chart */}
           <View style={styles.chartWrapper}>
-            {/* Y-axis label */}
-            <AppText variant="labelSm" style={styles.yAxisLabel}>
-              {activeChart === "ROM" ? "Degrees (°)" : activeChart === "Pain" ? "Pain Level (0-10)" : "Score (%)"}
-            </AppText>
             <LineChart
-              data={{
-                labels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8"],
-                datasets: (() => {
-                  const currentWeek = plan?.currentWeek || 4;
-                  const totalWeeks = plan?.totalWeeks || 8;
-                  const weeksToShow = Math.max(totalWeeks, currentWeek + 2);
-                  const labels = [];
-                  for (let i = 1; i <= weeksToShow && i <= 8; i++) labels.push(`W${i}`);
+              data={(() => {
+                const currentWeek = plan?.currentWeek || 4;
+                const totalWeeks = plan?.totalWeeks || 8;
+                const weeksToShow = Math.min(Math.max(totalWeeks, currentWeek + 2), 8);
 
-                  // Generate actual data up to current week
-                  const actualData = [];
-                  const projectedData = [];
-                  const targetData = [];
+                const labels = [];
+                const actualData = [];
+                const projectedData = [];
 
-                  // ROM baseline progression
-                  const romValues = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85];
-                  const painValues = [7, 6, 5, 4, 3, 2, 2, 1, 1, 1, 0, 0];
-                  const accuracyValues = [45, 52, 58, 65, 70, 75, 80, 85, 88, 90, 92, 95];
+                for (let i = 0; i < weeksToShow; i++) {
+                  labels.push(`W${i + 1}`);
+                }
 
-                  const targetROM = 90; // Target ROM for knee flexion
-                  const targetPain = 0;
-                  const targetAccuracy = 90;
+                // Actual data up to current week
+                const romActual = [30, 38, 45, 52, 60, 68, 75, 80];
+                const painActual = [6, 5, 4, 3, 2, 2, 1, 1];
+                const accuracyActual = [50, 58, 65, 72, 78, 83, 88, 92];
 
-                  for (let i = 0; i < weeksToShow && i < 8; i++) {
-                    const weekNum = i + 1;
-
-                    // Actual data (up to current week)
-                    if (weekNum <= currentWeek) {
-                      if (activeChart === "ROM") {
-                        actualData.push(progress?.romFlexion || romValues[i] || 75);
-                      } else if (activeChart === "Pain") {
-                        actualData.push(avgPain && weekNum === currentWeek ? avgPain : (painValues[i] || 2));
-                      } else {
-                        actualData.push(progress?.movementScore || accuracyValues[i] || 80);
-                      }
-                      projectedData.push(null);
-                    } else {
-                      // Projected data (after current week)
-                      actualData.push(null);
-                      if (activeChart === "ROM") {
-                        projectedData.push(romValues[i] || 75);
-                      } else if (activeChart === "Pain") {
-                        projectedData.push(painValues[i] || 1);
-                      } else {
-                        projectedData.push(accuracyValues[i] || 85);
-                      }
-                    }
-
-                    // Target line (constant)
+                for (let i = 0; i < weeksToShow; i++) {
+                  const weekNum = i + 1;
+                  if (weekNum <= currentWeek) {
+                    // Actual data
                     if (activeChart === "ROM") {
-                      targetData.push(targetROM);
+                      actualData.push(progress?.romFlexion && weekNum === currentWeek ? progress.romFlexion : romActual[i]);
                     } else if (activeChart === "Pain") {
-                      targetData.push(targetPain);
+                      actualData.push(avgPain && weekNum === currentWeek ? avgPain : painActual[i]);
                     } else {
-                      targetData.push(targetAccuracy);
+                      actualData.push(progress?.movementScore && weekNum === currentWeek ? progress.movementScore : accuracyActual[i]);
+                    }
+                    projectedData.push(null);
+                  } else {
+                    // Projected (dashed feel via lighter color)
+                    actualData.push(null);
+                    if (activeChart === "ROM") {
+                      projectedData.push(romActual[i] || 75);
+                    } else if (activeChart === "Pain") {
+                      projectedData.push(painActual[i] || 1);
+                    } else {
+                      projectedData.push(accuracyActual[i] || 90);
                     }
                   }
+                }
 
-                  return [
+                return {
+                  labels,
+                  datasets: [
                     {
-                      data: targetData,
-                      color: (opacity = 1) => `rgba(220, 38, 38, ${opacity * 0.3})`,
+                      data: projectedData,
+                      color: (opacity = 1) => `rgba(15, 118, 110, ${opacity * 0.25})`,
                       strokeWidth: 2,
                     },
                     {
@@ -308,91 +291,56 @@ export const PatientDetailScreen: React.FC = () => {
                       color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
                       strokeWidth: 3,
                     },
-                    {
-                      data: projectedData,
-                      color: (opacity = 1) => `rgba(15, 118, 110, ${opacity * 0.3})`,
-                      strokeWidth: 2,
-                    },
-                  ];
-                })(),
-              }}
-              width={screenWidth - 16}
-              height={200}
+                  ],
+                };
+              })()}
+              width={screenWidth - 32}
+              height={180}
               chartConfig={{
                 backgroundColor: "#fff",
                 backgroundGradientFrom: "#fff",
                 backgroundGradientTo: "#fff",
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(30, 41, 59, ${opacity})`,
+                labelColor: () => "#334155",
                 propsForBackgroundLines: {
-                  strokeDasharray: "5,5",
-                  stroke: "#cbd5e1",
+                  stroke: "#f1f5f9",
                   strokeWidth: 1,
                 },
                 propsForDots: {
-                  r: "5",
+                  r: "4",
                   strokeWidth: "2",
                   stroke: "#0f766e",
                   fill: "#fff",
                 },
                 propsForLabels: {
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: "600",
-                  fill: "#1e293b",
+                  fill: "#334155",
                 },
               }}
               bezier={false}
               withInnerLines={true}
-              withOuterLines={true}
+              withOuterLines={false}
               withVerticalLines={false}
               withHorizontalLines={true}
-              fromZero={true}
+              fromZero={false}
               withDots={true}
               style={styles.chart}
-              renderDotContent={({ x, y, index }) => {
-                // Only show dots for actual data (not projected or target)
-                const currentWeek = plan?.currentWeek || 4;
-                if (index < currentWeek) {
-                  return (
-                    <View
-                      key={index}
-                      style={{
-                        position: 'absolute',
-                        top: y - 5,
-                        left: x - 5,
-                        width: 10,
-                        height: 10,
-                        borderRadius: 5,
-                        backgroundColor: '#0f766e',
-                        borderWidth: 2,
-                        borderColor: '#fff',
-                      }}
-                    />
-                  );
-                }
-                return null;
-              }}
             />
             {/* Legend */}
             <View style={styles.chartLegend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendLine, { backgroundColor: '#0f766e' }]} />
-                <AppText variant="labelSm" style={styles.legendText}>Actual</AppText>
+                <View style={[styles.legendDot, { backgroundColor: "#0f766e" }]} />
+                <AppText variant="labelSm" style={styles.legendText}>
+                  Actual (W1-W{plan?.currentWeek || 4})
+                </AppText>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendLine, { backgroundColor: 'rgba(15, 118, 110, 0.3)' }]} />
+                <View style={[styles.legendDot, { backgroundColor: "rgba(15,118,110,0.25)" }]} />
                 <AppText variant="labelSm" style={styles.legendText}>Projected</AppText>
               </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendLine, { backgroundColor: 'rgba(220, 38, 38, 0.3)', borderBottomWidth: 1, borderBottomColor: 'rgba(220, 38, 38, 0.3)', borderStyle: 'dashed' }]} />
-                <AppText variant="labelSm" style={styles.legendText}>Target</AppText>
-              </View>
             </View>
-            {/* X-axis label */}
-            <AppText variant="labelSm" style={styles.xAxisLabel}>
-              Treatment Timeline (Weeks)
-            </AppText>
           </View>
         </View>
 
@@ -507,36 +455,21 @@ const styles = StyleSheet.create({
   chart: {
     borderRadius: 0,
   },
-  yAxisLabel: {
-    color: "#1e293b",
-    fontSize: 12,
-    fontWeight: "700",
-    alignSelf: "flex-start",
-    marginLeft: spacing.lg + 8,
-    marginBottom: 4,
-  },
-  xAxisLabel: {
-    color: "#1e293b",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 8,
-    marginBottom: spacing.md,
-  },
   chartLegend: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 16,
+    gap: 20,
     marginTop: 8,
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
   },
-  legendLine: {
-    width: 20,
-    height: 3,
-    borderRadius: 2,
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   legendText: {
     color: "#475569",
