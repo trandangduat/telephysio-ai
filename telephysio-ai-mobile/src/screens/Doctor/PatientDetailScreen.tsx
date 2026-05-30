@@ -237,61 +237,29 @@ export const PatientDetailScreen: React.FC = () => {
             <LineChart
               data={(() => {
                 const currentWeek = plan?.currentWeek || 4;
-                const totalWeeks = plan?.totalWeeks || 8;
-                const weeksToShow = Math.min(Math.max(totalWeeks, currentWeek + 2), 8);
+                const weeksToShow = currentWeek;
 
                 const labels = [];
-                const actualData = [];
-                const projectedData = [];
+                const data = [];
 
-                for (let i = 0; i < weeksToShow; i++) {
-                  labels.push(`W${i + 1}`);
-                }
-
-                // Actual data up to current week
                 const romActual = [30, 38, 45, 52, 60, 68, 75, 80];
                 const painActual = [6, 5, 4, 3, 2, 2, 1, 1];
                 const accuracyActual = [50, 58, 65, 72, 78, 83, 88, 92];
 
                 for (let i = 0; i < weeksToShow; i++) {
-                  const weekNum = i + 1;
-                  if (weekNum <= currentWeek) {
-                    // Actual data
-                    if (activeChart === "ROM") {
-                      actualData.push(progress?.romFlexion && weekNum === currentWeek ? progress.romFlexion : romActual[i]);
-                    } else if (activeChart === "Pain") {
-                      actualData.push(avgPain && weekNum === currentWeek ? avgPain : painActual[i]);
-                    } else {
-                      actualData.push(progress?.movementScore && weekNum === currentWeek ? progress.movementScore : accuracyActual[i]);
-                    }
-                    projectedData.push(null);
+                  labels.push(`W${i + 1}`);
+                  if (activeChart === "ROM") {
+                    data.push(progress?.romFlexion && i === weeksToShow - 1 ? progress.romFlexion : romActual[i]);
+                  } else if (activeChart === "Pain") {
+                    data.push(avgPain && i === weeksToShow - 1 ? avgPain : painActual[i]);
                   } else {
-                    // Projected (dashed feel via lighter color)
-                    actualData.push(null);
-                    if (activeChart === "ROM") {
-                      projectedData.push(romActual[i] || 75);
-                    } else if (activeChart === "Pain") {
-                      projectedData.push(painActual[i] || 1);
-                    } else {
-                      projectedData.push(accuracyActual[i] || 90);
-                    }
+                    data.push(progress?.movementScore && i === weeksToShow - 1 ? progress.movementScore : accuracyActual[i]);
                   }
                 }
 
                 return {
                   labels,
-                  datasets: [
-                    {
-                      data: projectedData,
-                      color: (opacity = 1) => `rgba(15, 118, 110, ${opacity * 0.25})`,
-                      strokeWidth: 2,
-                    },
-                    {
-                      data: actualData,
-                      color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
-                      strokeWidth: 3,
-                    },
-                  ],
+                  datasets: [{ data, strokeWidth: 3 }],
                 };
               })()}
               width={screenWidth - 32}
@@ -302,7 +270,7 @@ export const PatientDetailScreen: React.FC = () => {
                 backgroundGradientTo: "#fff",
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(15, 118, 110, ${opacity})`,
-                labelColor: () => "#334155",
+                labelColor: () => "#1e293b",
                 propsForBackgroundLines: {
                   stroke: "#f1f5f9",
                   strokeWidth: 1,
@@ -314,9 +282,10 @@ export const PatientDetailScreen: React.FC = () => {
                   fill: "#fff",
                 },
                 propsForLabels: {
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: "600",
-                  fill: "#334155",
+                  fontFamily: "Inter_600SemiBold",
+                  fill: "#1e293b",
                 },
               }}
               bezier={false}
@@ -328,19 +297,6 @@ export const PatientDetailScreen: React.FC = () => {
               withDots={true}
               style={styles.chart}
             />
-            {/* Legend */}
-            <View style={styles.chartLegend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: "#0f766e" }]} />
-                <AppText variant="labelSm" style={styles.legendText}>
-                  Actual (W1-W{plan?.currentWeek || 4})
-                </AppText>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: "rgba(15,118,110,0.25)" }]} />
-                <AppText variant="labelSm" style={styles.legendText}>Projected</AppText>
-              </View>
-            </View>
           </View>
         </View>
 
@@ -450,31 +406,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     alignItems: "center",
     overflow: "hidden",
-    paddingBottom: spacing.md,
   },
   chart: {
     borderRadius: 0,
-  },
-  chartLegend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 20,
-    marginTop: 8,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendText: {
-    color: "#475569",
-    fontSize: 11,
-    fontWeight: "600",
   },
   actionsRow: { flexDirection: "row", gap: spacing.md },
   actionPrimary: {
