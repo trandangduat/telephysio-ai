@@ -182,6 +182,106 @@ export const seedMockData = async () => {
         color: "#06B6D4",
         category: "Lower Body",
       },
+      {
+        id: "ex-11",
+        name: "Hamstring Curl",
+        sets: 3,
+        reps: 12,
+        duration: "5 mins",
+        icon: "body-outline",
+        color: "#A855F7",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-12",
+        name: "Glute Bridge",
+        sets: 3,
+        reps: 15,
+        duration: "4 mins",
+        icon: "accessibility-outline",
+        color: "#EF4444",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-13",
+        name: "Bicep Curl",
+        sets: 3,
+        reps: 12,
+        duration: "5 mins",
+        icon: "barbell-outline",
+        color: "#3B82F6",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-14",
+        name: "Tricep Dip",
+        sets: 3,
+        reps: 10,
+        duration: "5 mins",
+        icon: "fitness-outline",
+        color: "#10B981",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-15",
+        name: "Bird Dog",
+        sets: 3,
+        reps: 10,
+        duration: "4 mins",
+        icon: "accessibility-outline",
+        color: "#F59E0B",
+        category: "Core",
+      },
+      {
+        id: "ex-16",
+        name: "Dead Bug",
+        sets: 3,
+        reps: 10,
+        duration: "4 mins",
+        icon: "accessibility-outline",
+        color: "#6366F1",
+        category: "Core",
+      },
+      {
+        id: "ex-17",
+        name: "Clamshell",
+        sets: 3,
+        reps: 15,
+        duration: "4 mins",
+        icon: "body-outline",
+        color: "#D946EF",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-18",
+        name: "Resistance Band Pull Apart",
+        sets: 3,
+        reps: 15,
+        duration: "5 mins",
+        icon: "fitness-outline",
+        color: "#0EA5E9",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-19",
+        name: "Wall Sit",
+        sets: 3,
+        reps: 1,
+        duration: "30 sec",
+        icon: "accessibility-outline",
+        color: "#F43F5E",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-20",
+        name: "Scapular Squeeze",
+        sets: 3,
+        reps: 10,
+        duration: "3 mins",
+        icon: "fitness-outline",
+        color: "#84CC16",
+        category: "Upper Body",
+      },
     ];
 
     // --- Create Exercises (Global) ---
@@ -198,39 +298,47 @@ export const seedMockData = async () => {
     const templates = [
       { 
         name: "Phục hồi dây chằng (ACL) - Cơ bản", 
-        exercises: [exercises[0], exercises[1], exercises[7]] 
+        exercises: [exercises[0], exercises[1], exercises[7], exercises[11]] 
       },
       { 
         name: "Giãn cơ vai gáy", 
-        exercises: [exercises[2], exercises[8]] 
+        exercises: [exercises[2], exercises[8], exercises[19]] 
       },
       { 
         name: "Phục hồi sụn chêm - Tuần 1-2", 
-        exercises: [exercises[0], exercises[1], exercises[6]] 
+        exercises: [exercises[0], exercises[1], exercises[6], exercises[16]] 
       },
       { 
         name: "Tăng cường cơ tứ đầu đùi", 
-        exercises: [exercises[0], exercises[1], exercises[4], exercises[9]] 
+        exercises: [exercises[0], exercises[1], exercises[4], exercises[9], exercises[18]] 
       },
       { 
         name: "Phục hồi chức năng khớp gối - Nâng cao", 
-        exercises: [exercises[0], exercises[1], exercises[4], exercises[6], exercises[9]] 
+        exercises: [exercises[0], exercises[1], exercises[4], exercises[6], exercises[9], exercises[10]] 
       },
       { 
         name: "Bài tập Core cho người cao tuổi", 
-        exercises: [exercises[3], exercises[5], exercises[4]] 
+        exercises: [exercises[3], exercises[5], exercises[14], exercises[15]] 
       },
       { 
         name: "Phục hồi sau phẫu thuật đầu gối", 
-        exercises: [exercises[0], exercises[1], exercises[7], exercises[6]] 
+        exercises: [exercises[0], exercises[1], exercises[7], exercises[6], exercises[11]] 
       },
       { 
         name: "Tăng cường sức mạnh vai", 
-        exercises: [exercises[2], exercises[8], exercises[3]] 
+        exercises: [exercises[2], exercises[8], exercises[17], exercises[19]] 
       },
       { 
         name: "Bài tập cân bằng và thăng bằng", 
-        exercises: [exercises[3], exercises[5], exercises[9]] 
+        exercises: [exercises[3], exercises[5], exercises[9], exercises[14]] 
+      },
+      { 
+        name: "Phục hồi chức năng hông", 
+        exercises: [exercises[7], exercises[11], exercises[16], exercises[4]] 
+      },
+      { 
+        name: "Tăng cường tay và vai", 
+        exercises: [exercises[12], exercises[13], exercises[17], exercises[2]] 
       },
     ];
     for (let t = 0; t < templates.length; t++) {
