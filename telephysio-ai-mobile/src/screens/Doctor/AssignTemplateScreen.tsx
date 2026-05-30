@@ -431,13 +431,18 @@ export const AssignTemplateScreen: React.FC = () => {
           <View style={styles.bottomSheetContainer}>
             <View style={styles.bottomSheetGrabber} />
             <View style={styles.bottomSheetHeader}>
+              <View style={styles.bottomSheetHeroIcon}>
+                <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+              </View>
               <View style={{ flex: 1 }}>
                 <AppText style={styles.bottomSheetTitle}>
                   {t('doctor.assignTemplate.createAssignmentTitle')}
                 </AppText>
-                <AppText style={styles.bottomSheetSubtitle}>{patientName}</AppText>
+                <AppText style={styles.bottomSheetSubtitle}>
+                  {patientName} • {selectedDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {assignmentHour.toString().padStart(2, '0')}:00
+                </AppText>
               </View>
-              <TouchableOpacity onPress={() => setIsAddModalVisible(false)} style={styles.modalCloseBtn}>
+              <TouchableOpacity onPress={() => setIsAddModalVisible(false)} style={styles.modalCloseBtn} activeOpacity={0.8}>
                 <Ionicons name="close" size={24} color={colors.onSurface} />
               </TouchableOpacity>
             </View>
@@ -458,7 +463,9 @@ export const AssignTemplateScreen: React.FC = () => {
              </View>
 
             <View style={styles.inputGroup}>
-              <Ionicons name="person-outline" size={24} color={colors.outline} style={styles.inputIcon} />
+              <View style={styles.inputIconWrap}>
+                <Ionicons name="person-outline" size={20} color={colors.primary} />
+              </View>
               <View style={styles.inputBody}>
                  <AppText style={styles.inputLabel}>{t('doctor.assignTemplate.patientLabel')}</AppText>
                  <AppText style={styles.inputValue}>{patientName}</AppText>
@@ -466,7 +473,9 @@ export const AssignTemplateScreen: React.FC = () => {
             </View>
             
             <View style={styles.inputGroup}>
-              <Ionicons name="document-text-outline" size={24} color={colors.outline} style={styles.inputIcon} />
+              <View style={styles.inputIconWrap}>
+                <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+              </View>
               <View style={styles.inputBody}>
                 <AppText style={styles.inputLabel}>{t('doctor.assignTemplate.templateLabel')}</AppText>
                 
@@ -495,7 +504,9 @@ export const AssignTemplateScreen: React.FC = () => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Ionicons name="time-outline" size={24} color={colors.outline} style={styles.inputIcon} />
+              <View style={styles.inputIconWrap}>
+                <Ionicons name="time-outline" size={20} color={colors.primary} />
+              </View>
               <View style={styles.inputBody}>
                  <AppText style={styles.inputLabel}>{t('doctor.assignTemplate.dateTimeLabel')}</AppText>
                  <AppText style={styles.inputValue}>
@@ -533,7 +544,10 @@ export const AssignTemplateScreen: React.FC = () => {
                   {assigning ? (
                     <ActivityIndicator color={colors.onPrimary} size="small" />
                   ) : (
-                    <AppText style={styles.saveBtnText}>{t('doctor.assignTemplate.saveBtn')}</AppText>
+                    <>
+                      <Ionicons name="checkmark-circle" size={18} color={colors.onPrimary} />
+                      <AppText style={styles.saveBtnText}>{t('doctor.assignTemplate.saveBtn')}</AppText>
+                    </>
                   )}
                 </View>
               </TouchableOpacity>
@@ -760,20 +774,29 @@ const styles = StyleSheet.create({
   },
 
   modalContainer: { flex: 1, backgroundColor: colors.background },
-  modalCloseBtn: { padding: spacing.xs },
+  modalCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
   bottomSheetOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
   },
   bottomSheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
   },
   bottomSheetContainer: {
-    maxHeight: '86%',
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    maxHeight: '88%',
+    backgroundColor: '#f8fafd',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     overflow: 'hidden',
   },
   bottomSheetGrabber: {
@@ -783,69 +806,99 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.outlineVariant,
     marginTop: spacing.sm,
-    marginBottom: spacing.sm,
+    marginBottom: 12,
   },
   bottomSheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.lg,
     gap: spacing.md,
   },
-  bottomSheetTitle: { color: colors.onSurface, fontSize: 22, fontWeight: '800' },
-  bottomSheetSubtitle: { color: colors.outline, fontSize: 13, marginTop: 2 },
+  bottomSheetHeroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryContainer,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  bottomSheetTitle: { color: colors.onSurface, fontSize: 23, fontWeight: '800' },
+  bottomSheetSubtitle: { color: '#64748b', fontSize: 13, marginTop: 3, fontWeight: '500' },
   bottomSheetScroll: { flexGrow: 0 },
-  bottomSheetContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  bottomSheetContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
   bottomSheetFooter: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceContainerHighest,
-    backgroundColor: colors.background,
+    backgroundColor: '#ffffff',
   },
   saveBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
     backgroundColor: colors.primary,
     paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 18,
+    paddingVertical: 15,
+    borderRadius: 20,
   },
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnText: { color: colors.onPrimary, fontWeight: '600', fontSize: 15 },
   titleInputContainer: {
     borderWidth: 1,
-    borderColor: colors.onSurface,
-    borderRadius: 4,
-    marginBottom: spacing.xl,
-    backgroundColor: colors.surfaceContainerLowest,
+    borderColor: '#dbe7f3',
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
   },
   titleInput: {
-    fontSize: 22,
+    fontSize: 17,
+    fontWeight: '600',
     color: colors.onSurface,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
   },
   
-  inputGroup: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.xl },
-  inputIcon: { marginTop: 2, marginRight: spacing.md },
+  inputGroup: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 22,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  inputIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryContainer,
+  },
   inputBody: { flex: 1 },
-  inputLabel: { color: colors.outline, fontSize: 13, marginBottom: 8 },
-  inputValue: { color: colors.onSurface, fontSize: 16, fontWeight: '500' },
+  inputLabel: { color: '#64748b', fontSize: 12, marginBottom: 7, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  inputValue: { color: colors.onSurface, fontSize: 16, fontWeight: '700' },
   
   templatesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   selectTemplateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: '#f8fafc',
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: '#cbd5e1',
+    borderStyle: 'dashed',
   },
-  selectTemplateBtnText: { color: colors.onSurfaceVariant, fontWeight: '500', fontSize: 14 },
+  selectTemplateBtnText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
   selectedTemplateBox: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
@@ -854,17 +907,17 @@ const styles = StyleSheet.create({
   },
   selectedTemplateText: { color: colors.onPrimary, fontWeight: '500', fontSize: 14 },
 
-  hourSelectorRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
-  hourSelectorLabel: { color: colors.onSurface, marginRight: spacing.md, fontWeight: '500' },
-  hourScroll: { paddingVertical: spacing.xs },
+  hourSelectorRow: { marginTop: spacing.md, gap: spacing.sm },
+  hourSelectorLabel: { color: '#64748b', fontWeight: '700', fontSize: 12 },
+  hourScroll: { paddingVertical: spacing.xs, paddingRight: spacing.md },
   hourChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: '#dbe7f3',
     marginRight: spacing.sm,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: '#ffffff',
   },
   hourChipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   hourChipText: { color: colors.onSurface, fontSize: 14 },
