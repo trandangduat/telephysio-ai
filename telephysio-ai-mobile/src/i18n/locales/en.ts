@@ -345,6 +345,7 @@ export default {
     // Assign Template
     assignTemplate: {
       title: 'Manage session',
+      createAssignmentTitle: 'Create assignment',
       patientLabel: 'Patient',
       templateLabel: 'Template (Required)',
       dateTimeLabel: 'Date & Time',

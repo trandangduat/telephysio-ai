@@ -419,26 +419,34 @@ export const AssignTemplateScreen: React.FC = () => {
       <Modal
         visible={isAddModalVisible}
         animationType="slide"
-        presentationStyle="fullScreen"
+        transparent
         onRequestClose={() => setIsAddModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setIsAddModalVisible(false)} style={styles.modalCloseBtn}>
-              <Ionicons name="close" size={28} color={colors.onSurface} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleAssign} disabled={assigning || selectedTemplateIds.length === 0}>
-              <View style={[styles.saveBtn, (selectedTemplateIds.length === 0 || assigning) && styles.saveBtnDisabled]}>
-                {assigning ? (
-                  <ActivityIndicator color={colors.onPrimary} size="small" />
-                ) : (
-                  <AppText style={styles.saveBtnText}>{t('doctor.assignTemplate.saveBtn')}</AppText>
-                )}
+        <View style={styles.bottomSheetOverlay}>
+          <TouchableOpacity
+            style={styles.bottomSheetBackdrop}
+            activeOpacity={1}
+            onPress={() => !assigning && setIsAddModalVisible(false)}
+          />
+          <View style={styles.bottomSheetContainer}>
+            <View style={styles.bottomSheetGrabber} />
+            <View style={styles.bottomSheetHeader}>
+              <View style={{ flex: 1 }}>
+                <AppText style={styles.bottomSheetTitle}>
+                  {t('doctor.assignTemplate.createAssignmentTitle')}
+                </AppText>
+                <AppText style={styles.bottomSheetSubtitle}>{patientName}</AppText>
               </View>
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView contentContainerStyle={styles.modalContent}>
+              <TouchableOpacity onPress={() => setIsAddModalVisible(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={24} color={colors.onSurface} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.bottomSheetScroll}
+              contentContainerStyle={styles.bottomSheetContent}
+              showsVerticalScrollIndicator={false}
+            >
              <View style={styles.titleInputContainer}>
                <TextInput
                  style={styles.titleInput}
@@ -510,11 +518,28 @@ export const AssignTemplateScreen: React.FC = () => {
                      ))}
                    </ScrollView>
                  </View>
-              </View>
+               </View>
             </View>
 
-          </ScrollView>
-        </SafeAreaView>
+            </ScrollView>
+
+            <View style={styles.bottomSheetFooter}>
+              <TouchableOpacity
+                onPress={handleAssign}
+                disabled={assigning || selectedTemplateIds.length === 0}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.saveBtn, (selectedTemplateIds.length === 0 || assigning) && styles.saveBtnDisabled]}>
+                  {assigning ? (
+                    <ActivityIndicator color={colors.onPrimary} size="small" />
+                  ) : (
+                    <AppText style={styles.saveBtnText}>{t('doctor.assignTemplate.saveBtn')}</AppText>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       {/* Template Search Modal */}
@@ -735,19 +760,60 @@ const styles = StyleSheet.create({
   },
 
   modalContainer: { flex: 1, backgroundColor: colors.background },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.gutter,
-    paddingVertical: spacing.md,
-  },
   modalCloseBtn: { padding: spacing.xs },
-  saveBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 24 },
+  bottomSheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+  },
+  bottomSheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bottomSheetContainer: {
+    maxHeight: '86%',
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: 'hidden',
+  },
+  bottomSheetGrabber: {
+    alignSelf: 'center',
+    width: 42,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.outlineVariant,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  bottomSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.md,
+  },
+  bottomSheetTitle: { color: colors.onSurface, fontSize: 22, fontWeight: '800' },
+  bottomSheetSubtitle: { color: colors.outline, fontSize: 13, marginTop: 2 },
+  bottomSheetScroll: { flexGrow: 0 },
+  bottomSheetContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  bottomSheetFooter: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceContainerHighest,
+    backgroundColor: colors.background,
+  },
+  saveBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 18,
+  },
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnText: { color: colors.onPrimary, fontWeight: '600', fontSize: 15 },
-  
-  modalContent: { padding: spacing.lg, paddingBottom: 100 },
   titleInputContainer: {
     borderWidth: 1,
     borderColor: colors.onSurface,

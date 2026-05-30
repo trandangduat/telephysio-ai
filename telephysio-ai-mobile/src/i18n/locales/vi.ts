@@ -345,6 +345,7 @@ export default {
     // Assign Template
     assignTemplate: {
       title: 'Quản lý phiên tập',
+      createAssignmentTitle: 'Tạo lịch tập',
       patientLabel: 'Bệnh Nhân',
       templateLabel: 'Mẫu Bài Tập (Bắt buộc)',
       dateTimeLabel: 'Ngày & Giờ',
