@@ -339,7 +339,7 @@ export default {
 
     // Assign Template
     assignTemplate: {
-      title: 'Assign Session',
+      title: 'Manage session',
       patientLabel: 'Patient',
       templateLabel: 'Template (Required)',
       dateTimeLabel: 'Date & Time',

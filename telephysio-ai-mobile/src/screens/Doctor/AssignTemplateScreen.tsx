@@ -22,11 +22,12 @@ import { colors, spacing } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import type { DoctorStackParamList } from '../../navigation/types';
-import type { ExerciseTemplate, Assignment, Exercise } from '../../services/firebase/types';
+import type { ExerciseTemplate, Assignment, Exercise, Session } from '../../services/firebase/types';
 import {
   getExerciseTemplates,
   createAssignment,
   getDoctorAssignments,
+  getPatientSessions,
 } from '../../services/firebase';
 
 type AssignTemplateNavProp = NativeStackNavigationProp<DoctorStackParamList, 'AssignTemplate'>;
@@ -41,6 +42,9 @@ const startOfDay = (date: Date) => {
 const getAssignmentDate = (assignment: Assignment) =>
   ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ?? null;
 
+const getSessionDate = (session: Session) =>
+  (session.date as any)?.toDate?.() ?? new Date();
+
 export const AssignTemplateScreen: React.FC = () => {
   const navigation = useNavigation<AssignTemplateNavProp>();
   const route = useRoute<AssignTemplateRouteProp>();
@@ -54,6 +58,7 @@ export const AssignTemplateScreen: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
   const [allTemplates, setAllTemplates] = useState<ExerciseTemplate[]>([]);
   const [patientAssignments, setPatientAssignments] = useState<Assignment[]>([]);
+  const [patientSessions, setPatientSessions] = useState<Session[]>([]);
   
   const [viewMode, setViewMode] = useState<'month' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
@@ -78,12 +83,14 @@ export const AssignTemplateScreen: React.FC = () => {
     if (!uid || !patientId) return;
     setLoading(true);
     try {
-      const [templatesData, assignmentsData] = await Promise.all([
+      const [templatesData, assignmentsData, sessionsData] = await Promise.all([
         getExerciseTemplates(uid),
         getDoctorAssignments(uid),
+        getPatientSessions(patientId, 100),
       ]);
       setAllTemplates(templatesData);
       setPatientAssignments(assignmentsData.filter(a => a.patientId === patientId));
+      setPatientSessions(sessionsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -232,10 +239,9 @@ export const AssignTemplateScreen: React.FC = () => {
   };
 
   const renderDayView = () => {
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const assignmentsToday = patientAssignments.filter(a => {
-      const d = getAssignmentDate(a);
-      return d && startOfDay(d).getTime() === startOfDay(selectedDate).getTime();
+    const sessionsToday = patientSessions.filter(s => {
+      const d = getSessionDate(s);
+      return startOfDay(d).getTime() === startOfDay(selectedDate).getTime();
     });
 
     return (
@@ -245,31 +251,42 @@ export const AssignTemplateScreen: React.FC = () => {
              {selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
            </AppText>
         </View>
-        <View style={styles.timelineContainer}>
-          {hours.map(hour => {
-            const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
-            const assignmentsInHour = assignmentsToday.filter(a => {
-              const d = getAssignmentDate(a);
-              return d && d.getHours() === hour;
-            });
-
-            return (
-              <View key={hour} style={styles.hourRow}>
-                <View style={styles.timeLabelContainer}>
-                  <AppText variant="labelSm" style={styles.timeLabel}>{timeLabel}</AppText>
+        <View style={styles.sessionsList}>
+          {sessionsToday.length === 0 ? (
+            <AppText variant="bodyMd" style={styles.noSessionsText}>
+              No sessions for this date.
+            </AppText>
+          ) : (
+            sessionsToday.map((session, i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.sessionCard}
+                onPress={() => navigation.navigate("DoctorSessionDetail", { session, patientName })}
+              >
+                <View style={styles.sessionCardHeader}>
+                  <View style={styles.sessionIconBox}>
+                    <Ionicons name="fitness-outline" size={24} color={colors.primary} />
+                  </View>
+                  <View style={styles.sessionInfo}>
+                    <AppText variant="labelMd" style={styles.sessionTitle}>Session Completed</AppText>
+                    <AppText variant="bodySm" style={styles.sessionMeta}>
+                      {session.exercisesCompleted} exercises • {session.durationSeconds ? Math.floor(session.durationSeconds / 60) : 0} min
+                    </AppText>
+                  </View>
                 </View>
-                <View style={styles.hourContent}>
-                  <View style={styles.hourDivider} />
-                  {assignmentsInHour.map((assignment, i) => (
-                    <View key={i} style={styles.assignmentBlockDay}>
-                      <AppText variant="labelMd" style={styles.assignmentBlockTextDay}>{assignment.templateName}</AppText>
-                      <AppText variant="labelSm" style={styles.assignmentBlockTimeDay}>{assignment.totalDuration}</AppText>
-                    </View>
-                  ))}
+                <View style={styles.sessionStats}>
+                  <View style={styles.statItem}>
+                    <AppText variant="labelMd" style={{ color: colors.primary }}>{session.accuracyScore}%</AppText>
+                    <AppText variant="labelSm" style={{ color: "#64748b" }}>Accuracy</AppText>
+                  </View>
+                  <View style={styles.statItem}>
+                    <AppText variant="labelMd" style={{ color: "#f59e0b" }}>{session.averagePain}/10</AppText>
+                    <AppText variant="labelSm" style={{ color: "#64748b" }}>Pain</AppText>
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     );
@@ -548,24 +565,16 @@ const styles = StyleSheet.create({
   dayViewScroll: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
   dayHeader: { padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.surfaceContainerHighest },
   dayHeaderTitle: { color: colors.onSurface, fontSize: 18, fontWeight: '600' },
-  timelineContainer: { },
-  hourRow: { flexDirection: 'row', minHeight: 60 },
-  timeLabelContainer: { width: 60, alignItems: 'center', paddingTop: 10 },
-  timeLabel: { color: colors.outline, fontSize: 12 },
-  hourContent: { flex: 1, position: 'relative' },
-  hourDivider: { position: 'absolute', top: 18, left: 0, right: 0, height: 1, backgroundColor: colors.surfaceContainerHighest },
-  assignmentBlockDay: {
-    marginTop: 20,
-    marginLeft: 8,
-    marginRight: 16,
-    backgroundColor: colors.primaryContainer,
-    borderRadius: 8,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  assignmentBlockTextDay: { color: colors.onPrimaryContainer, fontWeight: '600', fontSize: 14 },
-  assignmentBlockTimeDay: { color: colors.onPrimaryContainer, fontSize: 12, opacity: 0.8, marginTop: 4 },
+  sessionsList: { padding: spacing.md, gap: spacing.md },
+  noSessionsText: { textAlign: 'center', color: '#64748b', marginTop: spacing.xl },
+  sessionCard: { backgroundColor: '#fff', borderRadius: 16, padding: spacing.md, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  sessionCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: spacing.md },
+  sessionIconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
+  sessionInfo: { flex: 1 },
+  sessionTitle: { color: '#0f172a', fontWeight: '700', fontSize: 16 },
+  sessionMeta: { color: '#64748b', marginTop: 2 },
+  sessionStats: { flexDirection: 'row', backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, gap: 16 },
+  statItem: { flex: 1, alignItems: 'center', gap: 2 },
 
 
   fab: {

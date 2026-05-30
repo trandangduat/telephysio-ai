@@ -339,7 +339,7 @@ export default {
 
     // Assign Template
     assignTemplate: {
-      title: 'Giao Buổi Tập',
+      title: 'Quản lý phiên tập',
       patientLabel: 'Bệnh Nhân',
       templateLabel: 'Mẫu Bài Tập (Bắt buộc)',
       dateTimeLabel: 'Ngày & Giờ',

@@ -80,10 +80,6 @@ export const PatientDetailScreen: React.FC = () => {
     navigation.navigate("AssignTemplate", { patientId, patientName });
   };
 
-  const handleViewSessions = () => {
-    navigation.navigate("PatientSessions", { patientId, patientName });
-  };
-
   if (loading) {
     return (
       <SafeAreaView
@@ -246,7 +242,7 @@ export const PatientDetailScreen: React.FC = () => {
                     data: activeChart === "ROM" 
                       ? [30, 45, 60, progress?.romFlexion || 75] 
                       : activeChart === "Pain" 
-                        ? [6, 4, 3, progress?.averagePain || 1] 
+                        ? [6, 4, 3, avgPain || 1] 
                         : [50, 65, 80, progress?.movementScore || 90]
                   }
                 ]
@@ -284,28 +280,12 @@ export const PatientDetailScreen: React.FC = () => {
             style={styles.actionPrimary}
             onPress={handleAssign}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
+            <Ionicons name="calendar-outline" size={20} color="#fff" />
             <AppText
               variant="labelMd"
               style={{ color: "#fff", fontWeight: "700" }}
             >
-              {t('doctor.patientDetail.assign')}
-            </AppText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionSecondary}
-            onPress={handleViewSessions}
-          >
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={colors.primary}
-            />
-            <AppText
-              variant="labelMd"
-              style={{ color: colors.primary, fontWeight: "700" }}
-            >
-              {t('doctor.patientDetail.viewSessions')}
+              {t('doctor.patientDetail.manageSessions', 'Manage Patient Sessions')}
             </AppText>
           </TouchableOpacity>
         </View>
