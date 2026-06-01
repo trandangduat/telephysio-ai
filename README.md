@@ -29,54 +29,24 @@ Hệ thống sử dụng **MediaPipe BlazePose** để phân tích tư thế qua
 
 ## Tính năng
 
-### Cho bệnh nhân
-
-- Đăng nhập, quản lý hồ sơ cá nhân
-- Xem danh sách bài tập được giao từ bác sĩ
-- Luyện tập với AI theo dõi tư thế qua camera (hỗ trợ Squat, Bicep Curl, Shoulder Press)
-- Đếm số lần lặp tự động và đánh giá form real-time
-- Ghi hình buổi tập, xem lại kết quả và video
-- Xem phản hồi từ bác sĩ sau mỗi buổi tập
-- Theo dõi tiến độ phục hồi qua biểu đồ
+### Giao diện bệnh nhân
 
 <table align="center">
   <tr>
-    <td width="33%" align="center"><img src="docs/images/trangchu-benhnhan.png" alt="Trang chủ bệnh nhân" width="100%" /><br><em>Trang chủ</em></td>
-    <td width="33%" align="center"><img src="docs/images/buoi-tap-hom-nay.png" alt="Buổi tập hôm nay" width="100%" /><br><em>Buổi tập hôm nay</em></td>
-    <td width="33%" align="center"><img src="docs/images/patient3.png" alt="Luyện tập với AI" width="100%" /><br><em>AI theo dõi tư thế</em></td>
+    <td width="50%" align="center"><img src="docs/images/before-start-workout.png" alt="Trước khi bắt đầu buổi tập" width="100%" /><br><em>Chuẩn bị buổi tập</em></td>
+    <td width="50%" align="center"><img src="docs/images/working-out.png" alt="Luyện tập với AI" width="100%" /><br><em>AI theo dõi tư thế real-time</em></td>
   </tr>
 </table>
+
+### Giao diện bác sĩ
 
 <table align="center">
   <tr>
-    <td width="50%" align="center"><img src="docs/images/session-summary.png" alt="Tổng kết buổi tập" width="100%" /><br><em>Tổng kết buổi tập</em></td>
-    <td width="50%" align="center"><img src="docs/images/session-history.png" alt="Lịch sử buổi tập" width="100%" /><br><em>Lịch sử buổi tập</em></td>
+    <td width="33%" align="center"><img src="docs/images/patient-details.png" alt="Chi tiết bệnh nhân" width="100%" /><br><em>Chi tiết bệnh nhân</em></td>
+    <td width="33%" align="center"><img src="docs/images/manage-sessions.png" alt="Quản lý buổi tập" width="100%" /><br><em>Quản lý buổi tập</em></td>
+    <td width="33%" align="center"><img src="docs/images/add-assignments.png" alt="Giao bài tập" width="100%" /><br><em>Giao bài tập</em></td>
   </tr>
 </table>
-
-### Cho bác sĩ
-
-- Dashboard quản lý bệnh nhân
-- Tạo và giao bài tập từ thư viện bài tập có sẵn
-- Tùy chỉnh bài tập (số set, số rep, thời gian nghỉ)
-- Xem chi tiết buổi tập và video ghi hình
-- Gửi phản hồi chuyên môn cho bệnh nhân
-- Quản lý mẫu bài tập (template)
-
-<table align="center">
-  <tr>
-    <td width="33%" align="center"><img src="docs/images/dashboard-doctor.png" alt="Dashboard bác sĩ" width="100%" /><br><em>Dashboard</em></td>
-    <td width="33%" align="center"><img src="docs/images/review-session-doctor1.png" alt="Đánh giá buổi tập" width="100%" /><br><em>Đánh giá buổi tập</em></td>
-    <td width="33%" align="center"><img src="docs/images/cau-hinh-bai-tap-bac-si.png" alt="Cấu hình bài tập" width="100%" /><br><em>Cấu hình bài tập</em></td>
-  </tr>
-</table>
-
-### Hệ thống
-
-- Phân quyền dựa trên vai trò (Patient / Doctor)
-- Đa ngôn ngữ (Tiếng Việt, Tiếng Anh)
-- Hỗ trợ iOS, Android và Web
-- Thiết kế theo hệ thống "Clinical Vitality"
 
 ## Công nghệ
 
