@@ -28,7 +28,7 @@ Hệ thống sử dụng **MediaPipe BlazePose** để phân tích tư thế qua
 ### Giao diện bệnh nhân
 
 <div align="center">
-  <img src="docs/images/patient-composite.png" alt="Giao diện bệnh nhân" width="800" />
+  <img src="docs/images/patient-composite.png?v=censored" alt="Giao diện bệnh nhân" width="800" />
 </div>
 
 ### Giao diện bác sĩ
