@@ -41,13 +41,16 @@ Hệ thống sử dụng **MediaPipe BlazePose** để phân tích tư thế qua
 
 <table align="center">
   <tr>
-    <td align="center"><img src="docs/images/trangchu-benhnhan.png" alt="Trang chủ bệnh nhân" width="260" /><br><em>Trang chủ</em></td>
-    <td align="center"><img src="docs/images/buoi-tap-hom-nay.png" alt="Buổi tập hôm nay" width="260" /><br><em>Buổi tập hôm nay</em></td>
-    <td align="center"><img src="docs/images/working-out.png" alt="Luyện tập với AI" width="260" /><br><em>AI theo dõi tư thế</em></td>
+    <td width="33%" align="center"><img src="docs/images/trangchu-benhnhan.png" alt="Trang chủ bệnh nhân" width="100%" /><br><em>Trang chủ</em></td>
+    <td width="33%" align="center"><img src="docs/images/buoi-tap-hom-nay.png" alt="Buổi tập hôm nay" width="100%" /><br><em>Buổi tập hôm nay</em></td>
+    <td width="33%" align="center"><img src="docs/images/patient3.png" alt="Luyện tập với AI" width="100%" /><br><em>AI theo dõi tư thế</em></td>
   </tr>
+</table>
+
+<table align="center">
   <tr>
-    <td align="center"><img src="docs/images/session-summary.png" alt="Tổng kết buổi tập" width="260" /><br><em>Tổng kết buổi tập</em></td>
-    <td colspan="2"></td>
+    <td width="50%" align="center"><img src="docs/images/session-summary.png" alt="Tổng kết buổi tập" width="100%" /><br><em>Tổng kết buổi tập</em></td>
+    <td width="50%" align="center"><img src="docs/images/session-history.png" alt="Lịch sử buổi tập" width="100%" /><br><em>Lịch sử buổi tập</em></td>
   </tr>
 </table>
 
@@ -62,9 +65,9 @@ Hệ thống sử dụng **MediaPipe BlazePose** để phân tích tư thế qua
 
 <table align="center">
   <tr>
-    <td align="center"><img src="docs/images/dashboard-doctor.png" alt="Dashboard bác sĩ" width="260" /><br><em>Dashboard</em></td>
-    <td align="center"><img src="docs/images/review-session-doctor.png" alt="Xem lại buổi tập" width="260" /><br><em>Đánh giá buổi tập</em></td>
-    <td align="center"><img src="docs/images/create-excercise-template.png" alt="Tạo mẫu bài tập" width="260" /><br><em>Tạo mẫu bài tập</em></td>
+    <td width="33%" align="center"><img src="docs/images/dashboard-doctor.png" alt="Dashboard bác sĩ" width="100%" /><br><em>Dashboard</em></td>
+    <td width="33%" align="center"><img src="docs/images/review-session-doctor1.png" alt="Đánh giá buổi tập" width="100%" /><br><em>Đánh giá buổi tập</em></td>
+    <td width="33%" align="center"><img src="docs/images/cau-hinh-bai-tap-bac-si.png" alt="Cấu hình bài tập" width="100%" /><br><em>Cấu hình bài tập</em></td>
   </tr>
 </table>
 
