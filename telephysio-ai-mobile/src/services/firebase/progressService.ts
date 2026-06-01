@@ -6,7 +6,7 @@
  *   - ProgressScreen (weeklyConsistency, ROM, strength, milestones)
  *   - TrainingScreen (session recording: reps, accuracy, elapsed)
  *   - PatientDetailScreen (session history, quick stats)
- *   - DoctorPatientsScreen (progress, sessions, accuracy per patient)
+ *   - DoctorDashboardScreen (progress, sessions, accuracy per patient)
  */
 
 import {

@@ -71,10 +71,11 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
+          <View style={styles.grabber} />
           {/* Header */}
           <View style={styles.header}>
             <AppText variant="headlineMd" style={styles.title}>{t('doctor.templateEditor.selectExercise')}</AppText>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.8}>
               <Ionicons name="close" size={24} color="#475569" />
             </TouchableOpacity>
           </View>
@@ -92,25 +93,37 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
           </View>
 
           {/* Category Filters */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow}>
-            {CATEGORIES.map(cat => (
-              <TouchableOpacity
-                key={cat}
-                style={[styles.chip, activeCategory === cat && styles.chipActive]}
-                onPress={() => setActiveCategory(cat)}
-              >
-                <AppText variant="labelSm" style={{ color: activeCategory === cat ? '#fff' : '#475569', fontWeight: '600' }}>
-                  {cat}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <View style={styles.filtersBlock}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.chipsRow}
+              contentContainerStyle={styles.chipsContent}
+            >
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.chip, activeCategory === cat && styles.chipActive]}
+                  onPress={() => setActiveCategory(cat)}
+                  activeOpacity={0.85}
+                >
+                  <AppText variant="labelSm" style={{ color: activeCategory === cat ? '#fff' : '#475569', fontWeight: '600' }}>
+                    {cat}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
 
           {/* Exercise List */}
           {loading ? (
             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
           ) : (
-            <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+            >
               {filtered.length > 0 ? filtered.map(ex => (
                 <TouchableOpacity key={ex.id} style={styles.exerciseItem} onPress={() => handleSelect(ex)}>
                   <View style={[styles.exerciseIcon, { backgroundColor: (ex.color || colors.primary) + '1A' }]}>
@@ -147,20 +160,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '80%',
-    paddingBottom: spacing.xl,
+    height: '86%',
+    overflow: 'hidden',
+  },
+  grabber: {
+    alignSelf: 'center',
+    width: 42,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: '#cbd5e1',
+    marginTop: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
   },
   title: {
     color: '#0f172a',
     fontWeight: '700',
     fontSize: 20,
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   searchBox: {
     flexDirection: 'row',
@@ -178,23 +212,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0f172a',
   },
+  filtersBlock: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    paddingBottom: spacing.md,
+    zIndex: 1,
+  },
   chipsRow: {
+    flexGrow: 0,
+  },
+  chipsContent: {
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    maxHeight: 36,
+    gap: 8,
   },
   chip: {
     backgroundColor: '#f1f5f9',
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 100,
-    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   chipActive: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   list: {
+    flex: 1,
+  },
+  listContent: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   exerciseItem: {
     flexDirection: 'row',

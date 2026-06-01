@@ -9,6 +9,7 @@ export default {
     cancel: 'Cancel',
     submit: 'Submit',
     back: 'Back',
+    done: 'Done',
     today: 'Today',
     sets: 'sets',
     reps: 'reps',
@@ -197,17 +198,21 @@ export default {
       goodMorning: 'Good morning,',
       goodAfternoon: 'Good afternoon,',
       goodEvening: 'Good evening,',
+      activePatients: 'Patients',
+      todayTasks: 'Today',
+      completedToday: 'Done',
       patientsAssigned: '{{count}} patient assigned',
       patientsAssigned_plural: '{{count}} patients assigned',
       myPatients: 'My Patients',
       noPatientsMatch: 'No patients match your search.',
       noPatientsAssigned: 'No patients assigned yet.',
-      noTasksToday: 'No tasks today',
+      noTasksToday: 'No assignments today',
       allDone: 'All done ✓',
       tasksDone: '{{completed}}/{{total}} done',
       notStarted: 'Not started',
       assignments: '{{count}} assignment',
       assignments_plural: '{{count}} assignments',
+      todayTasksCount: '{{count}} today',
     },
 
     // Patients
@@ -240,6 +245,11 @@ export default {
       streak: 'Streak',
       painAvg: 'Pain Avg',
       recoveryProgress: 'Recovery Progress',
+      noChartData: 'No actual data available for this metric yet.',
+      chartXAxis: 'Recovery week',
+      chartYAxisRom: 'Knee ROM (degrees)',
+      chartYAxisPain: 'Pain score (0-10)',
+      chartYAxisAccuracy: 'Movement accuracy (%)',
       weekLabel: 'Week {{num}}',
       nowLabel: 'Now',
       assign: 'Assign',
@@ -276,6 +286,7 @@ export default {
       title: 'Exercise Templates',
       subtitle: 'Create reusable exercise groups for patient care plans',
       tabDesc: 'Customized exercise groups that can be reused across patients',
+      searchPlaceholder: 'Search templates...',
       createTemplate: 'Create New Template',
       exercisesCount: '{{count}} exercises',
       patientsCount: '{{count}} patients',
@@ -287,6 +298,7 @@ export default {
       deleteError: 'Failed to delete template.',
       cancel: 'Cancel',
       noTemplates: 'No templates found. Create one to get started.',
+      noTemplatesMatch: 'No templates match your search.',
     },
 
     // Template Editor
@@ -339,7 +351,8 @@ export default {
 
     // Assign Template
     assignTemplate: {
-      title: 'Assign Session',
+      title: 'Manage session',
+      createAssignmentTitle: 'Create assignment',
       patientLabel: 'Patient',
       templateLabel: 'Template (Required)',
       dateTimeLabel: 'Date & Time',
@@ -352,6 +365,9 @@ export default {
       addTitlePlaceholder: 'Add title',
       saveBtn: 'Save',
       assignmentSuccess: 'Successfully assigned template to patient.',
+      completedBadge: 'Completed',
+      scheduledBadge: 'Scheduled',
+      viewSessionDetail: 'View session details',
     }
   },
 

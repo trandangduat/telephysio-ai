@@ -4,7 +4,7 @@
  * Maps to:
  *   - ProfileScreen (displayName, email, phone, dateOfBirth, avatarUrl)
  *   - DoctorDashboardScreen (userName, specialty)
- *   - DoctorPatientsScreen (patient list with name, condition, progress)
+ *   - DoctorDashboardScreen (patient list with name, condition, progress)
  */
 
 import {
@@ -50,7 +50,7 @@ export async function uploadAvatar(uid: string, fileUri: string): Promise<string
 }
 
 // ── Get All Patients (Doctor use) ───────────────────
-// Called by DoctorPatientsScreen, DoctorDashboardScreen
+// Called by DoctorDashboardScreen
 export async function getPatients(doctorId: string): Promise<UserProfile[]> {
   console.log(`[Service] getPatients called with doctorId: ${doctorId}`);
   // Query users where role=patient AND they have an active treatment plan with this doctor

@@ -59,7 +59,6 @@ export type DoctorStackParamList = {
     DoctorProfile: undefined;
     TemplateEditor: { templateId?: string };
     AssignTemplate: { templateId?: string; templateName?: string; patientId?: string; patientName?: string };
-    PatientSessions: { patientId: string; patientName: string };
     DoctorSessionDetail: { session: Session; patientName: string };
     Notifications: undefined;
 };
@@ -67,7 +66,6 @@ export type DoctorStackParamList = {
 export type DoctorTabParamList = {
   Dashboard: undefined;
   Assignments: undefined;
-  Patients: undefined;
 };
 
 // Screen names as constants to avoid typo
@@ -91,7 +89,6 @@ export const SCREENS = {
     DoctorTabs: 'DoctorTabs',
     Dashboard: 'Dashboard',
     Assignments: 'Assignments',
-    Patients: 'Patients',
     PatientDetail: 'PatientDetail',
     DoctorProfile: 'DoctorProfile',
     TemplateEditor: 'TemplateEditor',

@@ -132,6 +132,156 @@ export const seedMockData = async () => {
         color: "#FFB533",
         category: "Lower Body",
       },
+      {
+        id: "ex-6",
+        name: "Side Plank",
+        sets: 3,
+        reps: 1,
+        duration: "1 min",
+        icon: "accessibility-outline",
+        color: "#8B5CF6",
+        category: "Core",
+      },
+      {
+        id: "ex-7",
+        name: "Calf Raises",
+        sets: 3,
+        reps: 15,
+        duration: "4 mins",
+        icon: "walk-outline",
+        color: "#EC4899",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-8",
+        name: "Hip Abduction",
+        sets: 3,
+        reps: 12,
+        duration: "5 mins",
+        icon: "body-outline",
+        color: "#14B8A6",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-9",
+        name: "Wall Slides",
+        sets: 3,
+        reps: 10,
+        duration: "5 mins",
+        icon: "fitness-outline",
+        color: "#F97316",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-10",
+        name: "Step-Ups",
+        sets: 3,
+        reps: 10,
+        duration: "6 mins",
+        icon: "walk-outline",
+        color: "#06B6D4",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-11",
+        name: "Hamstring Curl",
+        sets: 3,
+        reps: 12,
+        duration: "5 mins",
+        icon: "body-outline",
+        color: "#A855F7",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-12",
+        name: "Glute Bridge",
+        sets: 3,
+        reps: 15,
+        duration: "4 mins",
+        icon: "accessibility-outline",
+        color: "#EF4444",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-13",
+        name: "Bicep Curl",
+        sets: 3,
+        reps: 12,
+        duration: "5 mins",
+        icon: "barbell-outline",
+        color: "#3B82F6",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-14",
+        name: "Tricep Dip",
+        sets: 3,
+        reps: 10,
+        duration: "5 mins",
+        icon: "fitness-outline",
+        color: "#10B981",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-15",
+        name: "Bird Dog",
+        sets: 3,
+        reps: 10,
+        duration: "4 mins",
+        icon: "accessibility-outline",
+        color: "#F59E0B",
+        category: "Core",
+      },
+      {
+        id: "ex-16",
+        name: "Dead Bug",
+        sets: 3,
+        reps: 10,
+        duration: "4 mins",
+        icon: "accessibility-outline",
+        color: "#6366F1",
+        category: "Core",
+      },
+      {
+        id: "ex-17",
+        name: "Clamshell",
+        sets: 3,
+        reps: 15,
+        duration: "4 mins",
+        icon: "body-outline",
+        color: "#D946EF",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-18",
+        name: "Resistance Band Pull Apart",
+        sets: 3,
+        reps: 15,
+        duration: "5 mins",
+        icon: "fitness-outline",
+        color: "#0EA5E9",
+        category: "Upper Body",
+      },
+      {
+        id: "ex-19",
+        name: "Wall Sit",
+        sets: 3,
+        reps: 1,
+        duration: "30 sec",
+        icon: "accessibility-outline",
+        color: "#F43F5E",
+        category: "Lower Body",
+      },
+      {
+        id: "ex-20",
+        name: "Scapular Squeeze",
+        sets: 3,
+        reps: 10,
+        duration: "3 mins",
+        icon: "fitness-outline",
+        color: "#84CC16",
+        category: "Upper Body",
+      },
     ];
 
     // --- Create Exercises (Global) ---
@@ -145,22 +295,62 @@ export const seedMockData = async () => {
 
     // --- Create Exercise Templates (Doctor's Library) ---
     console.log("Creating exercise templates...");
-    const templateNames = ["Phục hồi dây chằng (ACL) - Cơ bản", "Giãn cơ vai gáy", "Phục hồi sụn chêm - Tuần 1-2"];
-    for (let t = 0; t < templateNames.length; t++) {
+    const templates = [
+      { 
+        name: "Phục hồi dây chằng (ACL) - Cơ bản", 
+        exercises: [exercises[0], exercises[1], exercises[7], exercises[11]] 
+      },
+      { 
+        name: "Giãn cơ vai gáy", 
+        exercises: [exercises[2], exercises[8], exercises[19]] 
+      },
+      { 
+        name: "Phục hồi sụn chêm - Tuần 1-2", 
+        exercises: [exercises[0], exercises[1], exercises[6], exercises[16]] 
+      },
+      { 
+        name: "Tăng cường cơ tứ đầu đùi", 
+        exercises: [exercises[0], exercises[1], exercises[4], exercises[9], exercises[18]] 
+      },
+      { 
+        name: "Phục hồi chức năng khớp gối - Nâng cao", 
+        exercises: [exercises[0], exercises[1], exercises[4], exercises[6], exercises[9], exercises[10]] 
+      },
+      { 
+        name: "Bài tập Core cho người cao tuổi", 
+        exercises: [exercises[3], exercises[5], exercises[14], exercises[15]] 
+      },
+      { 
+        name: "Phục hồi sau phẫu thuật đầu gối", 
+        exercises: [exercises[0], exercises[1], exercises[7], exercises[6], exercises[11]] 
+      },
+      { 
+        name: "Tăng cường sức mạnh vai", 
+        exercises: [exercises[2], exercises[8], exercises[17], exercises[19]] 
+      },
+      { 
+        name: "Bài tập cân bằng và thăng bằng", 
+        exercises: [exercises[3], exercises[5], exercises[9], exercises[14]] 
+      },
+      { 
+        name: "Phục hồi chức năng hông", 
+        exercises: [exercises[7], exercises[11], exercises[16], exercises[4]] 
+      },
+      { 
+        name: "Tăng cường tay và vai", 
+        exercises: [exercises[12], exercises[13], exercises[17], exercises[2]] 
+      },
+    ];
+    for (let t = 0; t < templates.length; t++) {
       const templateId = `template-${doctorId}-${t}`;
       const templateRef = doc(collection(db, "exercise_templates"), templateId);
-      
-      // Pick 2-3 random exercises for the template
-      const selectedExercises = exercises
-        .sort(() => 0.5 - Math.random())
-        .slice(0, Math.floor(Math.random() * 2) + 2);
 
       const templateData = {
         id: templateId,
         doctorId: doctorId,
-        name: templateNames[t],
-        exercises: selectedExercises,
-        totalDuration: `${selectedExercises.length * 5} min`,
+        name: templates[t].name,
+        exercises: templates[t].exercises,
+        totalDuration: `${templates[t].exercises.length * 5} min`,
         patientCount: Math.floor(Math.random() * 5) + 1,
         createdAt: Timestamp.fromDate(new Date()),
         updatedAt: Timestamp.fromDate(new Date()),
@@ -189,6 +379,47 @@ export const seedMockData = async () => {
     };
     batch.set(planRef, planData);
     opCount++;
+
+    // --- Create additional mock patients ---
+    const additionalPatients = [
+      { uid: "patient-nguyen-van-a", name: "Nguyễn Văn A", email: "nguyenvana@gmail.com", phone: "0901234567", dob: "1985-03-15", condition: "Phục hồi ACL sau phẫu thuật", phase: 2, week: 6, totalWeeks: 16, progress: 38 },
+      { uid: "patient-tran-thi-b", name: "Trần Thị B", email: "tranthib@gmail.com", phone: "0912345678", dob: "1990-07-22", condition: "Đau vai gáy mãn tính", phase: 1, week: 3, totalWeeks: 8, progress: 35 },
+      { uid: "patient-le-van-c", name: "Lê Văn C", email: "levanc@gmail.com", phone: "0923456789", dob: "1978-11-05", condition: "Thoái hóa khớp gối", phase: 3, week: 10, totalWeeks: 20, progress: 50 },
+      { uid: "patient-pham-thi-d", name: "Phạm Thị D", email: "phamthid@gmail.com", phone: "0934567890", dob: "1995-01-30", condition: "Phục hồi sụn chêm", phase: 1, week: 2, totalWeeks: 10, progress: 20 },
+      { uid: "patient-hoang-van-e", name: "Hoàng Văn E", email: "hoangvane@gmail.com", phone: "0945678901", dob: "1982-09-12", condition: "Đau lưng dưới", phase: 2, week: 5, totalWeeks: 12, progress: 42 },
+    ];
+
+    for (const ap of additionalPatients) {
+      const apRef = doc(collection(db, "users"), ap.uid);
+      batch.set(apRef, {
+        uid: ap.uid,
+        email: ap.email,
+        displayName: ap.name,
+        role: "patient",
+        dateOfBirth: ap.dob,
+        phone: ap.phone,
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+      opCount++;
+
+      const apPlanId = `plan-${ap.uid}`;
+      const apPlanRef = doc(collection(db, "treatment_plans"), apPlanId);
+      batch.set(apPlanRef, {
+        id: apPlanId,
+        patientId: ap.uid,
+        doctorId: doctorId,
+        condition: ap.condition,
+        currentPhase: ap.phase,
+        currentWeek: ap.week,
+        totalWeeks: ap.totalWeeks,
+        status: "on-track",
+        progress: ap.progress,
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+      opCount++;
+    }
 
     // --- Create Multiple Assignments ---
     console.log("Creating assignments...");

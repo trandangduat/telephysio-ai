@@ -9,6 +9,7 @@ export default {
     cancel: 'Huỷ',
     submit: 'Gửi',
     back: 'Quay lại',
+    done: 'Xong',
     today: 'Hôm nay',
     sets: 'hiệp',
     reps: 'lần',
@@ -197,17 +198,21 @@ export default {
       goodMorning: 'Chào buổi sáng,',
       goodAfternoon: 'Chào buổi chiều,',
       goodEvening: 'Chào buổi tối,',
+      activePatients: 'Bệnh nhân',
+      todayTasks: 'Hôm nay',
+      completedToday: 'Đã xong',
       patientsAssigned: 'Đã giao {{count}} bệnh nhân',
       patientsAssigned_plural: 'Đã giao {{count}} bệnh nhân',
       myPatients: 'Bệnh Nhân Của Tôi',
       noPatientsMatch: 'Không có bệnh nhân nào khớp với tìm kiếm.',
       noPatientsAssigned: 'Chưa có bệnh nhân nào được giao.',
-      noTasksToday: 'Không có bài tập hôm nay',
+      noTasksToday: 'Không có lịch tập hôm nay',
       allDone: 'Đã hoàn thành ✓',
       tasksDone: 'Hoàn thành {{completed}}/{{total}}',
       notStarted: 'Chưa bắt đầu',
       assignments: '{{count}} lộ trình',
       assignments_plural: '{{count}} lộ trình',
+      todayTasksCount: '{{count}} hôm nay',
     },
 
     // Patients
@@ -240,6 +245,11 @@ export default {
       streak: 'Chuỗi',
       painAvg: 'Đau (TB)',
       recoveryProgress: 'Tiến Độ Phục Hồi',
+      noChartData: 'Chưa có dữ liệu thực tế cho chỉ số này.',
+      chartXAxis: 'Tuần hồi phục',
+      chartYAxisRom: 'Tầm vận động gối (độ)',
+      chartYAxisPain: 'Mức đau (0-10)',
+      chartYAxisAccuracy: 'Độ chính xác vận động (%)',
       weekLabel: 'Tuần {{num}}',
       nowLabel: 'Hiện tại',
       assign: 'Giao Bài',
@@ -276,6 +286,7 @@ export default {
       title: 'Mẫu Bài Tập',
       subtitle: 'Tạo các nhóm bài tập có thể sử dụng lại',
       tabDesc: 'Các nhóm bài tập tùy chỉnh có thể dùng chung cho nhiều bệnh nhân',
+      searchPlaceholder: 'Tìm mẫu bài tập...',
       createTemplate: 'Tạo Mẫu Mới',
       exercisesCount: '{{count}} bài tập',
       patientsCount: '{{count}} bệnh nhân',
@@ -287,6 +298,7 @@ export default {
       deleteError: 'Không thể xóa mẫu.',
       cancel: 'Hủy',
       noTemplates: 'Chưa có mẫu nào. Hãy tạo một mẫu để bắt đầu.',
+      noTemplatesMatch: 'Không có mẫu nào khớp với tìm kiếm.',
     },
 
     // Template Editor
@@ -339,7 +351,8 @@ export default {
 
     // Assign Template
     assignTemplate: {
-      title: 'Giao Buổi Tập',
+      title: 'Quản lý phiên tập',
+      createAssignmentTitle: 'Tạo lịch tập',
       patientLabel: 'Bệnh Nhân',
       templateLabel: 'Mẫu Bài Tập (Bắt buộc)',
       dateTimeLabel: 'Ngày & Giờ',
@@ -352,6 +365,9 @@ export default {
       addTitlePlaceholder: 'Thêm tiêu đề',
       saveBtn: 'Lưu',
       assignmentSuccess: 'Đã giao lộ trình cho bệnh nhân thành công.',
+      completedBadge: 'Đã xong',
+      scheduledBadge: 'Đã lên lịch',
+      viewSessionDetail: 'Xem chi tiết buổi tập',
     }
   },
 
