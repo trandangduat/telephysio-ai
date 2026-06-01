@@ -23,30 +23,19 @@ TelePhysio AI là ứng dụng di động hỗ trợ phục hồi vận động 
 
 Hệ thống sử dụng **MediaPipe BlazePose** để phân tích tư thế qua camera, tự động đếm số lần lặp và đánh giá độ chính xác của động tác.
 
-<div align="center">
-  <img src="docs/images/dang-nhap-dang-ky.png" alt="Màn hình đăng nhập và đăng ký" width="850" />
-</div>
-
 ## Tính năng
 
 ### Giao diện bệnh nhân
 
-<table align="center">
-  <tr>
-    <td width="50%" align="center"><img src="docs/images/before-start-workout.png" alt="Trước khi bắt đầu buổi tập" width="100%" /><br><em>Chuẩn bị buổi tập</em></td>
-    <td width="50%" align="center"><img src="docs/images/working-out.png" alt="Luyện tập với AI" width="100%" /><br><em>AI theo dõi tư thế real-time</em></td>
-  </tr>
-</table>
+<div align="center">
+  <img src="docs/images/patient-composite.png" alt="Giao diện bệnh nhân" width="800" />
+</div>
 
 ### Giao diện bác sĩ
 
-<table align="center">
-  <tr>
-    <td width="33%" align="center"><img src="docs/images/patient-details.png" alt="Chi tiết bệnh nhân" width="100%" /><br><em>Chi tiết bệnh nhân</em></td>
-    <td width="33%" align="center"><img src="docs/images/manage-sessions.png" alt="Quản lý buổi tập" width="100%" /><br><em>Quản lý buổi tập</em></td>
-    <td width="33%" align="center"><img src="docs/images/add-assignments.png" alt="Giao bài tập" width="100%" /><br><em>Giao bài tập</em></td>
-  </tr>
-</table>
+<div align="center">
+  <img src="docs/images/doctor-composite.png" alt="Giao diện bác sĩ" width="800" />
+</div>
 
 ## Công nghệ
 
