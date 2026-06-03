@@ -6,8 +6,8 @@
 
 import { Timestamp } from "firebase/firestore";
 
-// ── User ────────────────────────────────────────────
-// Derived from: AuthContext (role, userName), ProfileScreen (email, phone, dob, avatarUrl)
+// ── Người dùng ──────────────────────────────────────
+// Dẫn xuất từ: AuthContext (vai trò, tên người dùng), ProfileScreen (email, sđt, ngày sinh, avatarUrl)
 export type UserRole = "patient" | "doctor";
 
 export interface UserProfile {
@@ -23,8 +23,8 @@ export interface UserProfile {
     updatedAt: Timestamp;
 }
 
-// ── Treatment Plan (Patient) ────────────────────────
-// Derived from: HomeScreen (protocol card), ProgressScreen (week/phase)
+// ── Phác đồ Điều trị (Bệnh nhân) ────────────────────
+// Dẫn xuất từ: HomeScreen (thẻ phác đồ), ProgressScreen (tuần/giai đoạn)
 export interface TreatmentPlan {
     id: string;
     patientId: string;
@@ -39,8 +39,8 @@ export interface TreatmentPlan {
     updatedAt: Timestamp;
 }
 
-// ── Exercise (Template) ─────────────────────────────
-// Derived from: WorkoutScreen mockExercises, DoctorAssignments templates
+// ── Bài tập (Mẫu) ───────────────────────────────────
+// Dẫn xuất từ: WorkoutScreen bài tập mẫu, DoctorAssignments mẫu bài tập
 export type ExerciseDifficulty = "easy" | "medium" | "hard";
 
 export interface Exercise {
@@ -58,8 +58,8 @@ export interface Exercise {
     notes?: string; // doctor's notes for this exercise
 }
 
-// ── Assignment (Doctor → Patient) ───────────────────
-// Derived from: DoctorAssignmentsScreen (templates, assigned tab)
+// ── Phân công (Bác sĩ → Bệnh nhân) ──────────────────
+// Dẫn xuất từ: DoctorAssignmentsScreen (mẫu bài tập, tab đã giao)
 export interface Assignment {
     id: string;
     doctorId: string;
@@ -73,7 +73,7 @@ export interface Assignment {
     completedAt?: Timestamp;
 }
 
-// ── Workout Records (Spec Compliant Details) ────────
+// ── Bản ghi Tập luyện (Chi tiết tuân thủ đặc tả) ────
 export interface SetRecord {
   setNumber: number;
   repsCompleted: number | null; // null if time-based (plank, hold, etc.)
@@ -98,8 +98,8 @@ export interface ExerciseRecord {
   thumbnailUrl?: string | null;
 }
 
-// ── Session (Single workout session) ────────────────
-// Derived from: TrainingScreen (reps, formAccuracy, elapsed), PatientDetailScreen (session history)
+// ── Buổi tập (Một buổi tập luyện duy nhất) ──────────
+// Dẫn xuất từ: TrainingScreen (số lần lặp, độ chính xác, thời gian), PatientDetailScreen (lịch sử buổi tập)
 export interface Session {
   id: string;
   patientId: string;
@@ -125,7 +125,7 @@ export interface Session {
   reviewedAt?: Timestamp;
   feedbackUpdatedAt?: Timestamp;
 
-  // Additional backward compatibility fields for legacy UI:
+  // Các trường tương thích ngược bổ sung cho giao diện cũ:
   videoUrl?: string;
   exerciseList?: string[];
   formBreakdown?: Record<string, number>;
@@ -140,7 +140,7 @@ export interface Session {
   }>;
 }
 
-// ── Incomplete Session (Active Workout State) ───────
+// ── Buổi tập Dang dở (Trạng thái đang tập luyện) ────
 export interface IncompleteSession {
     id: string; // Same as assignmentId or document auto-ID
     patientId: string;
@@ -153,7 +153,7 @@ export interface IncompleteSession {
     lastUpdated: Timestamp;
     videoPath?: string | null;    // local video path if recording mid-workout
 
-    // Backward compatibility fields:
+    // Các trường tương thích ngược:
     exercisesCompleted?: number;
     completedExercisesData?: Array<{
         exerciseId: string;
@@ -164,8 +164,8 @@ export interface IncompleteSession {
     }>;
 }
 
-// ── Progress Snapshot ───────────────────────────────
-// Derived from: HomeScreen (movementScore, timeActive, sessions), ProgressScreen (ROM, strength)
+// ── Ảnh chụp Tiến độ ────────────────────────────────
+// Dẫn xuất từ: HomeScreen (điểm chuyển động, thời gian HĐ, buổi tập), ProgressScreen (ROM, sức mạnh)
 export interface ProgressSnapshot {
     id: string;
     patientId: string;
@@ -176,7 +176,7 @@ export interface ProgressSnapshot {
     strength?: number;            // muscle strength percentage
     date: Timestamp;
 
-    // Backward compatibility fields:
+    // Các trường tương thích ngược:
     timeActiveMinutes?: number;
     dailyGoalPercent?: number;
     sessionsCompleted?: number;
@@ -190,7 +190,7 @@ export interface ProgressSnapshot {
 
 
 
-// ── Exercise Template (Doctor's Library) ────────────
+// ── Mẫu Bài tập (Thư viện của Bác sĩ) ───────────────
 export interface ExerciseTemplate {
     id: string;
     doctorId: string;
@@ -203,8 +203,8 @@ export interface ExerciseTemplate {
     updatedAt?: Timestamp;
 }
 
-// ── Feedback (Exercise feedback) ────────────────────
-// Derived from: SessionScreen (difficulty, notes, exercise name)
+// ── Phản hồi (Phản hồi bài tập) ─────────────────────
+// Dẫn xuất từ: SessionScreen (độ khó, ghi chú, tên bài tập)
 export interface ExerciseFeedback {
     id: string;
     patientId: string;
@@ -217,8 +217,8 @@ export interface ExerciseFeedback {
     createdAt: Timestamp;
 }
 
-// ── Schedule (Doctor) ───────────────────────────────
-// Derived from: DoctorDashboardScreen (today's schedule items)
+// ── Lịch trình (Bác sĩ) ─────────────────────────────
+// Dẫn xuất từ: DoctorDashboardScreen (các mục lịch trình hôm nay)
 export interface ScheduleItem {
     id: string;
     doctorId: string;
@@ -230,10 +230,10 @@ export interface ScheduleItem {
     date: Timestamp;
 }
 
-// ── Notification ────────────────────────────────────
-// Two event-driven notification types:
-//   session_completed  → sent to doctor when patient finishes a session
-//   session_assigned   → sent to patient when doctor assigns a workout
+// ── Thông báo ───────────────────────────────────────
+// Hai loại thông báo dựa trên sự kiện:
+//   session_completed  → gửi cho bác sĩ khi bệnh nhân hoàn thành buổi tập
+//   session_assigned   → gửi cho bệnh nhân khi bác sĩ giao bài tập
 export type NotificationType = "session_completed" | "session_assigned";
 
 export interface Notification {
@@ -253,8 +253,8 @@ export interface Notification {
     createdAt: Timestamp;
 }
 
-// ── Library Item ────────────────────────────────────
-// Derived from: LibraryScreen (guides, videos, articles)
+// ── Mục Thư viện ────────────────────────────────────
+// Dẫn xuất từ: LibraryScreen (hướng dẫn, video, bài báo)
 export interface LibraryItem {
     id: string;
     title: string;

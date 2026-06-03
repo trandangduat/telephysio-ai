@@ -77,7 +77,7 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
    * Tự động yêu cầu quyền camera khi component được mount
    * nếu quyền chưa được cấp và hệ thống còn cho phép hỏi lại.
    */
-    // Automatically request camera permission on mount if not yet decided
+    // Tự động yêu cầu quyền camera khi mount nếu chưa quyết định
     useEffect(() => {
         if (permission && !permission.granted && permission.canAskAgain) {
             requestPermission();
@@ -85,12 +85,12 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
     }, [permission]);
 
     if (!permission) {
-    // Camera permissions are still loading.
+    // Quyền camera vẫn đang tải.
         return <View style={styles.container} />;
     }
 
     if (!permission.granted) {
-    // Camera permissions are not granted yet.
+    // Chưa được cấp quyền truy cập camera.
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: spacing.xl }]}>
                 <AppText variant="bodyMd" color={colors.onSurface} style={{ textAlign: 'center', marginBottom: spacing.lg }}>

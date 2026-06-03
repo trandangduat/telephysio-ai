@@ -19,7 +19,7 @@
  */
 
 export default {
-  // ── Common ───────────────────────────────────────
+  // ── Chung ────────────────────────────────────────
   common: {
     ok: 'OK',
     cancel: 'Cancel',
@@ -32,7 +32,7 @@ export default {
     minutes: 'min',
   },
 
-    // ── Tab Bar ──────────────────────────────────────
+    // ── Thanh Tab ────────────────────────────────────
     tabs: {
         home: 'Home',
         workout: 'Workout',
@@ -41,14 +41,14 @@ export default {
         feedback: 'Feedback',
     },
 
-    // ── Navigation Titles ────────────────────────────
+    // ── Tiêu đề Điều hướng ───────────────────────────
     nav: {
         calibration: 'Camera Calibration',
         training: 'AI Training Room',
         doctorChat: 'Doctor Feedback & Chat',
     },
 
-  // ── Home Screen ──────────────────────────────────
+  // ── Màn hình Trang chủ ───────────────────────────
   home: {
     greeting: 'Hello, {{name}}',
     todayBadge: "Today's Workout",
@@ -68,7 +68,7 @@ export default {
     contactDoctor: 'Please contact your doctor.',
   },
 
-    // ── Week Calendar ────────────────────────────────
+    // ── Lịch Tuần ────────────────────────────────────
     weekDays: {
         mon: 'Mon',
         tue: 'Tue',
@@ -79,7 +79,7 @@ export default {
         sun: 'Sun',
     },
 
-    // ── Library Screen ───────────────────────────────
+    // ── Màn hình Thư viện ────────────────────────────
     library: {
         title: 'Exercise Library',
         noExercises: 'No exercises found.',
@@ -95,7 +95,7 @@ export default {
         kneeHealth: 'Knee Health',
     },
 
-    // ── Progress Screen ──────────────────────────────
+    // ── Màn hình Tiến độ ─────────────────────────────
     progress: {
         title: 'Your Recovery Journey',
         subtitle: 'Week 6 of ACL Rehabilitation • Phase 2',
@@ -120,7 +120,7 @@ export default {
         streakDesc: 'Consistent daily therapy for two weeks',
     },
 
-    // ── Workout Screen ───────────────────────────────
+    // ── Màn hình Bài tập ─────────────────────────────
     workout: {
         title: "Today's Protocol",
         subtitle: 'Complete these exercises to reach your daily goal.',
@@ -129,7 +129,7 @@ export default {
         continueWorkout: 'Continue Workout',
     },
 
-    // ── Calibration Screen ───────────────────────────
+    // ── Màn hình Hiệu chỉnh ──────────────────────────
     calibration: {
         notReady: 'Not detected — Step back',
         partial: 'Almost — Adjust position',
@@ -138,7 +138,7 @@ export default {
         startButton: 'Start',
     },
 
-  // ── Training Screen ──────────────────────────────
+  // ── Màn hình Luyện tập ───────────────────────────
   training: {
     set: 'SET {{current}}/{{total}}',
     repCount: 'REPS',
@@ -168,7 +168,7 @@ export default {
     pause: 'PAUSE',
   },
 
-  // ── Exercise Result Screen ───────────────────────
+  // ── Màn hình Kết quả Bài tập ─────────────────────
   result: {
     title: 'Exercise Complete!',
     setsSummary: 'SETS SUMMARY',
@@ -183,7 +183,7 @@ export default {
     setSubtitle: 'Set {{setNum}} • {{reps}} reps',
   },
 
-  // ── Workout Summary Screen ───────────────────────
+  // ── Màn hình Tổng kết Buổi tập ───────────────────
   summary: {
     processingTitle: 'Processing Results...',
     processingDesc: 'Saving metadata, updating logs, running MET calculations, and closing the active session state.',
@@ -203,13 +203,13 @@ export default {
     returnHome: 'Return Home',
   },
 
-  // ── Doctor ───────────────────────────────────────
+  // ── Bác sĩ ───────────────────────────────────────
   doctor: {
-    // Common
+    // Chung
     doctorRole: 'DOCTOR',
     searchPlaceholder: 'Search by email or name...',
     
-    // Dashboard
+    // Bảng điều khiển
     dashboard: {
       goodMorning: 'Good morning,',
       goodAfternoon: 'Good afternoon,',
@@ -231,7 +231,7 @@ export default {
       todayTasksCount: '{{count}} today',
     },
 
-    // Patients
+    // Bệnh nhân
     patients: {
       allPatients: 'All Patients',
       searchPlaceholder: 'Search patients or conditions...',
@@ -249,7 +249,7 @@ export default {
       noPatientsFound: 'No patients found.',
     },
 
-    // Patient Detail
+    // Chi tiết Bệnh nhân
     patientDetail: {
       title: 'Patient Details',
       noActivePlan: 'No active plan',
@@ -272,7 +272,7 @@ export default {
       viewSessions: 'View Sessions',
     },
 
-    // Session Detail
+    // Chi tiết Buổi tập
     sessionDetail: {
       title: 'Review Session',
       accuracy: 'ACCURACY',
@@ -287,7 +287,7 @@ export default {
       shareFeedback: 'Share Feedback',
     },
 
-    // Sessions History
+    // Lịch sử Buổi tập
     sessions: {
       title: 'Session History',
       accuracyScore: 'Accuracy Score',
@@ -297,7 +297,7 @@ export default {
       durationValue: '{{min}}m {{sec}}s',
     },
 
-    // Assignments
+    // Phân công
     assignments: {
       title: 'Exercise Templates',
       subtitle: 'Create reusable exercise groups for patient care plans',
@@ -317,7 +317,7 @@ export default {
       noTemplatesMatch: 'No templates match your search.',
     },
 
-    // Template Editor
+    // Chỉnh sửa Mẫu
     templateEditor: {
       newTemplate: 'Create Template',
       editTemplate: 'Edit Template',
@@ -365,7 +365,7 @@ export default {
       mins: 'mins',
     },
 
-    // Assign Template
+    // Giao Mẫu bài tập
     assignTemplate: {
       title: 'Manage session',
       createAssignmentTitle: 'Create assignment',
@@ -387,7 +387,7 @@ export default {
     }
   },
 
-    // ── Report Screen ────────────────────────────────
+    // ── Màn hình Báo cáo ─────────────────────────────
     report: {
         title: 'Progress Report',
         completionRate: 'Completion Rate',
@@ -397,7 +397,7 @@ export default {
         history: 'Training History',
     },
 
-  // ── Session Screen ───────────────────────────────
+  // ── Màn hình Buổi tập ────────────────────────────
   session: {
     historyTitle: 'Session History',
     historySubtitle: "Review videos and doctor's feedback for each of your sessions.",
@@ -437,7 +437,7 @@ export default {
     reviewedBadge: 'Reviewed',
   },
 
-  // ── Feedback Screen ──────────────────────────────
+  // ── Màn hình Phản hồi ────────────────────────────
   feedback: {
     painTitle: 'Pain Level',
     painDescription: 'Select your pain level (1 = no pain, 10 = severe pain)',
@@ -450,7 +450,7 @@ export default {
     submitSuccessMessage: 'Your feedback has been recorded. The doctor will review it soon.',
   },
 
-    // ── Symptom Options ──────────────────────────────
+    // ── Tùy chọn Triệu chứng ─────────────────────────
     symptoms: {
         pain: 'Pain',
         painDesc: 'Pain in the exercise area',
@@ -466,7 +466,7 @@ export default {
         betterDesc: 'Noticeable improvement',
     },
 
-    // ── Profile Screen ───────────────────────────────
+    // ── Màn hình Hồ sơ ───────────────────────────────
     profile: {
         navTitle: 'Profile & Settings',
         activity: 'Activity',

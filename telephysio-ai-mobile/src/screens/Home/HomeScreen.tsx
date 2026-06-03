@@ -1,6 +1,6 @@
 /**
- * HomeScreen — Màn hình Bảng điều khiển (Dashboard) chính của ứng dụng dành cho người dùng.
- * Hiển thị kế hoạch tập luyện hôm nay, tiến độ và các thông báo.
+ * HomeScreen - Màn hình chính được thiết kế lại (Clinical Vitality).
+ * Màn hình này hiển thị tổng quan về kế hoạch điều trị, tiến độ và các bài tập hàng ngày của bệnh nhân.
  */
 
 import React, { useEffect, useState } from "react";
@@ -41,8 +41,8 @@ import { NotificationBell } from "../../components/NotificationBell";
 import { useTranslation } from "react-i18next";
 
 type HomeNavProp = CompositeNavigationProp<
-BottomTabNavigationProp<BottomTabParamList, "Home">,
-NativeStackNavigationProp<RootStackParamList>
+    BottomTabNavigationProp<BottomTabParamList, "Home">,
+    NativeStackNavigationProp<RootStackParamList>
 >;
 
 interface Props {
@@ -50,21 +50,22 @@ interface Props {
 }
 
 /**
- * Component Màn hình chính (HomeScreen).
- * Hiển thị tóm tắt thông tin điều trị, bài tập hôm nay và các chỉ số sức khỏe cơ bản.
+ * Thành phần (Component) đại diện cho màn hình chính của ứng dụng.
  * 
- * @param props Các thuộc tính truyền vào component
- * @param props.navigation Đối tượng navigation dùng để chuyển hướng màn hình
- * @return React.FC Component HomeScreen
+ * @param {Props} props Các thuộc tính của thành phần.
+ * @returns {JSX.Element} Giao diện người dùng của màn hình chính.
  */
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const { t } = useTranslation();
-  const { userName, uid } = useAuth();
+    const { t } = useTranslation();
+    const { userName, uid } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [plan, setPlan] = useState<TreatmentPlan | null>(null);
-    const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
-    const [incompleteSession, setIncompleteSession] = useState<IncompleteSession | null>(null);
+    const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(
+        null,
+    );
+    const [incompleteSession, setIncompleteSession] =
+        useState<IncompleteSession | null>(null);
     const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
 
     useEffect(() => {
@@ -74,28 +75,26 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         return unsubscribe;
     }, [navigation, uid]);
 
-    /**
-   * Tải dữ liệu ban đầu cho màn hình chính.
-   * Lấy kế hoạch điều trị, tiến độ mới nhất và danh sách bài tập được giao.
-   * 
-   * @return Promise<void>
-   */
     async function loadData() {
         if (!uid) {
             setLoading(false);
             return;
         }
         try {
-            const [fetchedPlan, fetchedProgress, assignments] = await Promise.all([
-                getActiveTreatmentPlan(uid),
-                getLatestProgress(uid),
-                getPatientAssignments(uid, "active"),
-            ]);
+            const [fetchedPlan, fetchedProgress, assignments] =
+                await Promise.all([
+                    getActiveTreatmentPlan(uid),
+                    getLatestProgress(uid),
+                    getPatientAssignments(uid, "active"),
+                ]);
             setPlan(fetchedPlan);
             setProgress(fetchedProgress);
             if (assignments && assignments.length > 0) {
                 setActiveAssignment(assignments[0]);
-                const incSession = await getIncompleteSession(uid, assignments[0].id);
+                const incSession = await getIncompleteSession(
+                    uid,
+                    assignments[0].id,
+                );
                 setIncompleteSession(incSession);
             } else {
                 setActiveAssignment(null);
@@ -125,136 +124,44 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         );
     }
 
-    const protocolTitle = activeAssignment?.templateName || plan?.condition || "No Active Protocol";
+    const protocolTitle =
+        activeAssignment?.templateName ||
+        plan?.condition ||
+        t("home.noActiveProtocol");
     const protocolSubtitle = activeAssignment
-        ? `${activeAssignment.exercises.length} exercises • ${activeAssignment.totalDuration || "0 min"}`
+        ? t("home.setsReps", {
+              sets: activeAssignment.exercises.length,
+              reps: activeAssignment.totalDuration || "0 min",
+          })
         : plan
-            ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}`
-            : "Please contact your doctor.";
+          ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}`
+          : t("home.contactDoctor");
 
-  if (loading) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.safe,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </SafeAreaView>
-    );
-  }
-
-  const protocolTitle = activeAssignment?.templateName || plan?.condition || t("home.noActiveProtocol");
-  const protocolSubtitle = activeAssignment
-    ? t("home.setsReps", { sets: activeAssignment.exercises.length, reps: activeAssignment.totalDuration || "0 min" })
-    : plan
-    ? `Phase ${plan.currentPhase}, Week ${plan.currentWeek}`
-    : t("home.contactDoctor");
-
-  const movementScore = progress?.movementScore || 0;
-  const timeActive = progress?.timeActiveMinutes || 0;
-  const dailyGoalPercent = progress?.dailyGoalPercent || 0;
-  const sessionsCompleted = progress?.sessionsCompleted || 0;
-  const sessionsTarget = progress?.sessionsTarget || 3;
-  const aiInsight =
-    progress?.aiInsight ||
-    t("progress.aiInsight");
+    const movementScore = progress?.movementScore || 0;
+    const timeActive = progress?.timeActiveMinutes || 0;
+    const dailyGoalPercent = progress?.dailyGoalPercent || 0;
+    const sessionsCompleted = progress?.sessionsCompleted || 0;
+    const sessionsTarget = progress?.sessionsTarget || 3;
+    const aiInsight = progress?.aiInsight || t("progress.aiInsight");
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>
-            {/* Unified Top Bar */}
+            {/* Thanh điều hướng trên cùng thống nhất */}
             <View style={styles.topBar}>
                 <View style={styles.logoRow}>
                     <Ionicons name="medical" size={20} color={colors.primary} />
                     <AppText variant="labelMd" style={styles.logoText}>
-            TelePhysioAI
-          </AppText>
-        </View>
-        <View style={styles.topBarIcons}>
-          <NotificationBell />
-          <TouchableOpacity
-            style={styles.avatarBtn}
-            onPress={() => navigation.navigate("Profile" as any)}
-          >
-            <Ionicons name="person" size={14} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header Greeting */}
-        <View style={styles.header}>
-          <AppText variant="headlineXl" style={styles.greetingTitle}>
-            {t("home.goodMorning", { name: userName || "there" })}
-          </AppText>
-          <AppText
-            variant="bodySm"
-            color={colors.onSurfaceVariant}
-            style={styles.greetingSubtitle}
-          >
-            {t("home.dailyOverview")}
-          </AppText>
-        </View>
-
-        {/* Hero Workout Card */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroCardContent}>
-            <View style={styles.heroLeftCol}>
-              <View style={styles.heroTag}>
-                <Ionicons name="flash" size={12} color={colors.primary} />
-                <AppText variant="labelSm" style={styles.heroTagText}>
-                  {t("home.todaysPlan")}
-                </AppText>
-              </View>
-              <AppText variant="headlineMd" style={styles.heroTitle} numberOfLines={2}>
-                {activeAssignment ? activeAssignment.templateName : t("home.restDay")}
-              </AppText>
-              
-              <View style={styles.heroMeta}>
-                {activeAssignment ? (
-                  <>
-                    <View style={styles.heroMetaItem}>
-                      <Ionicons name="barbell-outline" size={14} color="#64748b" />
-                      <AppText variant="bodySm" style={styles.heroMetaText}>
-                        {activeAssignment.exercises.length} {t("common.sets")}
-                      </AppText>
-                    </View>
-                    <View style={styles.heroMetaItem}>
-                      <Ionicons name="time-outline" size={14} color="#64748b" />
-                      <AppText variant="bodySm" style={styles.heroMetaText}>
-                        {activeAssignment.totalDuration}
-                      </AppText>
-                    </View>
-                  </>
-                ) : (
-                  <AppText variant="bodySm" style={{ color: "#64748b" }}>
-                    {t("home.noRoutine")}
-                  </AppText>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.heroRightCol}>
-              {activeAssignment ? (
-                <TouchableOpacity
-                  style={styles.heroPlayButton}
-                  activeOpacity={0.8}
-                  onPress={() => navigation.navigate("Workout")}
-                >
-                  <Ionicons
-                    name={incompleteSession ? "play-forward" : "play"}
-                    size={28}
-                    color="#fff"
-                  />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.heroRestIcon}>
-                  <Ionicons name="cafe" size={28} color="#94a3b8" />
+                        TelePhysioAI
+                    </AppText>
+                </View>
+                <View style={styles.topBarIcons}>
+                    <NotificationBell />
+                    <TouchableOpacity
+                        style={styles.avatarBtn}
+                        onPress={() => navigation.navigate("Profile" as any)}
+                    >
+                        <Ionicons name="person" size={14} color="#fff" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -263,16 +170,148 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
             >
-              <AppText variant="labelSm" style={styles.heroFooterText}>
-                {incompleteSession ? t("home.inProgressTap") : t("home.readyTap")}
-              </AppText>
-              <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+                {/* Lời chào ở phần đầu */}
+                <View style={styles.header}>
+                    <AppText variant="headlineXl" style={styles.greetingTitle}>
+                        {t("home.goodMorning", { name: userName || "there" })}
+                    </AppText>
+                    <AppText
+                        variant="bodySm"
+                        color={colors.onSurfaceVariant}
+                        style={styles.greetingSubtitle}
+                    >
+                        {t("home.dailyOverview")}
+                    </AppText>
+                </View>
+
+                {/* Thẻ bài tập nổi bật */}
+                <View style={styles.heroCard}>
+                    <View style={styles.heroCardContent}>
+                        <View style={styles.heroLeftCol}>
+                            <View style={styles.heroTag}>
+                                <Ionicons
+                                    name="flash"
+                                    size={12}
+                                    color={colors.primary}
+                                />
+                                <AppText
+                                    variant="labelSm"
+                                    style={styles.heroTagText}
+                                >
+                                    {t("home.todaysPlan")}
+                                </AppText>
+                            </View>
+                            <AppText
+                                variant="headlineMd"
+                                style={styles.heroTitle}
+                                numberOfLines={2}
+                            >
+                                {activeAssignment
+                                    ? activeAssignment.templateName
+                                    : t("home.restDay")}
+                            </AppText>
+
+                            <View style={styles.heroMeta}>
+                                {activeAssignment ? (
+                                    <>
+                                        <View style={styles.heroMetaItem}>
+                                            <Ionicons
+                                                name="barbell-outline"
+                                                size={14}
+                                                color="#64748b"
+                                            />
+                                            <AppText
+                                                variant="bodySm"
+                                                style={styles.heroMetaText}
+                                            >
+                                                {
+                                                    activeAssignment.exercises
+                                                        .length
+                                                }{" "}
+                                                {t("common.sets")}
+                                            </AppText>
+                                        </View>
+                                        <View style={styles.heroMetaItem}>
+                                            <Ionicons
+                                                name="time-outline"
+                                                size={14}
+                                                color="#64748b"
+                                            />
+                                            <AppText
+                                                variant="bodySm"
+                                                style={styles.heroMetaText}
+                                            >
+                                                {activeAssignment.totalDuration}
+                                            </AppText>
+                                        </View>
+                                    </>
+                                ) : (
+                                    <AppText
+                                        variant="bodySm"
+                                        style={{ color: "#64748b" }}
+                                    >
+                                        {t("home.noRoutine")}
+                                    </AppText>
+                                )}
+                            </View>
+                        </View>
+
+                        <View style={styles.heroRightCol}>
+                            {activeAssignment ? (
+                                <TouchableOpacity
+                                    style={styles.heroPlayButton}
+                                    activeOpacity={0.8}
+                                    onPress={() =>
+                                        navigation.navigate("Workout")
+                                    }
+                                >
+                                    <Ionicons
+                                        name={
+                                            incompleteSession
+                                                ? "play-forward"
+                                                : "play"
+                                        }
+                                        size={28}
+                                        color="#fff"
+                                    />
+                                </TouchableOpacity>
+                            ) : (
+                                <View style={styles.heroRestIcon}>
+                                    <Ionicons
+                                        name="cafe"
+                                        size={28}
+                                        color="#94a3b8"
+                                    />
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
+                    {activeAssignment && (
+                        <TouchableOpacity
+                            style={styles.heroFooter}
+                            activeOpacity={0.7}
+                            onPress={() => navigation.navigate("Workout")}
+                        >
+                            <AppText
+                                variant="labelSm"
+                                style={styles.heroFooterText}
+                            >
+                                {incompleteSession
+                                    ? t("home.inProgressTap")
+                                    : t("home.readyTap")}
+                            </AppText>
+                            <Ionicons
+                                name="chevron-forward"
+                                size={14}
+                                color={colors.primary}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
 };
 
 const styles = StyleSheet.create({

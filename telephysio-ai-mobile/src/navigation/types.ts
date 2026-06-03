@@ -15,7 +15,7 @@
 
 import type { Session } from '../services/firebase/types';
 
-// ── Auth Navigation ─────────────────────────────────
+// ── Điều hướng Xác thực ───────────────────────────
 
 /**
  * Kiểu tham số điều hướng cho Auth Stack.
@@ -32,7 +32,7 @@ export type AuthStackParamList = {
     SignUp: undefined;
 };
 
-// ── Patient Navigation ──────────────────────────────
+// ── Điều hướng Bệnh nhân ──────────────────────────
 
 /**
  * Kiểu tham số điều hướng cho Root Stack của bệnh nhân.
@@ -107,7 +107,7 @@ export type BottomTabParamList = {
     Progress: undefined;
 };
 
-// ── Doctor Navigation ───────────────────────────────
+// ── Điều hướng Bác sĩ ─────────────────────────────
 
 /**
  * Kiểu tham số điều hướng cho Doctor Stack (stack chính của bác sĩ).
@@ -159,10 +159,10 @@ export type DoctorTabParamList = {
  * {@code navigation.navigate(SCREENS.Login)}</p>
  */
 export const SCREENS = {
-    // Auth
+    // Xác thực
     Login: 'Login',
     SignUp: 'SignUp',
-    // Patient
+    // Bệnh nhân
     MainTabs: 'MainTabs',
     Home: 'Home',
     Calibration: 'Calibration',
@@ -174,7 +174,7 @@ export const SCREENS = {
     MyAssignments: 'MyAssignments',
     WorkoutDetail: 'WorkoutDetail',
     Notifications: 'Notifications',
-    // Doctor
+    // Bác sĩ
     DoctorTabs: 'DoctorTabs',
     Dashboard: 'Dashboard',
     Assignments: 'Assignments',

@@ -78,7 +78,7 @@ export const DoctorAssignmentsScreen: React.FC = () => {
         loadData();
     }, [uid]);
 
-    // Refresh when screen is focused (after navigating back from editor)
+    // Làm mới khi màn hình được tập trung (sau khi quay lại từ trình chỉnh sửa)
     useEffect(() => {
         const unsubscribe = navigation.addListener("focus", () => {
             if (uid) loadData();

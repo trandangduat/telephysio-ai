@@ -14,8 +14,8 @@ import {
 import { db } from './config';
 import type { ScheduleItem } from './types';
 
-// ── Get Today's Schedule ────────────────────────────
-// Called by DoctorDashboardScreen (schedule list)
+// ── Lấy Lịch trình Hôm nay ──────────────────────────
+// Được gọi bởi DoctorDashboardScreen (danh sách lịch trình)
 /**
  * Lấy lịch trình hôm nay của bác sĩ.
  * 
@@ -40,7 +40,7 @@ export async function getTodaySchedule(doctorId: string): Promise<ScheduleItem[]
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as ScheduleItem));
 }
 
-// ── Create Schedule Item ────────────────────────────
+// ── Tạo Mục Lịch trình ──────────────────────────────
 /**
  * Tạo mới một mục lịch trình.
  * 

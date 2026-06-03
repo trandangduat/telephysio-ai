@@ -27,7 +27,7 @@ import type { Notification, NotificationType } from "./types";
 
 const NOTIFICATIONS_COLLECTION = "notifications";
 
-// ── Create Notification ─────────────────────────────
+// ── Tạo Thông báo ───────────────────────────────────
 /**
  * Tạo một thông báo mới trong cơ sở dữ liệu.
  * 
@@ -54,7 +54,7 @@ export async function createNotification(data: {
     return ref.id;
 }
 
-// ── Get User Notifications ──────────────────────────
+// ── Lấy Thông báo của Người dùng ────────────────────
 /**
  * Lấy danh sách tất cả thông báo của một người dùng, sắp xếp từ mới nhất đến cũ nhất.
  * 
@@ -79,7 +79,7 @@ export async function getUserNotifications(
         });
 }
 
-// ── Mark Single Notification as Read ────────────────
+// ── Đánh dấu Thông báo là Đã đọc ────────────────────
 /**
  * Đánh dấu một thông báo cụ thể là đã đọc.
  * 
@@ -94,7 +94,7 @@ export async function markNotificationRead(
     });
 }
 
-// ── Mark All Notifications as Read ──────────────────
+// ── Đánh dấu Tất cả là Đã đọc ───────────────────────
 /**
  * Đánh dấu tất cả thông báo của người dùng là đã đọc.
  * 
@@ -118,7 +118,7 @@ export async function markAllRead(userId: string): Promise<void> {
     await batch.commit();
 }
 
-// ── Get Unread Count ────────────────────────────────
+// ── Lấy Số lượng Chưa đọc ───────────────────────────
 /**
  * Lấy số lượng thông báo chưa đọc của người dùng.
  * 
@@ -136,8 +136,8 @@ export async function getUnreadCount(userId: string): Promise<number> {
     return snap.size;
 }
 
-// ── Real-time Listener ──────────────────────────────
-// Returns an unsubscribe function. Emits the full list on every change.
+// ── Lắng nghe Thời gian thực ────────────────────────
+// Trả về hàm hủy đăng ký. Phát ra danh sách đầy đủ khi có thay đổi.
 /**
  * Lắng nghe thay đổi của thông báo theo thời gian thực (Real-time).
  * Trả về một hàm unsubscribe để hủy lắng nghe khi không cần thiết.

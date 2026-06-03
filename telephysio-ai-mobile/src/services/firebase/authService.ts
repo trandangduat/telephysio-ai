@@ -20,7 +20,7 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import type { UserProfile, UserRole } from './types';
 
-// ── Register ────────────────────────────────────────
+// ── Đăng ký ─────────────────────────────────────────
 /**
  * Đăng ký người dùng mới bằng Email và Mật khẩu.
  * Tạo mới tài khoản trong Firebase Auth và lưu thông tin hồ sơ vào Firestore.
@@ -53,7 +53,7 @@ export async function registerUser(
     return profile;
 }
 
-// ── Login ───────────────────────────────────────────
+// ── Đăng nhập ───────────────────────────────────────
 /**
  * Đăng nhập người dùng bằng Email và Mật khẩu.
  * Sau khi đăng nhập thành công, lấy thông tin hồ sơ từ Firestore.
@@ -69,7 +69,7 @@ export async function loginUser(email: string, password: string): Promise<UserPr
     return profile;
 }
 
-// ── Logout ──────────────────────────────────────────
+// ── Đăng xuất ───────────────────────────────────────
 /**
  * Đăng xuất người dùng hiện tại khỏi ứng dụng.
  * 
@@ -79,7 +79,7 @@ export async function logoutUser(): Promise<void> {
     await signOut(auth);
 }
 
-// ── Get Current User Profile ────────────────────────
+// ── Lấy Hồ sơ Người dùng Hiện tại ───────────────────
 /**
  * Lấy thông tin hồ sơ người dùng từ Firestore dựa trên UID.
  * 
@@ -91,7 +91,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
-// ── Auth State Listener ─────────────────────────────
+// ── Lắng nghe Trạng thái Xác thực ───────────────────
 /**
  * Lắng nghe sự kiện thay đổi trạng thái xác thực (Đăng nhập/Đăng xuất).
  * 
@@ -102,7 +102,7 @@ export function onAuthChange(callback: (user: User | null) => void) {
     return onAuthStateChanged(auth, callback);
 }
 
-// ── Get Current Firebase User ───────────────────────
+// ── Lấy Người dùng Firebase Hiện tại ────────────────
 /**
  * Lấy đối tượng người dùng Firebase hiện tại đang đăng nhập.
  * 

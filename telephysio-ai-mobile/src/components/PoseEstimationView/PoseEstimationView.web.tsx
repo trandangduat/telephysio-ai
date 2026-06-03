@@ -15,7 +15,7 @@ import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { POSE_HTML } from './pose-html';
 import type { PoseLandmark } from './PoseEstimationView';
 
-// ── Props (same interface as the native version) ──────────────────────────────
+// ── Props (Cùng một giao diện như phiên bản native) ──────────────────────────────
 
 /**
  * @interface PoseEstimationViewProps
@@ -37,7 +37,7 @@ interface PoseEstimationViewProps {
     onError?: (message: string) => void;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Thành phần ─────────────────────────────────────────────────────────────────
 
 /**
  * @component PoseEstimationView
@@ -53,12 +53,12 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
     onPoseDetected,
     onError,
 }) => {
-    // Use a stable DOM id to locate the container after mount
+    // Sử dụng một DOM id ổn định để định vị container sau khi mount
     const containerId = useRef(
         `pose-view-${Math.random().toString(36).slice(2)}`,
     ).current;
 
-    // Use refs to keep callbacks stable and prevent iframe from being destroyed & re-created
+    // Sử dụng refs để giữ các callback ổn định và ngăn iframe bị hủy & tạo lại
     const onPoseDetectedRef = useRef(onPoseDetected);
     const onErrorRef = useRef(onError);
 
@@ -71,14 +71,14 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        // ── Create iframe ─────────────────────────────────────────────────────────
+        // ── Tạo iframe ─────────────────────────────────────────────────────────
         const iframe = document.createElement('iframe');
         iframe.style.cssText =
       'width:100%;height:100%;border:none;display:block;background:#111827;';
-        // Grant camera + microphone permissions to the iframe origin
+        // Cấp quyền camera + microphone cho iframe origin
         iframe.allow = 'camera; microphone; autoplay';
         iframe.setAttribute('allowfullscreen', '');
-        // Inject the entire HTML via srcdoc (no separate server required)
+        // Nhúng toàn bộ HTML qua srcdoc (không cần máy chủ riêng)
         iframe.srcdoc = POSE_HTML;
 
         container.appendChild(iframe);
@@ -87,9 +87,9 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
             (window as any).__poseIframe = iframe.contentWindow;
         }
 
-        // ── Listen for messages posted from inside the iframe ─────────────────────
+        // ── Lắng nghe tin nhắn gửi từ bên trong iframe ─────────────────────
         const handleMessage = (event: MessageEvent) => {
-            // Only handle messages from our iframe
+            // Chỉ xử lý tin nhắn từ iframe của chúng ta
             if (event.source !== iframe.contentWindow) return;
             try {
                 const data =
@@ -102,9 +102,9 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
                 } else if (data.type === 'CAMERA_ERROR') {
                     onErrorRef.current?.(data.error as string);
                 } else if (data.type === 'RECORDING_COMPLETE') {
-                    // Receive raw ArrayBuffer from iframe and create blob URL in parent context.
-                    // This is critical: blob URLs created inside srcdoc iframes get revoked
-                    // when the iframe is destroyed, so we must recreate the blob here.
+                    // Nhận ArrayBuffer thô từ iframe và tạo blob URL trong ngữ cảnh cha.
+                    // Điều này rất quan trọng: các blob URL được tạo bên trong srcdoc iframes sẽ bị thu hồi
+                    // khi iframe bị hủy, do đó chúng ta phải tạo lại blob ở đây.
                     if (data.buffer instanceof ArrayBuffer) {
                         const blob = new Blob([data.buffer], { type: data.mimeType || 'video/webm' });
                         const blobUrl = URL.createObjectURL(blob);
@@ -119,7 +119,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
                     }
                 }
             } catch (_) {
-                // ignore malformed messages
+                // bỏ qua các tin nhắn bị định dạng sai
             }
         };
 
@@ -137,7 +137,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
         };
     }, [containerId]);
 
-    // React Native Web renders <View> as a <div> — nativeID becomes the DOM id
+    // React Native Web render <View> thành <div> — nativeID trở thành DOM id
     return (
         <View
             nativeID={containerId}
@@ -146,7 +146,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
     );
 };
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Kiểu dáng ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     container: {

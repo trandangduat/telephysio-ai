@@ -19,7 +19,7 @@ import { View, StyleSheet, StyleProp, ViewStyle, Platform } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { POSE_HTML } from './pose-html';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Kiểu dữ liệu ────────────────────────────────────────────────────────────
 
 /**
  * @interface PoseLandmark
@@ -28,13 +28,13 @@ import { POSE_HTML } from './pose-html';
  */
 export interface PoseLandmark {
     /** Tọa độ ngang, chuẩn hóa về [0..1] theo chiều rộng khung hình */
-    x: number;         // normalised [0..1] relative to frame width
+    x: number;         // chuẩn hóa [0..1] so với chiều rộng khung hình
     /** Tọa độ dọc, chuẩn hóa về [0..1] theo chiều cao khung hình */
-    y: number;         // normalised [0..1] relative to frame height
+    y: number;         // chuẩn hóa [0..1] so với chiều cao khung hình
     /** Độ sâu tương đối (dấu có ý nghĩa, không phải giá trị tuyệt đối) */
-    z: number;         // depth (relative, sign matters, not absolute)
+    z: number;         // độ sâu (tương đối, có xét dấu, không phải tuyệt đối)
     /** Độ tin cậy phát hiện, trong khoảng [0..1] */
-    visibility: number; // confidence [0..1]
+    visibility: number; // độ tin cậy [0..1]
 }
 
 /**
@@ -57,7 +57,7 @@ interface PoseEstimationViewProps {
     onError?: (message: string) => void;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Thành phần ─────────────────────────────────────────────────────────────────
 
 /**
  * @component PoseEstimationView
@@ -93,34 +93,34 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
                     onError?.(data.error as string);
                 }
             } catch (_) {
-                // ignore malformed messages
+                // bỏ qua các tin nhắn bị định dạng sai
             }
         },
         [onPoseDetected, onError],
     );
 
-    // On Android, mediaPlaybackRequiresUserAction must be false and
-    // allowsInlineMediaPlayback must be true for camera / video to work.
+    // Trên Android, mediaPlaybackRequiresUserAction phải là false và
+    // allowsInlineMediaPlayback phải là true để camera / video hoạt động.
     return (
         <View style={[styles.container, style]}>
             <WebView
                 ref={webViewRef}
                 source={{ html: POSE_HTML }}
                 style={styles.webview}
-                // ── Media / Camera permissions ──────────────────────────────────────
+                // ── Quyền Camera / Media ──────────────────────────────────────────
                 mediaPlaybackRequiresUserAction={false}
                 allowsInlineMediaPlayback={true}
-                // @ts-ignore: onPermissionRequest is valid for Android but missing in WebView type definition
+                // @ts-ignore: onPermissionRequest hợp lệ trên Android nhưng bị thiếu trong định nghĩa kiểu WebView
                 onPermissionRequest={(request: any) => request.grant(request.resources)}
-                // iOS – grant camera permission inside WKWebView
+                // iOS – cấp quyền camera bên trong WKWebView
                 allowsProtectedMedia={true}
-                // ── Network / security ───────────────────────────────────────────────
-                // Required to load CDN scripts in the inline HTML
+                // ── Mạng / bảo mật ───────────────────────────────────────────────
+                // Bắt buộc để tải các script CDN trong HTML nội tuyến
                 mixedContentMode="always"
                 originWhitelist={['*']}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
-                // ── Messaging ────────────────────────────────────────────────────────
+                // ── Nhắn tin ────────────────────────────────────────────────────────
                 onMessage={handleMessage}
                 // ── UX ──────────────────────────────────────────────────────────────
                 scrollEnabled={false}
@@ -128,7 +128,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
                 overScrollMode="never"
                 showsHorizontalScrollIndicator={false}
                 showsVerticalScrollIndicator={false}
-                // ── Error handling ───────────────────────────────────────────────────
+                // ── Xử lý lỗi ───────────────────────────────────────────────────
                 onError={(syntheticEvent) => {
                     const { nativeEvent } = syntheticEvent;
                     onError?.(`WebView error: ${nativeEvent.description}`);
@@ -142,7 +142,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
     );
 };
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Kiểu dáng ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     container: {

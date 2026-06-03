@@ -1,3 +1,9 @@
+/**
+ * Màn hình AssignTemplateScreen
+ * 
+ * Mục đích: Cho phép bác sĩ chỉ định các mẫu bài tập (templates) cho bệnh nhân.
+ * Cung cấp giao diện xem lịch dưới dạng tháng và ngày, cũng như tạo bài tập mới.
+ */
 import React, { useState, useEffect, useMemo } from "react";
 import {
     View,
@@ -44,25 +50,12 @@ type AssignTemplateRouteProp = RouteProp<
     "AssignTemplate"
 >;
 
-/**
- * Trả về đối tượng Date tương ứng với đầu ngày (00:00:00.000) của ngày được truyền vào.
- *
- * @param date - Ngày cần chuẩn hóa về đầu ngày.
- * @return Đối tượng Date với giờ được đặt về 00:00:00.000.
- */
 const startOfDay = (date: Date) => {
     const copy = new Date(date);
     copy.setHours(0, 0, 0, 0);
     return copy;
 };
 
-/**
- * Lấy đối tượng Date từ một Assignment.
- * Ưu tiên trường scheduledDate, nếu không có thì lấy assignedAt.
- *
- * @param assignment - Đối tượng assignment cần lấy ngày.
- * @return Đối tượng Date tương ứng hoặc null nếu không có.
- */
 const getAssignmentDate = (assignment: Assignment) =>
     ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ??
     null;
@@ -81,12 +74,6 @@ const getLatestSessionForAssignment = (
     );
 };
 
-/**
- * Màn hình gán buổi tập cho bệnh nhân.
- * Hiển thị lịch tháng/ngày của bệnh nhân và cho phép bác sĩ tạo buổi tập mới.
- *
- * @return Component màn hình AssignTemplate.
- */
 export const AssignTemplateScreen: React.FC = () => {
     const navigation = useNavigation<AssignTemplateNavProp>();
     const route = useRoute<AssignTemplateRouteProp>();
@@ -175,7 +162,7 @@ export const AssignTemplateScreen: React.FC = () => {
             const scheduleDate = new Date(selectedDate);
             scheduleDate.setHours(assignmentHour, 0, 0, 0);
 
-            // Combine exercises and calculate total duration
+            // Kết hợp các bài tập và tính tổng thời lượng
             let allEx: Exercise[] = [];
             let totalMins = 0;
             selectedTemplates.forEach((t) => {
@@ -195,7 +182,6 @@ export const AssignTemplateScreen: React.FC = () => {
                 status: "active",
                 scheduledDate: Timestamp.fromDate(scheduleDate),
             });
-            const generatedName = selectedTemplates.map(t => t.name).join(' + ');
 
             setIsAddModalVisible(false);
             setSelectedTemplateIds([]);
@@ -637,7 +623,7 @@ export const AssignTemplateScreen: React.FC = () => {
                 <Ionicons name="add" size={32} color={colors.onPrimary} />
             </TouchableOpacity>
 
-            {/* Add Assignment Form Modal */}
+            {/* Modal Form Thêm bài chỉ định */}
             <Modal
                 visible={isAddModalVisible}
                 animationType="slide"
@@ -926,7 +912,7 @@ export const AssignTemplateScreen: React.FC = () => {
                 </View>
             </Modal>
 
-            {/* Template Search Modal */}
+            {/* Modal Tìm kiếm Mẫu bài tập */}
             <Modal
                 visible={isTemplateSearchVisible}
                 animationType="slide"

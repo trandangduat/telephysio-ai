@@ -47,14 +47,14 @@ export const MyAssignmentsScreen: React.FC = () => {
                 return;
             }
             try {
-                // Fetch all assignments (active + completed)
+                // Lấy tất cả các bài tập (đang hoạt động + đã hoàn thành)
                 const [active, completed] = await Promise.all([
                     getPatientAssignments(uid, 'active'),
                     getPatientAssignments(uid, 'completed'),
                 ]);
                 const all = [...active, ...completed];
 
-                // Fetch doctor names
+                // Lấy tên bác sĩ
                 const doctorIds = [...new Set(all.map(a => a.doctorId).filter(Boolean))];
                 const doctorMap = new Map<string, string>();
                 await Promise.all(

@@ -40,7 +40,7 @@ import {
 import { getPatientSessions } from "../../services/firebase/progressService";
 import type { Notification } from "../../services/firebase/types";
 
-// ── Helpers ─────────────────────────────────────────
+// ── Hàm hỗ trợ ──────────────────────────────────────
 
 /**
  * Chuyển đổi đối tượng Date thành chuỗi thời gian tương đối (relative time).
@@ -180,7 +180,7 @@ export const NotificationsScreen: React.FC = () => {
    * @return Promise<void>
    */
     const handleTap = async (notification: Notification) => {
-    // Mark as read
+    // Đánh dấu là đã đọc
         if (!notification.read) {
             try {
                 await markNotificationRead(notification.id);
@@ -194,13 +194,13 @@ export const NotificationsScreen: React.FC = () => {
             }
         }
 
-        // Navigate based on type
+        // Điều hướng dựa trên loại thông báo
         if (
             notification.type === "session_completed" &&
       notification.data?.sessionId &&
       notification.data?.patientId
         ) {
-            // Doctor taps → go to review that session
+            // Bác sĩ nhấn → đi đến xem lại phiên tập đó
             try {
                 const sessions = await getPatientSessions(
                     notification.data.patientId,
@@ -225,7 +225,7 @@ export const NotificationsScreen: React.FC = () => {
             notification.type === "session_assigned" &&
       notification.data?.assignmentId
         ) {
-            // Patient taps → go to begin that workout
+            // Bệnh nhân nhấn → đi đến bắt đầu bài tập đó
             navigation.navigate("WorkoutDetail", {
                 assignmentId: notification.data.assignmentId,
             });

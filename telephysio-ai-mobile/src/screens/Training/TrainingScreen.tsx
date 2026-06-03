@@ -34,14 +34,14 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
     const { uid } = useAuth();
     const { t } = useTranslation();
-    const [isFullScreen, setIsFullScreen] = useState(true); // Toggle state
+    const [isFullScreen, setIsFullScreen] = useState(true); // Trạng thái chuyển đổi
     const [currentRep, setCurrentRep] = useState(0);
     const [currentSet, setCurrentSet] = useState(1);
     const [formAccuracy, setFormAccuracy] = useState(95);
     const [averageAccuracy, setAverageAccuracy] = useState(95);
     const isFinishingRef = useRef(false);
     
-    // Video timing refs
+    // Tham chiếu thời gian video
     const recordingStartTimeRef = useRef<number>(0);
     const currentSetRepTimestamps = useRef<{rep: number, start: number, end: number}[]>([]);
     const lastRepEndMs = useRef<number>(0);
@@ -69,7 +69,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     const totalReps = exercise?.reps || 12;
     const totalSets = exercise?.sets || 3;
 
-    // ── Pose estimation state ─────────────────────────────────────────────────
+    // ── Trạng thái nhận diện cử chỉ ──────────────────────────────────────────
     const [poseDetected, setPoseDetected] = useState(false);
     const [liveFps, setLiveFps] = useState(0);
     const [poseError, setPoseError] = useState<string | null>(null);
@@ -136,9 +136,9 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         }
     }, [exercise?.name]);
 
-    // totalReps and totalSets have been moved up to resolve reference issues in callbacks
+    // totalReps và totalSets đã được di chuyển lên để giải quyết vấn đề tham chiếu trong callbacks
 
-    // Simulate timers
+    // Giả lập đồng hồ bấm giờ
     useEffect(() => {
         if (paused) return;
 
@@ -149,7 +149,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
                         setIsResting(false);
                         setCurrentSet(s => s + 1);
                         setCurrentRep(0);
-                        setCurrentSetElapsed(0); // Reset set timer for the new set!
+                        setCurrentSetElapsed(0); // Đặt lại thời gian cho hiệp mới!
                         return 0;
                     }
                     return prev - 1;
@@ -186,7 +186,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         };
     }, [assignmentId, recordVideo, currentSet, isResting, isFinishing]);
 
-    // Unmount cleanup
+    // Dọn dẹp khi unmount
     useEffect(() => {
         return () => {
             if (recordVideo) {
@@ -222,20 +222,20 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         setIsFinishing(true);
         setPaused(true);
 
-        // Calculate dynamic overall average accuracy over completed sets
+        // Tính độ chính xác trung bình tổng thể cho các hiệp đã hoàn thành
         const avgAccuracy = finalSets.length > 0 
             ? Math.round(finalSets.reduce((sum, s) => sum + s.accuracy, 0) / finalSets.length)
             : averageAccuracy;
 
-        // Calculate total reps completed
+        // Tính tổng số lần lặp đã hoàn thành
         const totalRepsCompleted = finalSets.reduce((sum, s) => sum + s.repsCompleted, 0);
 
         let videoResult = null;
-        // videoResult is now null as videos are stored per-set in setsData.
+        // videoResult hiện tại là null do video được lưu theo từng hiệp trong setsData.
 
 
         try {
-            // Just navigate to ExerciseResult
+            // Chỉ điều hướng đến ExerciseResult
             navigation.replace('ExerciseResult', {
                 assignmentId,
                 exerciseIndex,
@@ -289,7 +289,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
             videoLocalPath,
         };
 
-        // Reset tracking for next set
+        // Đặt lại theo dõi cho hiệp tiếp theo
         currentSetRepTimestamps.current = [];
         lastRepEndMs.current = nowVideoMs;
         currentRepRef.current = 0;
@@ -319,7 +319,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         handleCompleteSetRef.current = handleCompleteSet;
     }, [handleCompleteSet]);
 
-    // Auto-complete set when reps reach totalReps goal
+    // Tự động hoàn thành hiệp khi số lần lặp đạt mục tiêu totalReps
     useEffect(() => {
         if (exercise && currentRep > 0 && currentRep >= totalReps && !isResting && !isFinishing && !paused) {
             console.log(`[TrainingScreen] Auto-completing set: ${currentRep}/${totalReps} reached.`);
@@ -339,7 +339,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     const remainingSets = Math.max(totalSets - currentSet, 0);
 
     // ---------------------------------------------------------------------------
-    // FULL SCREEN MODE (Compact)
+    // CHẾ ĐỘ TOÀN MÀN HÌNH (Gọn nhẹ)
     // ---------------------------------------------------------------------------
     if (isFullScreen) {
         return (
@@ -495,7 +495,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     }
 
     // ---------------------------------------------------------------------------
-    // NORMAL MODE (Detailed)
+    // CHẾ ĐỘ THƯỜNG (Chi tiết)
     // ---------------------------------------------------------------------------
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -660,7 +660,7 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
 };
 
 const styles = StyleSheet.create({
-    // === SHARED ===
+    // === DÙNG CHUNG ===
     grayLabel: {
         color: '#64748b',
         fontWeight: '700',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
 
-    // === FULL SCREEN STYLES ===
+    // === STYLES CHẾ ĐỘ TOÀN MÀN HÌNH ===
     fsContainer: { flex: 1, backgroundColor: '#111827' },
     skeletonCenter: { position: 'absolute', top: '35%', left: 0, right: 0, alignItems: 'center' },
     poseBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     mediaControls: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.xl },
     playPauseButton: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 },
 
-    // === NORMAL MODE STYLES ===
+    // === STYLES CHẾ ĐỘ THƯỜNG ===
     safe: { flex: 1, backgroundColor: '#f8fafd' },
     normalTopBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.sm },
     logoText: { color: colors.primary, fontSize: 16, letterSpacing: 0.5, fontWeight: '700' },

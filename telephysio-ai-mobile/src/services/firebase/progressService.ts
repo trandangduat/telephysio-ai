@@ -30,7 +30,7 @@ import type { Session, ProgressSnapshot, ExerciseFeedback, IncompleteSession } f
 import { createNotification } from "./notificationService";
 
 // ═══════════════════════════════════════════════════
-// INCOMPLETE SESSIONS (Active Workout State)
+// CÁC BUỔI TẬP DANG DỞ (Trạng thái tập luyện đang hoạt động)
 // ═══════════════════════════════════════════════════
 
 /**
@@ -52,7 +52,7 @@ export async function getIncompleteSession(
         ),
     );
     if (snap.empty) return null;
-    // There should only be one incomplete session per assignment per patient
+    // Chỉ nên có một buổi tập dang dở cho mỗi bài tập được giao của một bệnh nhân
     return { id: snap.docs[0].id, ...snap.docs[0].data() } as IncompleteSession;
 }
 
@@ -102,11 +102,11 @@ export async function deleteIncompleteSession(sessionId: string): Promise<void> 
 }
 
 // ═══════════════════════════════════════════════════
-// SESSIONS
+// CÁC BUỔI TẬP
 // ═══════════════════════════════════════════════════
 
-// ── Record Session ──────────────────────────────────
-// Called after TrainingScreen completes (skip-forward or finish)
+// ── Lưu Buổi Tập ────────────────────────────────────
+// Được gọi sau khi TrainingScreen hoàn thành (bỏ qua hoặc kết thúc)
 /**
  * Lưu một buổi tập đã hoàn thành vào cơ sở dữ liệu.
  * Gửi thông báo cho bác sĩ nếu lưu thành công.
@@ -122,13 +122,13 @@ export async function recordSession(
         date: serverTimestamp(),
     });
 
-    // Best-effort: notify the doctor that the patient finished this session
+    // Cố gắng hết mức: thông báo cho bác sĩ rằng bệnh nhân đã hoàn thành buổi tập này
     try {
-    // Fetch assignment to get doctorId and templateName
+    // Lấy bài tập để có doctorId và templateName
         const assignSnap = await getDoc(doc(db, "assignments", data.assignmentId));
         if (assignSnap.exists()) {
             const assignment = assignSnap.data();
-            // Fetch patient name
+            // Lấy tên bệnh nhân
             const patientSnap = await getDoc(doc(db, "users", data.patientId));
             const patientName = patientSnap.exists()
                 ? patientSnap.data().displayName || "A patient"
@@ -160,8 +160,8 @@ export async function recordSession(
     return ref.id;
 }
 
-// ── Get Patient Sessions ────────────────────────────
-// Called by PatientDetailScreen (session history table)
+// ── Lấy Buổi tập Bệnh nhân ──────────────────────────
+// Được gọi bởi PatientDetailScreen (bảng lịch sử buổi tập)
 /**
  * Lấy danh sách lịch sử buổi tập của bệnh nhân (sắp xếp giảm dần theo ngày).
  * 
@@ -186,8 +186,8 @@ export async function getPatientSessions(
         .slice(0, maxResults);
 }
 
-// ── Get Session Count This Week ─────────────────────
-// Called by HomeScreen (SESSIONS card: "2 /3 this week")
+// ── Lấy Số Buổi tập Trong Tuần Này ──────────────────
+// Được gọi bởi HomeScreen (thẻ SESSIONS: "2 /3 trong tuần này")
 /**
  * Đếm số lượng buổi tập đã thực hiện trong tuần hiện tại.
  * 
@@ -199,7 +199,7 @@ export async function getWeeklySessionCount(
 ): Promise<number> {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Thứ Hai
     startOfWeek.setHours(0, 0, 0, 0);
 
     const snap = await getDocs(
@@ -212,7 +212,7 @@ export async function getWeeklySessionCount(
     return snap.size;
 }
 
-// ── Submit Doctor Feedback for Session ──────────────
+// ── Gửi Phản hồi của Bác sĩ cho Buổi tập ────────────
 /**
  * Gửi phản hồi của bác sĩ cho một buổi tập cụ thể.
  * 
@@ -235,11 +235,11 @@ export async function submitDoctorFeedback(
 }
 
 // ═══════════════════════════════════════════════════
-// PROGRESS SNAPSHOTS
+// ẢNH CHỤP TIẾN ĐỘ
 // ═══════════════════════════════════════════════════
 
-// ── Get Latest Progress ─────────────────────────────
-// Called by HomeScreen (movementScore, timeActive), ProgressScreen (ROM, strength)
+// ── Lấy Tiến độ Mới nhất ────────────────────────────
+// Được gọi bởi HomeScreen (movementScore, timeActive), ProgressScreen (ROM, strength)
 /**
  * Lấy dữ liệu tiến độ mới nhất của bệnh nhân.
  * 
@@ -267,8 +267,8 @@ export async function getLatestProgress(
     return snapshots[0] || null;
 }
 
-// ── Save Progress Snapshot ──────────────────────────
-// Called after AI analysis processes a completed session
+// ── Lưu Ảnh chụp Tiến độ ────────────────────────────
+// Được gọi sau khi AI phân tích xử lý một buổi tập hoàn thành
 /**
  * Lưu lại ảnh chụp (snapshot) tiến độ tập luyện của người dùng sau mỗi buổi.
  * 
@@ -285,8 +285,8 @@ export async function saveProgressSnapshot(
     return ref.id;
 }
 
-// ── Get Progress History ────────────────────────────
-// Called by ProgressScreen chart (ROM over weeks)
+// ── Lấy Lịch sử Tiến độ ─────────────────────────────
+// Được gọi bởi biểu đồ ProgressScreen (ROM theo tuần)
 /**
  * Lấy lịch sử tiến độ của bệnh nhân để vẽ biểu đồ.
  * 
@@ -317,11 +317,11 @@ export async function getProgressHistory(
 }
 
 // ═══════════════════════════════════════════════════
-// EXERCISE FEEDBACK
+// PHẢN HỒI BÀI TẬP
 // ═══════════════════════════════════════════════════
 
-// ── Submit Feedback ─────────────────────────────────
-// Called by SessionScreen "Give Feedback" → modal submit
+// ── Gửi Phản hồi ────────────────────────────────────
+// Được gọi bởi SessionScreen "Gửi Phản hồi" → nộp modal
 /**
  * Bệnh nhân gửi phản hồi về bài tập.
  * 
@@ -338,8 +338,8 @@ export async function submitFeedback(
     return ref.id;
 }
 
-// ── Get Feedback for Patient ────────────────────────
-// Called by SessionScreen (exercise feedback list)
+// ── Lấy Phản hồi cho Bệnh nhân ──────────────────────
+// Được gọi bởi SessionScreen (danh sách phản hồi bài tập)
 /**
  * Lấy danh sách các phản hồi về bài tập của bệnh nhân.
  * 
@@ -369,8 +369,8 @@ export async function getPatientFeedback(
         .slice(0, maxResults);
 }
 
-// ── Get Avg Stats for Doctor Dashboard ──────────────
-// Called by DoctorDashboardScreen (Avg Accuracy stat card)
+// ── Lấy Chỉ số Trung bình cho Bảng Bác sĩ ───────────
+// Được gọi bởi DoctorDashboardScreen (thẻ Độ chính xác trung bình)
 /**
  * Lấy độ chính xác trung bình (accuracy) của các bệnh nhân mà bác sĩ quản lý.
  * Thường dùng cho bảng điều khiển của bác sĩ.
@@ -379,7 +379,7 @@ export async function getPatientFeedback(
  * @return {Promise<number>} Độ chính xác trung bình (0-100)
  */
 export async function getAverageAccuracy(doctorId: string): Promise<number> {
-    // Get all patient IDs for this doctor
+    // Lấy tất cả ID bệnh nhân cho bác sĩ này
     const plansSnap = await getDocs(
         query(collection(db, "treatment_plans"), where("doctorId", "==", doctorId)),
     );
@@ -412,7 +412,7 @@ export async function getAverageAccuracy(doctorId: string): Promise<number> {
     return count > 0 ? Math.round(totalAccuracy / count) : 0;
 }
 
-// ── Update Session Effort ───────────────────────────
+// ── Cập nhật Nỗ lực Buổi tập ────────────────────────
 /**
  * Cập nhật mức độ cố gắng/khó khăn (perceived effort) cho một buổi tập.
  * 
@@ -429,7 +429,7 @@ export async function updateSessionEffort(
     });
 }
 
-// ── Delete Session Video ────────────────────────────
+// ── Xóa Video Buổi tập ──────────────────────────────
 /**
  * Xóa video của buổi tập khỏi thiết bị lưu trữ cục bộ và cập nhật lại bản ghi.
  * 
@@ -443,7 +443,7 @@ export async function deleteSessionVideo(
     videoPath: string,
     thumbnailPath: string,
 ): Promise<void> {
-    // 1. Delete local files using our videoService
+    // 1. Xóa các tệp cục bộ bằng videoService của chúng tôi
     try {
         const { deleteLocalVideo } = require("./videoService");
         await deleteLocalVideo(videoPath, thumbnailPath);
@@ -451,7 +451,7 @@ export async function deleteSessionVideo(
         console.warn("Failed to delete local files in service:", err);
     }
 
-    // 2. Clear paths in Firestore doc
+    // 2. Xóa các đường dẫn trong tài liệu Firestore
     await updateDoc(doc(db, "sessions", sessionId), {
         videoLocalPath: null,
         thumbnailPath: null,

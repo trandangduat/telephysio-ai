@@ -15,11 +15,11 @@ import { useTranslation } from "react-i18next";
 
 import { useAuth } from "../contexts/AuthContext";
 
-// Auth screens
+// Màn hình xác thực
 import { LoginScreen } from "../screens/Auth/LoginScreen";
 import { SignUpScreen } from "../screens/Auth/SignUpScreen";
 
-// Patient screens
+// Màn hình bệnh nhân
 import { BottomTabNavigator } from "./PatienttabNavigator";
 import { CalibrationScreen } from "../screens/Calibration/CalibrationScreen";
 import { TrainingScreen } from "../screens/Training/TrainingScreen";
@@ -30,7 +30,7 @@ import { MyAssignmentsScreen } from "../screens/Workout/MyAssignmentsScreen";
 import { WorkoutDetailScreen } from "../screens/Workout/WorkoutDetailScreen";
 import { NotificationsScreen } from "../screens/Notifications/NotificationsScreen";
 
-// Doctor screens
+// Màn hình bác sĩ
 import { DoctorTabNavigator } from "./DoctorTabNavigator";
 import { PatientDetailScreen } from "../screens/Doctor/PatientDetailScreen";
 import { TemplateEditorScreen } from "../screens/Doctor/TemplateEditorScreen";
@@ -44,7 +44,7 @@ import type {
     DoctorStackParamList,
 } from "./types";
 
-// ── Auth Stack ──────────────────────────────────────
+// ── Stack Xác thực (Auth) ──────────────────────────
 const Auth = createNativeStackNavigator<AuthStackParamList>();
 
 const AuthNavigator: React.FC = () => (
@@ -54,7 +54,7 @@ const AuthNavigator: React.FC = () => (
     </Auth.Navigator>
 );
 
-// ── Patient Stack ───────────────────────────────────
+// ── Stack Bệnh nhân ───────────────────────────────
 const PatientStack = createNativeStackNavigator<RootStackParamList>();
 
 /**
@@ -128,7 +128,7 @@ const PatientNavigator: React.FC = () => {
     );
 };
 
-// ── Doctor Stack ────────────────────────────────────
+// ── Stack Bác sĩ ──────────────────────────────────
 const DoctorStack = createNativeStackNavigator<DoctorStackParamList>();
 
 /**
@@ -192,7 +192,7 @@ const DoctorNavigator: React.FC = () => {
   );
 };
 
-// ── Root: Auth → Role-based ─────────────────────────
+// ── Gốc: Xác thực → Dựa trên vai trò ──────────────
 /**
  * Component gốc xử lý luồng điều hướng dựa trên trạng thái xác thực và phân quyền.
  * Hiển thị màn hình tải (loading) trong lúc chờ kiểm tra xác thực.
@@ -202,7 +202,7 @@ const DoctorNavigator: React.FC = () => {
 export const AppNavigator: React.FC = () => {
     const { isAuthenticated, isLoading, role, uid } = useAuth();
 
-    // Show splash while checking Firebase Auth state
+    // Hiển thị màn hình chờ trong khi kiểm tra trạng thái xác thực Firebase
     if (isLoading) {
         return (
             <View style={styles.splash}>
@@ -211,12 +211,12 @@ export const AppNavigator: React.FC = () => {
         );
     }
 
-    // Not logged in → show Login/SignUp
+    // Chưa đăng nhập → hiển thị Đăng nhập/Đăng ký
     if (!isAuthenticated) {
         return <AuthNavigator />;
     }
 
-    // Logged in → show role-based navigator
+    // Đã đăng nhập → hiển thị bộ điều hướng theo vai trò
     return role === "doctor" ? <DoctorNavigator /> : <PatientNavigator />;
 };
 

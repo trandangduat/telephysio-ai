@@ -26,15 +26,15 @@ import type { UserProfile } from "../services/firebase/types";
 export type UserRole = "patient" | "doctor";
 
 interface AuthContextType {
-    // Auth state
+    // Trạng thái xác thực
     user: UserProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    // Derived fields (backward-compatible with existing screens)
+    // Các trường dẫn xuất (tương thích ngược với các màn hình hiện có)
     role: UserRole;
     userName: string;
     uid: string | null;
-    // Actions
+    // Hành động
     switchRole: (role: UserRole) => void;
     setUser: (user: UserProfile | null) => void;
     logout: () => Promise<void>;
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [roleOverride, setRoleOverride] = useState<UserRole | null>(null);
 
-    // Listen to Firebase Auth state changes
+    // Lắng nghe thay đổi trạng thái xác thực Firebase
     useEffect(() => {
         const unsubscribe = onAuthChange(async (firebaseUser) => {
             if (firebaseUser) {
@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         return unsubscribe;
     }, []);
 
-    // Derived values — backward-compatible with all existing screens
+    // Các giá trị dẫn xuất — tương thích ngược với tất cả các màn hình hiện có
     const role = roleOverride ?? (user?.role || "patient");
     const authUser = getCurrentUser();
     const userName = user?.displayName || authUser?.displayName || "";
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     const logout = async () => {
         try {
-            // Clear state immediately for better UX
+            // Xóa trạng thái ngay lập tức để trải nghiệm người dùng tốt hơn
             setUser(null);
             setRoleOverride(null);
             await logoutUser();

@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     roleLabelActiveDoc: { color: '#0f766e' },
     roleDesc: { color: '#94a3b8', fontSize: 11, textAlign: 'center' },
 
-    // Card
+    // Thẻ
     card: {
         backgroundColor: '#fff', borderRadius: 24, padding: spacing.xl,
         shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: '#f1f5f9',
     },
 
-    // Inputs
+    // Trường nhập
     inputGroup: { marginBottom: spacing.lg },
     inputLabel: { color: '#334155', fontWeight: '600', marginBottom: 8 },
     inputBox: {
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     textInput: { flex: 1, fontSize: 15, color: '#0f172a', fontFamily: 'Inter_400Regular' },
     errorText: { color: '#ef4444', marginTop: 4, fontSize: 12 },
 
-    // Buttons
+    // Nút bấm
     primaryBtn: {
         backgroundColor: colors.primary, flexDirection: 'row',
         alignItems: 'center', justifyContent: 'center',

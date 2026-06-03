@@ -7,8 +7,8 @@ import { PoseLandmark } from './PoseEstimationView';
 
 export interface PoseAnalysisResult {
     reps: number;
-    formAccuracy: number;      // REAL-TIME dynamic form accuracy for the live bar
-    averageAccuracy: number;   // Cumulative average form accuracy for completed reps
+    formAccuracy: number;      // độ chính xác động THỜI GIAN THỰC cho thanh hiển thị trực tiếp
+    averageAccuracy: number;   // Độ chính xác trung bình tích lũy cho các lần lặp lại đã hoàn thành
     feedback: string;
     isRepCounted: boolean;
 }
@@ -23,18 +23,18 @@ export class PoseAnalyzer {
     private reps: number = 0;
     private formAccuracySum: number = 0;
     private completedRepsCount: number = 0;
-    private liveAccuracy: number = 95; // Real-time smoothed posture score
+    private liveAccuracy: number = 95; // Điểm tư thế mượt mà trong thời gian thực
   
-    // State machine for exercises
+    // Trạng thái (State machine) cho các bài tập
     private repState: 'UP' | 'DOWN' = 'UP';
     private lastStateTime: number = 0;
   
-    // History for vertical oscillation (nose or shoulders y-coordinate)
+    // Lịch sử dao động dọc (tọa độ y của mũi hoặc vai)
     private yHistory: number[] = [];
-    private historySize = 30; // ~1-2 seconds of frames
+    private historySize = 30; // Khoảng 1-2 giây khung hình
     private lastRepTime = 0;
   
-    // Angle history for smoothing
+    // Lịch sử góc để làm mượt
     private kneeAngleHistory: number[] = [];
     private elbowAngleHistory: number[] = [];
   
@@ -83,7 +83,7 @@ export class PoseAnalyzer {
             };
         }
     
-        // Extract key landmarks
+        // Trích xuất các điểm mốc quan trọng
         const nose = landmarks[0];
         const leftShoulder = landmarks[11];
         const rightShoulder = landmarks[12];
@@ -98,12 +98,12 @@ export class PoseAnalyzer {
         const leftAnkle = landmarks[27];
         const rightAnkle = landmarks[28];
     
-        // Check which exercise we are doing
+        // Kiểm tra xem chúng ta đang tập bài tập nào
         const isSquat = this.exerciseName.includes('squat');
         const isCurl = this.exerciseName.includes('curl') || this.exerciseName.includes('bicep');
         const isPress = this.exerciseName.includes('press') || this.exerciseName.includes('shoulder');
     
-        // Calculate visibilities
+        // Tính toán độ hiển thị (visibility)
         const kneesVisible = (leftKnee?.visibility ?? 0) > 0.4 && (rightKnee?.visibility ?? 0) > 0.4;
         const hipsVisible = (leftHip?.visibility ?? 0) > 0.4 && (rightHip?.visibility ?? 0) > 0.4;
         const anklesVisible = (leftAnkle?.visibility ?? 0) > 0.4 && (rightAnkle?.visibility ?? 0) > 0.4;
@@ -112,12 +112,12 @@ export class PoseAnalyzer {
         const wristsVisible = (leftWrist?.visibility ?? 0) > 0.4 && (rightWrist?.visibility ?? 0) > 0.4;
         const shouldersVisible = (leftShoulder?.visibility ?? 0) > 0.4 && (rightShoulder?.visibility ?? 0) > 0.4;
     
-        // ─── 1. REAL-TIME ACCURACY & POSTURE EVALUATION (updates on every frame) ───
+        // ─── 1. ĐÁNH GIÁ ĐỘ CHÍNH XÁC VÀ TƯ THẾ THỜI GIAN THỰC (cập nhật trên mỗi khung hình) ───
         let symmetryScore = 100;
     
         if (shouldersVisible) {
             const shoulderTilt = Math.abs(leftShoulder.y - rightShoulder.y);
-            // Tilt of > 0.03 (approx 3% of camera height) drops accuracy
+            // Độ nghiêng > 0.03 (khoảng 3% chiều cao camera) làm giảm độ chính xác
             if (shoulderTilt > 0.02) {
                 symmetryScore -= Math.min(30, (shoulderTilt - 0.02) * 700);
             }
@@ -136,7 +136,7 @@ export class PoseAnalyzer {
             const rightKneeAngle = this.calculateAngle(rightHip, rightKnee, rightAnkle);
             const kneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
       
-            // If squatting down, evaluate squat range of motion
+            // Nếu đang ngồi xổm (squat), đánh giá phạm vi chuyển động của squat
             if (this.repState === 'DOWN') {
                 if (kneeAngle > 120) {
                     depthScore -= Math.min(35, (kneeAngle - 120) * 0.9);
@@ -154,13 +154,13 @@ export class PoseAnalyzer {
     
         const frameAccuracy = Math.max(60, Math.min(100, Math.round(symmetryScore * 0.75 + depthScore * 0.25)));
     
-        // Smooth the live accuracy so the progress bar transitions beautifully
+        // Làm mượt độ chính xác trực tiếp để thanh tiến trình chuyển đổi đẹp mắt
         this.liveAccuracy = Math.round(this.liveAccuracy * 0.90 + frameAccuracy * 0.10);
     
-        // ─── 2. REPETITION COUNTING STATE MACHINES ───
+        // ─── 2. MÔ HÌNH TRẠNG THÁI (STATE MACHINES) ĐẾM SỐ LẦN TẬP ───
         if (isSquat) {
             if (kneesVisible && hipsVisible && anklesVisible) {
-                // Precise knee angle tracking
+                // Theo dõi góc đầu gối chính xác
                 const leftKneeAngle = this.calculateAngle(leftHip, leftKnee, leftAnkle);
                 const rightKneeAngle = this.calculateAngle(rightHip, rightKnee, rightAnkle);
                 const kneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
@@ -194,7 +194,7 @@ export class PoseAnalyzer {
                     }
                 }
             } else {
-                // Head/Shoulder vertical oscillation fallback
+                // Dự phòng dao động dọc của Đầu/Vai
                 const referenceY = shouldersVisible ? (leftShoulder.y + rightShoulder.y) / 2 : nose?.y;
         
                 if (referenceY !== undefined) {
@@ -265,7 +265,7 @@ export class PoseAnalyzer {
                     }
                 }
             } else {
-                // Fallback for curls using hand motion
+                // Dự phòng cho cuốn tạ (curls) sử dụng chuyển động tay
                 const referenceY = wristsVisible ? (leftWrist.y + rightWrist.y) / 2 : (nose?.y ?? 0.5);
                 this.yHistory.push(referenceY);
                 if (this.yHistory.length > this.historySize) this.yHistory.shift();
@@ -324,7 +324,7 @@ export class PoseAnalyzer {
                     }
                 }
             } else {
-                // Press fallback using hand vertical motion
+                // Dự phòng đẩy tạ (press) sử dụng chuyển động tay dọc
                 const referenceY = wristsVisible ? (leftWrist.y + rightWrist.y) / 2 : (nose?.y ?? 0.5);
                 this.yHistory.push(referenceY);
                 if (this.yHistory.length > this.historySize) this.yHistory.shift();
@@ -357,7 +357,7 @@ export class PoseAnalyzer {
                 }
             }
         } else {
-            // GENERAL MOTION DETECTOR
+            // BỘ PHÁT HIỆN CHUYỂN ĐỘNG CHUNG
             const referenceY = shouldersVisible ? (leftShoulder.y + rightShoulder.y) / 2 : (nose?.y ?? 0.5);
             this.yHistory.push(referenceY);
             if (this.yHistory.length > this.historySize) this.yHistory.shift();
@@ -395,8 +395,8 @@ export class PoseAnalyzer {
     
         return {
             reps: this.reps,
-            formAccuracy: this.liveAccuracy, // Return dynamic live accuracy for the real-time bar!
-            averageAccuracy: this.getAverageAccuracy(), // Return the cumulative session average for completion
+            formAccuracy: this.liveAccuracy, // Trả về độ chính xác động trực tiếp cho thanh thời gian thực!
+            averageAccuracy: this.getAverageAccuracy(), // Trả về trung bình tích lũy của phiên để hoàn thành
             feedback,
             isRepCounted
         };

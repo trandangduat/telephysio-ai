@@ -9,7 +9,7 @@
  */
 
 export const colors = {
-    // Surfaces
+    // Bề mặt
     surface:                '#f5faff',
     surfaceDim:             '#d1dbe4',
     surfaceBright:          '#f5faff',
@@ -19,17 +19,17 @@ export const colors = {
     surfaceContainerHighest:'#dae4ec',
     surfaceContainer:       '#e5eff8',
 
-    // On-surface (text / icon trên nền surface)
+    // Trên bề mặt (văn bản / biểu tượng trên bề mặt)
     onSurface:              '#131d23',
     onSurfaceVariant:       '#424752',
     inverseSurface:         '#283238',
     inverseOnSurface:       '#e8f2fb',
 
-    // Outline
+    // Đường viền
     outline:                '#727783',
     outlineVariant:         '#c2c6d4',
 
-    // Primary — Medical Blue
+    // Chính — Xanh Y tế
     surfaceTint:            '#005db6',
     primary:                '#00478d',
     onPrimary:              '#ffffff',
@@ -41,7 +41,7 @@ export const colors = {
     onPrimaryFixed:         '#001b3d',
     onPrimaryFixedVariant:  '#00468c',
 
-    // Secondary — Wash Blue
+    // Phụ — Xanh nhạt (Wash Blue)
     secondary:              '#566067',
     onSecondary:            '#ffffff',
     secondaryContainer:     '#dae4ed',
@@ -51,7 +51,7 @@ export const colors = {
     onSecondaryFixed:       '#131d23',
     onSecondaryFixedVariant:'#3e484f',
 
-    // Tertiary — Success Green
+    // Thứ ba — Xanh lá (Thành công)
     tertiary:               '#00541e',
     onTertiary:             '#ffffff',
     tertiaryContainer:      '#006f2b',
@@ -61,13 +61,13 @@ export const colors = {
     onTertiaryFixed:        '#002108',
     onTertiaryFixedVariant: '#00531e',
 
-    // Error
+    // Lỗi
     error:                  '#ba1a1a',
     onError:                '#ffffff',
     errorContainer:         '#ffdad6',
     onErrorContainer:       '#93000a',
 
-    // Background
+    // Nền
     background:             '#f5faff',
     onBackground:           '#131d23',
     surfaceVariant:         '#dae4ec',

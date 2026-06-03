@@ -64,14 +64,14 @@ export const DoctorDashboardScreen: React.FC = () => {
             return;
         }
         try {
-            // Derive patients from assignments (not treatment_plans)
-            // so any newly-assigned patient shows up immediately
+            // Lấy bệnh nhân từ các bài tập được giao (không phải từ treatment_plans)
+            // để bất kỳ bệnh nhân mới được giao nào cũng hiển thị ngay lập tức
             const allAssignments = await getDoctorAssignments(uid);
             const uniquePatientIds = [
                 ...new Set(allAssignments.map((a) => a.patientId)),
             ];
 
-            // Fetch profiles for all those patient IDs in parallel
+            // Lấy hồ sơ cho tất cả các ID bệnh nhân đó song song
             const profiles = await Promise.all(
                 uniquePatientIds.map((id) => getUser(id)),
             );
@@ -102,7 +102,7 @@ export const DoctorDashboardScreen: React.FC = () => {
                     todayTotal: todayAssignments.length,
                 };
             });
-            // Sort: patients with today's tasks first, then alphabetically
+            // Sắp xếp: bệnh nhân có nhiệm vụ hôm nay trước, sau đó theo bảng chữ cái
             cards.sort((a, b) => {
                 if (b.todayTotal !== a.todayTotal)
                     return b.todayTotal - a.todayTotal;
@@ -135,16 +135,16 @@ export const DoctorDashboardScreen: React.FC = () => {
     const filtered = (() => {
         const raw = searchText.trim();
         if (!raw) return patients;
-        // Split query into tokens so "nguyen lta" matches both independently
+        // Tách truy vấn thành các từ khóa để "nguyen lta" khớp độc lập cả hai
         const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean);
         return patients.filter((p) => {
             const email = (p.profile.email || "").toLowerCase();
             const name = (p.profile.displayName || "").toLowerCase();
-            // Also search inside assignment template names
+            // Đồng thời tìm kiếm bên trong tên mẫu bài tập được giao
             const templateNames = p.assignments
                 .map((a) => (a.templateName || "").toLowerCase())
                 .join(" ");
-            // Email prefix (before @) for quick typing
+            // Phần đầu email (trước @) để gõ nhanh
             const emailLocal = email.split("@")[0];
             return tokens.every(
                 (token) =>

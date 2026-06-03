@@ -104,7 +104,7 @@ export const POSE_HTML = `<!DOCTYPE html>
     const statusEl = document.getElementById('status');
     const fpsEl    = document.getElementById('fps-badge');
 
-    // ── FPS tracking ──────────────────────────────────────────────────────────
+    // ── Theo dõi FPS ──────────────────────────────────────────────────────────
     let lastFrameTime = performance.now();
     let frameCount = 0;
     let fps = 0;
@@ -121,19 +121,19 @@ export const POSE_HTML = `<!DOCTYPE html>
       }
     }
 
-    // ── Landmark drawing helpers ──────────────────────────────────────────────
+    // ── Các hàm hỗ trợ vẽ điểm mốc ──────────────────────────────────────────────
     const POSE_CONNECTIONS = [
-      // Torso
+      // Thân mình
       [11, 12], [11, 23], [12, 24], [23, 24],
-      // Right arm
+      // Cánh tay phải
       [12, 14], [14, 16], [16, 18], [18, 20], [16, 20], [16, 22],
-      // Left arm
+      // Cánh tay trái
       [11, 13], [13, 15], [15, 17], [17, 19], [15, 19], [15, 21],
-      // Right leg
+      // Chân phải
       [24, 26], [26, 28], [28, 30], [30, 32], [28, 32],
-      // Left leg
+      // Chân trái
       [23, 25], [25, 27], [27, 29], [29, 31], [27, 31],
-      // Face
+      // Khuôn mặt
       [0, 1], [1, 2], [2, 3], [3, 7],
       [0, 4], [4, 5], [5, 6], [6, 8],
       [9, 10],
@@ -156,7 +156,7 @@ export const POSE_HTML = `<!DOCTYPE html>
       const W = canvas.width;
       const H = canvas.height;
 
-      // Draw connections (bones)
+      // Vẽ các kết nối (xương)
       POSE_CONNECTIONS.forEach(([a, b]) => {
         const lmA = landmarks[a];
         const lmB = landmarks[b];
@@ -172,26 +172,26 @@ export const POSE_HTML = `<!DOCTYPE html>
         ctx.stroke();
       });
 
-      // Draw joints (dots)
+      // Vẽ các khớp (điểm)
       landmarks.forEach((lm, i) => {
         if (lm.visibility < 0.4) return;
         const cx = lm.x * W;
         const cy = lm.y * H;
         const color = getLandmarkColor(i);
 
-        // Outer glow
+        // Phát sáng bên ngoài
         ctx.beginPath();
         ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
         ctx.fillStyle = color + '40';
         ctx.fill();
 
-        // Inner dot
+        // Điểm bên trong
         ctx.beginPath();
         ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
         ctx.fillStyle = color;
         ctx.fill();
 
-        // White center
+        // Tâm màu trắng
         ctx.beginPath();
         ctx.arc(cx, cy, 1.5, 0, 2 * Math.PI);
         ctx.fillStyle = '#fff';
@@ -199,14 +199,14 @@ export const POSE_HTML = `<!DOCTYPE html>
       });
     }
 
-    // ── Pose data reporting (works in both WebView and iframe) ───────────────
+    // ── Báo cáo dữ liệu tư thế (hoạt động ở cả WebView và iframe) ───────────────
     function postToHost(payload) {
       const msg = JSON.stringify(payload);
       if (window.ReactNativeWebView) {
         // Native WebView (Android / iOS)
         window.ReactNativeWebView.postMessage(msg);
       } else {
-        // Web iframe — parent listens via window.addEventListener('message')
+        // Web iframe — thành phần cha lắng nghe qua window.addEventListener('message')
         window.parent.postMessage(msg, '*');
       }
     }
@@ -221,7 +221,7 @@ export const POSE_HTML = `<!DOCTYPE html>
       postToHost({ type: 'POSE_LANDMARKS', landmarks: simplified, fps });
     }
 
-    // ── MediaPipe Pose setup ──────────────────────────────────────────────────
+    // ── Cài đặt MediaPipe Pose ──────────────────────────────────────────────────
     function initPose() {
       const pose = new Pose({
         locateFile: (file) =>
@@ -229,7 +229,7 @@ export const POSE_HTML = `<!DOCTYPE html>
       });
 
       pose.setOptions({
-        modelComplexity: 1,          // 0=light, 1=full, 2=heavy
+        modelComplexity: 1,          // 0=nhẹ, 1=đầy đủ, 2=nặng
         smoothLandmarks: true,
         enableSegmentation: false,
         smoothSegmentation: false,
@@ -238,11 +238,11 @@ export const POSE_HTML = `<!DOCTYPE html>
       });
 
       pose.onResults((results) => {
-        // Resize canvas to video dimensions
+        // Thay đổi kích thước canvas theo kích thước video
         canvas.width  = video.videoWidth  || canvas.offsetWidth;
         canvas.height = video.videoHeight || canvas.offsetHeight;
 
-        // Clear frame
+        // Xóa khung hình
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (results.poseLandmarks && results.poseLandmarks.length > 0) {
@@ -265,7 +265,7 @@ export const POSE_HTML = `<!DOCTYPE html>
     let mediaRecorder = null;
     let recordedChunks = [];
 
-    // ── Camera setup ──────────────────────────────────────────────────────────
+    // ── Cài đặt Camera ──────────────────────────────────────────────────────────
     async function startCamera() {
       statusEl.textContent = '⟳ Requesting camera…';
       statusEl.className = 'loading';
@@ -273,7 +273,7 @@ export const POSE_HTML = `<!DOCTYPE html>
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: 'user',    // front camera by default
+            facingMode: 'user',    // mặc định là camera trước
             width: { ideal: 430 },
             height: { ideal: 932 },
             frameRate: { ideal: 30, max: 30 },
@@ -290,7 +290,7 @@ export const POSE_HTML = `<!DOCTYPE html>
 
         const pose = initPose();
 
-        // Use MediaPipe Camera utility for frame pumping
+        // Sử dụng tiện ích Camera của MediaPipe để đưa khung hình vào
         const camera = new Camera(video, {
           onFrame: async () => {
             await pose.send({ image: video });
@@ -300,7 +300,7 @@ export const POSE_HTML = `<!DOCTYPE html>
         });
         camera.start();
 
-        // ── Web MediaRecorder Setup ──────────────────────────────────────────
+        // ── Cài đặt Web MediaRecorder ──────────────────────────────────────────
         try {
           recordedChunks = [];
           let options = {};
@@ -330,8 +330,8 @@ export const POSE_HTML = `<!DOCTYPE html>
               const mime = mediaRecorder.mimeType || 'video/webm';
               const blob = new Blob(recordedChunks, { type: mime });
               console.log("[pose-html] Recording complete. Blob size:", blob.size, "bytes, mime:", mime);
-              // Transfer raw ArrayBuffer to parent — blob URLs from iframes
-              // get revoked when the iframe is destroyed, so we send the data itself.
+              // Truyền ArrayBuffer thô đến thành phần cha — các blob URL từ iframe
+              // bị thu hồi khi iframe bị hủy, vì vậy chúng ta gửi chính dữ liệu đó.
               blob.arrayBuffer().then(function(buffer) {
                 console.log("[pose-html] ArrayBuffer ready, transferring to parent. Size:", buffer.byteLength);
                 window.parent.postMessage({
@@ -345,7 +345,7 @@ export const POSE_HTML = `<!DOCTYPE html>
             }
           };
 
-          mediaRecorder.start(1000); // chunk every 1 second
+          mediaRecorder.start(1000); // chia nhỏ mỗi 1 giây
           console.log("[pose-html] MediaRecorder started successfully!");
         } catch (recErr) {
           console.warn("[pose-html] Failed to initialize MediaRecorder:", recErr);
@@ -359,7 +359,7 @@ export const POSE_HTML = `<!DOCTYPE html>
       }
     }
 
-    // ── Listen to host control commands ──────────────────────────────────────
+    // ── Lắng nghe các lệnh điều khiển từ host ──────────────────────────────────────
     window.addEventListener('message', (event) => {
       try {
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -388,13 +388,13 @@ export const POSE_HTML = `<!DOCTYPE html>
           }
         }
       } catch (e) {
-        // ignore malformed messages
+        // bỏ qua các tin nhắn bị định dạng sai
       }
     });
 
-    // ── Boot ──────────────────────────────────────────────────────────────────
+    // ── Khởi động ──────────────────────────────────────────────────────────────────
     window.addEventListener('load', () => {
-      // Small delay so scripts fully initialise
+      // Độ trễ nhỏ để các script khởi tạo hoàn toàn
       setTimeout(startCamera, 500);
     });
   </script>

@@ -16,7 +16,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './config';
 import type { UserProfile, UserRole } from './types';
 
-// ── Get User by UID ─────────────────────────────────
+// ── Lấy Người dùng theo UID ─────────────────────────
 /**
  * Lấy thông tin hồ sơ của một người dùng bất kỳ thông qua UID.
  * 
@@ -28,8 +28,8 @@ export async function getUser(uid: string): Promise<UserProfile | null> {
     return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
-// ── Update Profile ──────────────────────────────────
-// Called when user edits profile (ProfileScreen "Edit" button)
+// ── Cập nhật Hồ sơ ──────────────────────────────────
+// Được gọi khi người dùng chỉnh sửa hồ sơ (nút "Chỉnh sửa" trên ProfileScreen)
 /**
  * Cập nhật thông tin hồ sơ người dùng trên Firestore.
  * Thường được gọi khi người dùng nhấn lưu trong màn hình chỉnh sửa hồ sơ.
@@ -48,8 +48,8 @@ export async function updateUserProfile(
     });
 }
 
-// ── Upload Avatar ───────────────────────────────────
-// Called when user taps Edit Avatar on ProfileScreen
+// ── Tải lên Ảnh đại diện ────────────────────────────
+// Được gọi khi người dùng nhấn Chỉnh sửa Ảnh đại diện trên ProfileScreen
 /**
  * Tải ảnh đại diện (avatar) của người dùng lên Firebase Storage và cập nhật URL vào Firestore.
  * 
@@ -70,12 +70,12 @@ export async function uploadAvatar(uid: string, fileUri: string): Promise<string
     return downloadUrl;
 }
 
-// ── Get All Patients (Doctor use) ───────────────────
-// Called by DoctorDashboardScreen
+// ── Lấy Tất cả Bệnh nhân (Dành cho Bác sĩ) ──────────
+// Được gọi bởi DoctorDashboardScreen
 export async function getPatients(doctorId: string): Promise<UserProfile[]> {
     console.log(`[Service] getPatients called with doctorId: ${doctorId}`);
-    // Query users where role=patient AND they have an active treatment plan with this doctor
-    // For simplicity, we query treatment plans first, then fetch user profiles
+    // Truy vấn người dùng có role=patient VÀ có phác đồ điều trị đang hoạt động với bác sĩ này
+    // Để đơn giản, chúng ta truy vấn phác đồ điều trị trước, sau đó lấy hồ sơ người dùng
     const plansSnap = await getDocs(
         query(collection(db, 'treatment_plans'), where('doctorId', '==', doctorId))
     );
@@ -84,7 +84,7 @@ export async function getPatients(doctorId: string): Promise<UserProfile[]> {
     if (patientIds.length === 0) return [];
 
     const profiles: UserProfile[] = [];
-    // Firestore `in` query supports max 30 items
+    // Truy vấn `in` của Firestore hỗ trợ tối đa 30 mục
     for (const id of patientIds) {
         const user = await getUser(id);
         if (user) profiles.push(user);
@@ -93,8 +93,8 @@ export async function getPatients(doctorId: string): Promise<UserProfile[]> {
     return profiles;
 }
 
-// ── Get Doctor for Patient ──────────────────────────
-// Called by various screens (to display doctor/user name)
+// ── Lấy Bác sĩ của Bệnh nhân ────────────────────────
+// Được gọi bởi nhiều màn hình khác nhau (để hiển thị tên bác sĩ/người dùng)
 /**
  * Lấy thông tin hồ sơ của bác sĩ đang điều trị cho một bệnh nhân.
  * 
@@ -114,7 +114,7 @@ export async function getPatientDoctor(patientId: string): Promise<UserProfile |
     return getUser(doctorId);
 }
 
-// ── Get All Patients in DB (for doctor's assign search) ──────────────────────
+// ── Lấy Tất cả Bệnh nhân trong DB (cho bác sĩ tìm kiếm) ──────────────────
 /**
  * Lấy danh sách toàn bộ bệnh nhân có trong hệ thống.
  * (Sử dụng cho màn hình Bác sĩ tìm kiếm và giao bài tập)

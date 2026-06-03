@@ -86,7 +86,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         try {
             const profile = await loginUser(email.trim(), password);
             setUser(profile);
-            // Navigation handled automatically by AppNavigator (isAuthenticated becomes true)
+            // Điều hướng được tự động xử lý bởi AppNavigator (isAuthenticated trở thành true)
         } catch (err: any) {
             let msg = 'Login failed. Please try again.';
             if (err.code === 'auth/user-not-found') msg = 'No account found with this email.';
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: '#f8fafd' },
     scrollContent: { flexGrow: 1, justifyContent: 'center', padding: spacing.gutter },
 
-    // Hero
+    // Phần chính (Hero)
     hero: { alignItems: 'center', marginBottom: spacing.xl, position: 'relative' },
     heroGlow: {
         position: 'absolute', top: -40, width: 200, height: 200, borderRadius: 100,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     heroTitle: { color: colors.primary, fontWeight: '800', fontSize: 28, letterSpacing: -0.5 },
     heroSubtitle: { color: '#64748b', marginTop: 4 },
 
-    // Card
+    // Thẻ
     card: {
         backgroundColor: '#fff', borderRadius: 24, padding: spacing.xl,
         shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     cardTitle: { color: '#0f172a', fontWeight: '800', fontSize: 22, marginBottom: 4 },
     cardSubtitle: { color: '#64748b', marginBottom: spacing.xl },
 
-    // Inputs
+    // Trường nhập
     inputGroup: { marginBottom: spacing.lg },
     inputLabel: { color: '#334155', fontWeight: '600', marginBottom: 8 },
     inputBox: {
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
 
     forgotBtn: { alignSelf: 'flex-end', marginBottom: spacing.lg, marginTop: -spacing.sm },
 
-    // Buttons
+    // Nút bấm
     primaryBtn: {
         backgroundColor: colors.primary, flexDirection: 'row',
         alignItems: 'center', justifyContent: 'center',

@@ -18,11 +18,11 @@ import type { Assignment, Exercise, TreatmentPlan, ExerciseTemplate } from './ty
 import { createNotification } from './notificationService';
 
 // ═══════════════════════════════════════════════════
-// TREATMENT PLANS
+// CÁC PHÁC ĐỒ ĐIỀU TRỊ
 // ═══════════════════════════════════════════════════
 
-// ── Get Active Plan for Patient ─────────────────────
-// Called by HomeScreen (protocol card), ProgressScreen (week/phase header)
+// ── Lấy Kế hoạch Hoạt động cho Bệnh nhân ────────────
+// Được gọi bởi HomeScreen (thẻ phác đồ), ProgressScreen (tiêu đề tuần/giai đoạn)
 /**
  * Lấy Kế hoạch điều trị (Treatment Plan) đang hoạt động của một bệnh nhân.
  * Trả về kế hoạch được tạo gần đây nhất.
@@ -47,8 +47,8 @@ export async function getActiveTreatmentPlan(patientId: string): Promise<Treatme
     return plans[0];
 }
 
-// ── Get All Plans for Doctor ────────────────────────
-// Called by DoctorDashboardScreen (patient cards with condition/week/phase/status)
+// ── Lấy Tất cả Kế hoạch cho Bác sĩ ──────────────────
+// Được gọi bởi DoctorDashboardScreen (thẻ bệnh nhân với tình trạng/tuần/giai đoạn/trạng thái)
 export async function getDoctorTreatmentPlans(doctorId: string): Promise<TreatmentPlan[]> {
     console.log(`[Service] getDoctorTreatmentPlans called with doctorId: ${doctorId}`);
     const snap = await getDocs(
@@ -66,8 +66,8 @@ export async function getDoctorTreatmentPlans(doctorId: string): Promise<Treatme
     });
 }
 
-// ── Create Treatment Plan ───────────────────────────
-// Called by Doctor when assigning a new program to patient
+// ── Tạo Kế hoạch Điều trị ───────────────────────────
+// Được gọi bởi Bác sĩ khi giao chương trình mới cho bệnh nhân
 /**
  * Tạo một Kế hoạch điều trị mới cho bệnh nhân.
  * 
@@ -85,8 +85,8 @@ export async function createTreatmentPlan(
     return ref.id;
 }
 
-// ── Update Treatment Plan ───────────────────────────
-// Called when progress changes, phase advances, or status updates
+// ── Cập nhật Kế hoạch Điều trị ──────────────────────
+// Được gọi khi tiến độ thay đổi, chuyển giai đoạn hoặc cập nhật trạng thái
 export async function updateTreatmentPlan(
     planId: string,
     data: Partial<Pick<TreatmentPlan, 'currentPhase' | 'currentWeek' | 'status' | 'progress'>>
@@ -98,11 +98,11 @@ export async function updateTreatmentPlan(
 }
 
 // ═══════════════════════════════════════════════════
-// ASSIGNMENTS (Exercise protocols)
+// PHÂN CÔNG (Phác đồ bài tập)
 // ═══════════════════════════════════════════════════
 
-// ── Get Assignments for Patient ─────────────────────
-// Called by WorkoutScreen (exercise list for today's routine)
+// ── Lấy Bài tập được giao cho Bệnh nhân ─────────────
+// Được gọi bởi WorkoutScreen (danh sách bài tập cho lịch trình hôm nay)
 /**
  * Lấy danh sách các Bài tập được giao (Assignments) của bệnh nhân.
  * 
@@ -129,8 +129,8 @@ export async function getPatientAssignments(
     });
 }
 
-// ── Get Assignments by Doctor ───────────────────────
-// Called by DoctorAssignmentsScreen (Assigned tab)
+// ── Lấy Bài tập đã giao bởi Bác sĩ ──────────────────
+// Được gọi bởi DoctorAssignmentsScreen (tab Đã giao)
 /**
  * Lấy danh sách toàn bộ Bài tập (Assignments) đã được Bác sĩ giao.
  * 
@@ -152,8 +152,8 @@ export async function getDoctorAssignments(doctorId: string): Promise<Assignment
     });
 }
 
-// ── Create Assignment ───────────────────────────────
-// Called by DoctorAssignmentsScreen "Assign" button
+// ── Tạo Bài tập được giao ───────────────────────────
+// Được gọi bởi nút "Giao bài" trên DoctorAssignmentsScreen
 /**
  * Bác sĩ tạo và giao Bài tập mới cho bệnh nhân.
  * Sẽ gửi thông báo (Notification) đến bệnh nhân nếu có thể.
@@ -169,9 +169,9 @@ export async function createAssignment(
         assignedAt: serverTimestamp(),
     });
 
-    // Best-effort: notify the patient about the new assignment
+    // Cố gắng hết mức: thông báo cho bệnh nhân về bài tập mới
     try {
-    // Fetch doctor name
+    // Lấy tên bác sĩ
         const doctorSnap = await getDoc(doc(db, 'users', data.doctorId));
         const doctorName = doctorSnap.exists()
             ? doctorSnap.data().displayName || 'Your doctor'
@@ -195,7 +195,7 @@ export async function createAssignment(
     return ref.id;
 }
 
-// ── Complete Assignment ─────────────────────────────
+// ── Hoàn thành Bài tập được giao ────────────────────
 export async function completeAssignment(assignmentId: string): Promise<void> {
     await updateDoc(doc(db, 'assignments', assignmentId), {
         status: 'completed',
@@ -204,11 +204,11 @@ export async function completeAssignment(assignmentId: string): Promise<void> {
 }
 
 // ═══════════════════════════════════════════════════
-// EXERCISE TEMPLATES (Doctor's library)
+// MẪU BÀI TẬP (Thư viện của bác sĩ)
 // ═══════════════════════════════════════════════════
 
-// ── Get Templates ───────────────────────────────────
-// Called by DoctorAssignmentsScreen (Templates tab)
+// ── Lấy Mẫu bài tập ─────────────────────────────────
+// Được gọi bởi DoctorAssignmentsScreen (tab Mẫu bài tập)
 /**
  * Lấy danh sách các Mẫu bài tập (Templates) được lưu của Bác sĩ.
  * 
@@ -230,7 +230,7 @@ export async function getExerciseTemplates(doctorId: string): Promise<ExerciseTe
     });
 }
 
-// ── Create Template ─────────────────────────────────
+// ── Tạo Mẫu bài tập ─────────────────────────────────
 /**
  * Tạo một Mẫu bài tập (Template) mới vào thư viện của Bác sĩ.
  * 
@@ -253,7 +253,7 @@ export async function createExerciseTemplate(data: {
     return ref.id;
 }
 
-// ── Update Template ─────────────────────────────────
+// ── Cập nhật Mẫu bài tập ────────────────────────────
 export async function updateExerciseTemplate(
     templateId: string,
     data: Partial<Pick<ExerciseTemplate, 'name' | 'description' | 'exercises' | 'totalDuration'>>
@@ -264,12 +264,12 @@ export async function updateExerciseTemplate(
     });
 }
 
-// ── Delete Template ─────────────────────────────────
+// ── Xóa Mẫu bài tập ─────────────────────────────────
 export async function deleteExerciseTemplate(templateId: string): Promise<void> {
     await deleteDoc(doc(db, 'exercise_templates', templateId));
 }
 
-// ── Get Global Exercises (for picker) ───────────────
+// ── Lấy Bài tập Toàn cầu (cho bộ chọn) ──────────────
 /**
  * Lấy toàn bộ danh sách bài tập chung (Global Exercises) từ Firestore.
  * (Thường dùng cho tính năng tìm kiếm bài tập khi bác sĩ tạo mẫu)

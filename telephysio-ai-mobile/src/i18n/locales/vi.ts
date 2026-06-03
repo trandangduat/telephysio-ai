@@ -19,7 +19,7 @@
  */
 
 export default {
-  // ── Common ───────────────────────────────────────
+  // ── Chung ────────────────────────────────────────
   common: {
     ok: 'OK',
     cancel: 'Huỷ',
@@ -32,7 +32,7 @@ export default {
     minutes: 'phút',
   },
 
-    // ── Tab Bar ──────────────────────────────────────
+    // ── Thanh Tab ────────────────────────────────────
     tabs: {
         home: 'Trang chủ',
         workout: 'Tập luyện',
@@ -41,14 +41,14 @@ export default {
         feedback: 'Phản hồi',
     },
 
-    // ── Navigation Titles ────────────────────────────
+    // ── Tiêu đề Điều hướng ───────────────────────────
     nav: {
         calibration: 'Hiệu chỉnh Camera',
         training: 'Phòng luyện tập AI',
         doctorChat: 'Trò chuyện cùng Bác sĩ',
     },
 
-  // ── Home Screen ──────────────────────────────────
+  // ── Màn hình Trang chủ ───────────────────────────
   home: {
     greeting: 'Xin chào, {{name}}',
     todayBadge: 'Buổi tập hôm nay',
@@ -68,7 +68,7 @@ export default {
     contactDoctor: 'Vui lòng liên hệ bác sĩ của bạn.',
   },
 
-    // ── Week Calendar ────────────────────────────────
+    // ── Lịch Tuần ────────────────────────────────────
     weekDays: {
         mon: 'T2',
         tue: 'T3',
@@ -79,7 +79,7 @@ export default {
         sun: 'CN',
     },
 
-    // ── Library Screen ───────────────────────────────
+    // ── Màn hình Thư viện ────────────────────────────
     library: {
         title: 'Thư viện bài tập',
         noExercises: 'Không có bài tập nào.',
@@ -95,7 +95,7 @@ export default {
         kneeHealth: 'Sức khoẻ Đầu gối',
     },
 
-    // ── Progress Screen ──────────────────────────────
+    // ── Màn hình Tiến độ ─────────────────────────────
     progress: {
         title: 'Hành trình Hồi phục',
         subtitle: 'Tuần 6 của VLTL dây chằng chéo • Giai đoạn 2',
@@ -120,7 +120,7 @@ export default {
         streakDesc: 'Duy trì tập luyện hàng ngày trong hai tuần',
     },
 
-    // ── Workout Screen ───────────────────────────────
+    // ── Màn hình Bài tập ─────────────────────────────
     workout: {
         title: "Bài tập Hôm nay",
         subtitle: 'Hoàn thành các bài tập này để đạt mục tiêu hàng ngày.',
@@ -129,7 +129,7 @@ export default {
         continueWorkout: 'Tiếp tục tập',
     },
 
-    // ── Calibration Screen ───────────────────────────
+    // ── Màn hình Hiệu chỉnh ──────────────────────────
     calibration: {
         notReady: 'Chưa nhận diện được — Hãy lùi lại',
         partial: 'Gần đúng — Điều chỉnh thêm',
@@ -138,7 +138,7 @@ export default {
         startButton: 'Bắt đầu',
     },
 
-  // ── Training Screen ──────────────────────────────
+  // ── Màn hình Luyện tập ───────────────────────────
   training: {
     set: 'HIỆP {{current}}/{{total}}',
     repCount: 'SỐ LẦN',
@@ -168,7 +168,7 @@ export default {
     pause: 'TẠM DỪNG',
   },
 
-  // ── Exercise Result Screen ───────────────────────
+  // ── Màn hình Kết quả Bài tập ─────────────────────
   result: {
     title: 'Đã hoàn thành bài tập!',
     setsSummary: 'TỔNG KẾT HIỆP TẬP',
@@ -183,7 +183,7 @@ export default {
     setSubtitle: 'Hiệp {{setNum}} • {{reps}} lần',
   },
 
-  // ── Workout Summary Screen ───────────────────────
+  // ── Màn hình Tổng kết Buổi tập ───────────────────
   summary: {
     processingTitle: 'Đang xử lý kết quả...',
     processingDesc: 'Đang lưu siêu dữ liệu, cập nhật nhật ký, chạy tính toán MET và đóng phiên tập hiện tại.',
@@ -203,13 +203,13 @@ export default {
     returnHome: 'Về Trang Chủ',
   },
 
-  // ── Doctor ───────────────────────────────────────
+  // ── Bác sĩ ───────────────────────────────────────
   doctor: {
-    // Common
+    // Chung
     doctorRole: 'BÁC SĨ',
     searchPlaceholder: 'Tìm theo email hoặc tên...',
     
-    // Dashboard
+    // Bảng điều khiển
     dashboard: {
       goodMorning: 'Chào buổi sáng,',
       goodAfternoon: 'Chào buổi chiều,',
@@ -231,7 +231,7 @@ export default {
       todayTasksCount: '{{count}} hôm nay',
     },
 
-    // Patients
+    // Bệnh nhân
     patients: {
       allPatients: 'Tất Cả Bệnh Nhân',
       searchPlaceholder: 'Tìm bệnh nhân hoặc tình trạng...',
@@ -249,7 +249,7 @@ export default {
       noPatientsFound: 'Không tìm thấy bệnh nhân nào.',
     },
 
-    // Patient Detail
+    // Chi tiết Bệnh nhân
     patientDetail: {
       title: 'Chi Tiết Bệnh Nhân',
       noActivePlan: 'Không có kế hoạch',
@@ -272,7 +272,7 @@ export default {
       viewSessions: 'Xem Buổi Tập',
     },
 
-    // Session Detail
+    // Chi tiết Buổi tập
     sessionDetail: {
       title: 'Đánh Giá Buổi Tập',
       accuracy: 'CHÍNH XÁC',
@@ -287,7 +287,7 @@ export default {
       shareFeedback: 'Gửi Phản Hồi',
     },
 
-    // Sessions History
+    // Lịch sử Buổi tập
     sessions: {
       title: 'Lịch Sử Tập',
       accuracyScore: 'Độ Chính Xác',
@@ -297,7 +297,7 @@ export default {
       durationValue: '{{min}}p {{sec}}s',
     },
 
-    // Assignments
+    // Phân công
     assignments: {
       title: 'Mẫu Bài Tập',
       subtitle: 'Tạo các nhóm bài tập có thể sử dụng lại',
@@ -317,7 +317,7 @@ export default {
       noTemplatesMatch: 'Không có mẫu nào khớp với tìm kiếm.',
     },
 
-    // Template Editor
+    // Chỉnh sửa Mẫu
     templateEditor: {
       newTemplate: 'Tạo Mẫu',
       editTemplate: 'Sửa Mẫu',
@@ -365,7 +365,7 @@ export default {
       mins: 'phút',
     },
 
-    // Assign Template
+    // Giao Mẫu bài tập
     assignTemplate: {
       title: 'Quản lý phiên tập',
       createAssignmentTitle: 'Tạo lịch tập',
@@ -387,7 +387,7 @@ export default {
     }
   },
 
-    // ── Report Screen ────────────────────────────────
+    // ── Màn hình Báo cáo ─────────────────────────────
     report: {
         title: 'Báo cáo tiến độ',
         completionRate: 'Tỉ lệ hoàn thành',
@@ -397,7 +397,7 @@ export default {
         history: 'Lịch sử tập luyện',
     },
 
-  // ── Session Screen ───────────────────────────────
+  // ── Màn hình Buổi tập ────────────────────────────
   session: {
     historyTitle: 'Lịch sử buổi tập',
     historySubtitle: "Xem lại video và phản hồi của bác sĩ cho từng buổi tập của bạn.",
@@ -437,7 +437,7 @@ export default {
     reviewedBadge: 'Đã xem',
   },
 
-  // ── Feedback Screen ──────────────────────────────
+  // ── Màn hình Phản hồi ────────────────────────────
   feedback: {
     painTitle: 'Mức độ đau',
     painDescription: 'Chọn mức độ đau bạn cảm nhận (1 = không đau, 10 = rất đau)',
@@ -450,7 +450,7 @@ export default {
     submitSuccessMessage: 'Phản hồi của bạn đã được ghi nhận. Bác sĩ sẽ xem xét sớm nhất.',
   },
 
-    // ── Symptom Options ──────────────────────────────
+    // ── Tùy chọn Triệu chứng ─────────────────────────
     symptoms: {
         pain: 'Đau nhức',
         painDesc: 'Cảm giác đau ở vùng tập',
@@ -466,7 +466,7 @@ export default {
         betterDesc: 'Cải thiện rõ rệt',
     },
 
-    // ── Profile Screen ───────────────────────────────
+    // ── Màn hình Hồ sơ ───────────────────────────────
     profile: {
         navTitle: 'Hồ sơ & Cài đặt',
         activity: 'Hoạt động',

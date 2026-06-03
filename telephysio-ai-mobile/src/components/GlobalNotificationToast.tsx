@@ -28,15 +28,15 @@ export const GlobalNotificationToast: React.FC = () => {
     const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
     const isInitialLoadRef = useRef(true);
 
-    // Listen to navigation changes to clear popups if Notifications screen is opened
+    // Lắng nghe các thay đổi điều hướng để xóa popups nếu màn hình Thông báo được mở
     useEffect(() => {
         const unsubscribe = navigation.addListener('state', () => {
-            // Just clear popups anytime they open Notifications
-            // Checking current route name specifically can be tricky in nested navigators,
-            // but clearing it when state changes if the focused route is Notifications works well.
+            // Chỉ cần xóa popups bất cứ khi nào họ mở màn hình Thông báo
+            // Kiểm tra tên route hiện tại có thể phức tạp trong các bộ điều hướng lồng nhau,
+            // nhưng xóa nó khi trạng thái thay đổi nếu route đang tập trung là Thông báo hoạt động tốt.
             const state = navigation.getState();
             if (state) {
-                // Find the active route
+                // Tìm route đang hoạt động
                 let currentRoute = state.routes[state.index];
                 while (currentRoute.state) {
                     currentRoute = currentRoute.state.routes[currentRoute.state.index];
@@ -74,10 +74,10 @@ export const GlobalNotificationToast: React.FC = () => {
                 if (!isInitialLoadRef.current && newPopups.length > 0) {
                     setPopups(prev => {
                         const combined = [...newPopups, ...prev];
-                        return combined.slice(0, 3); // Max 3 popups on screen
+                        return combined.slice(0, 3); // Tối đa 3 popups trên màn hình
                     });
           
-                    // Auto-hide popups after 5 seconds
+                    // Tự động ẩn popups sau 5 giây
                     newPopups.forEach(p => {
                         setTimeout(() => {
                             setPopups(current => current.filter(x => x.id !== p.id));
@@ -85,7 +85,7 @@ export const GlobalNotificationToast: React.FC = () => {
                     });
                 }
         
-                // Add all fetched notifications to seenIds so we don't show toasts for them later 
+                // Thêm tất cả các thông báo đã tải vào seenIds để không hiển thị toast cho chúng sau này 
                 notifications.forEach(n => newSeen.add(n.id));
                 return newSeen;
             });
@@ -158,10 +158,10 @@ export const GlobalNotificationToast: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        top: Platform.OS === 'ios' ? 110 : 90, // Under the top bar
+        top: Platform.OS === 'ios' ? 110 : 90, // Dưới thanh công cụ trên cùng
         right: spacing.gutter,
         left: spacing.gutter,
-        alignItems: 'flex-end', // Align right
+        alignItems: 'flex-end', // Căn phải
         zIndex: 9999,
     },
     toast: {
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: spacing.md,
         marginBottom: spacing.sm,
-        width: '85%', // Make it a bit compact on the right side
+        width: '85%', // Làm cho nó gọn một chút ở bên phải
         maxWidth: 320,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },

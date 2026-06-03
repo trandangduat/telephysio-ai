@@ -7,10 +7,10 @@
  *   import { loginUser, getPatientSessions, sendMessage } from '../services/firebase';
  */
 
-// Config
+// Cấu hình
 export { auth, db, storage } from './config';
 
-// Types
+// Các kiểu dữ liệu
 export type {
     UserProfile, UserRole,
     TreatmentPlan, Exercise, ExerciseDifficulty, ExerciseTemplate, Assignment,
@@ -19,7 +19,7 @@ export type {
     ScheduleItem, LibraryItem,
 } from './types';
 
-// Auth
+// Xác thực
 export {
     registerUser,
     loginUser,
@@ -29,7 +29,7 @@ export {
     getCurrentUser,
 } from './authService';
 
-// Users
+// Người dùng
 export {
     getUser,
     updateUserProfile,
@@ -39,7 +39,7 @@ export {
     getAllPatients,
 } from './userService';
 
-// Assignments & Treatment Plans
+// Phân công & Phác đồ điều trị
 export {
     getActiveTreatmentPlan,
     getDoctorTreatmentPlans,
@@ -56,7 +56,7 @@ export {
     getGlobalExercises,
 } from './assignmentService';
 
-// Progress & Sessions
+// Tiến trình & Phiên tập
 export {
     recordSession,
     getPatientSessions,
@@ -76,7 +76,7 @@ export {
     deleteSessionVideo,
 } from './progressService';
 
-// Notifications
+// Thông báo
 export {
     createNotification,
     getUserNotifications,
@@ -86,7 +86,7 @@ export {
     onNotificationsChange,
 } from './notificationService';
 
-// Video Recording Local
+// Ghi hình Video Cục bộ
 export {
   startRecording,
   pauseRecording,
@@ -99,13 +99,13 @@ export {
   uploadThumbnailToCloudinary,
 } from './videoService';
 
-// Schedule
+// Lịch trình
 export {
     getTodaySchedule,
     createScheduleItem,
 } from './scheduleService';
 
-// Library
+// Thư viện
 export {
   getLibraryItems,
 } from './libraryService';

@@ -66,7 +66,7 @@ function getMETValue(exerciseName: string): number {
     if (name.includes("plank") || name.includes("core") || name.includes("abdominal")) return 3.5;
     if (name.includes("hiit") || name.includes("burpee") || name.includes("cardio")) return 8.0;
     if (name.includes("stretch") || name.includes("cooldown") || name.includes("yoga")) return 2.5;
-    return 5.0; // default Bodyweight exercise
+    return 5.0; // Mặc định cho bài tập thể dục không dụng cụ (Bodyweight exercise)
 }
 
 /**
@@ -90,7 +90,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
-    // Workout stats
+    // Số liệu bài tập
     const [assignment, setAssignment] = useState<Assignment | null>(null);
     const [completedExercises, setCompletedExercises] = useState<ExerciseRecord[]>([]);
     const [overallAccuracy, setOverallAccuracy] = useState(0);
@@ -100,10 +100,10 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
     const [calories, setCalories] = useState(0);
     const [completionRateVal, setCompletionRateVal] = useState(0);
 
-    // Perceived effort
+    // Nỗ lực cảm nhận
     const [effort, setEffort] = useState<"easy" | "normal" | "hard" | null>(null);
 
-    // Video Management
+    // Quản lý video
     const [videoPath, setVideoPath] = useState<string | null>(null);
     const [thumbPath, setThumbPath] = useState<string | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -117,7 +117,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
             try {
                 console.log("[WorkoutSummary] Starting strict completion sequence...");
 
-                // Fetch active assignment & incomplete session data
+                // Lấy thông tin bài tập đang hoạt động & dữ liệu phiên chưa hoàn thành
                 const assignments = await getPatientAssignments(uid, 'active');
                 const active = assignments.find((a) => a.id === assignmentId);
                 const sessionData = await getIncompleteSession(uid, assignmentId);
@@ -125,11 +125,11 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                 if (active && sessionData) {
                     setAssignment(active);
 
-                    // Build Exercises & Sets Records from Incomplete Session
+                    // Xây dựng danh sách bài tập & hiệp từ phiên chưa hoàn thành
                     const exercisesList = sessionData.completedExercises || [];
                     setCompletedExercises(exercisesList);
 
-                    // Calculate accuracy and sums (Workout Flow Spec section 10)
+                    // Tính toán độ chính xác và tổng số (Mục 10 của Đặc tả Luồng Bài tập)
                     let totalAcc = 0;
                     let totalSecs = 0;
                     let sumReps = 0;
@@ -147,13 +147,13 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                         });
                         totalSecs += exSecs;
 
-                        // Met calculations per exercise: MET * weightKg * (durationSecs / 3600)
+                        // Tính toán lượng MET mỗi bài tập: MET * cân nặng (Kg) * (thời gian (giây) / 3600)
                         const met = getMETValue(ex.exerciseName);
                         const durationHours = exSecs / 3600;
-                        calculatedCalories += met * 65 * durationHours; // Default 65kg weight
+                        calculatedCalories += met * 65 * durationHours; // Mặc định cân nặng 65kg
                     });
 
-                    // Average Accuracy (rounded mean accuracy across exercises)
+                    // Độ chính xác trung bình (làm tròn số trung bình giữa các bài tập)
                     const avgAcc = exercisesList.length > 0 ? Math.round(totalAcc / exercisesList.length) : 0;
                     const finalCalories = Math.round(calculatedCalories);
                     const completionRate = parseFloat((exercisesList.length / active.exercises.length).toFixed(2));
@@ -167,19 +167,19 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
 
                     console.log(`[WorkoutSummary] Calculated stats - Acc: ${avgAcc}%, Secs: ${totalSecs}, Calories: ${finalCalories}, Rate: ${completionRate}`);
 
-                    // 2. Save final session to Firestore
+                    // 2. Lưu phiên cuối vào Firestore
                     const finalSessionId = await recordSession({
                         patientId: uid,
                         assignmentId: active.id,
                         reps: sumReps,
                         templateName: active.templateName,
                         accuracy: avgAcc,
-                        duration: totalSecs, // total seconds
+                        duration: totalSecs, // tổng số giây
                         caloriesBurned: finalCalories,
                         completionRate: completionRate,
-                        perceivedEffort: null, // starts empty, chosen by user below
+                        perceivedEffort: null, // bắt đầu rỗng, được người dùng chọn phía dưới
                         exercises: exercisesList,
-                        // Backward compatibility properties:
+                        // Thuộc tính tương thích ngược:
                         exercisesCompleted: exercisesList.length,
                         completedExercises: exercisesList.length,
                         accuracyScore: avgAcc,
@@ -197,25 +197,25 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                     setSessionId(finalSessionId);
                     console.log(`[WorkoutSummary] Step 2 - Session recorded with ID: ${finalSessionId}`);
 
-                    // 3. Complete assignment only if 100% finished
+                    // 3. Chỉ hoàn thành bài tập nếu đạt 100%
                     if (completionRate >= 1.0) {
-                        // Check status first (handled in completeAssignment service)
+                        // Kiểm tra trạng thái trước (xử lý trong service completeAssignment)
                         await completeAssignment(active.id);
                         console.log(`[WorkoutSummary] Step 3 - Assignment ${active.id} completed!`);
                     } else {
                         console.log(`[WorkoutSummary] Step 3 - Completion rate is ${completionRate}. Left assignment active.`);
                     }
 
-                    // 4. Save progress snapshot
+                    // 4. Lưu ảnh chụp tiến trình
                     const snapshotId = await saveProgressSnapshot({
                         patientId: uid,
-                        movementScore: avgAcc, // Accuracy represents active movement score
-                        timeActive: Math.round(totalSecs / 60), // Accumulate time active in minutes
-                        weeklyConsistency: 85, // Mock baseline
-                        rom: 90, // ROM standard baseline
-                        strength: 80, // Strength baseline
+                        movementScore: avgAcc, // Độ chính xác đại diện cho điểm số chuyển động
+                        timeActive: Math.round(totalSecs / 60), // Tích lũy thời gian hoạt động tính bằng phút
+                        weeklyConsistency: 85, // Cơ sở dữ liệu mẫu
+                        rom: 90, // Cơ sở ROM tiêu chuẩn
+                        strength: 80, // Cơ sở sức mạnh
 
-                        // Backward compatibility
+                        // Tương thích ngược
                         timeActiveMinutes: Math.round(totalSecs / 60),
                         dailyGoalPercent: Math.round(completionRate * 100),
                         sessionsCompleted: 1,
@@ -228,7 +228,7 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
                     });
                     console.log(`[WorkoutSummary] Step 4 - Progress snapshot saved: ${snapshotId}`);
 
-                    // 5. Clean up incomplete session
+                    // 5. Dọn dẹp phiên chưa hoàn thành
                     await deleteIncompleteSession(sessionData.id);
                     console.log(`[WorkoutSummary] Step 5 - Incomplete session state cleaned up.`);
                 }
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     title: { color: '#0f172a', fontWeight: '800', textAlign: 'center', fontSize: 22 },
     subtitle: { color: '#64748b', marginTop: 4, textAlign: 'center', fontSize: 14 },
 
-    // Stats
+    // Số liệu
     statsContainer: {
         flexDirection: 'row',
         gap: spacing.md,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     },
     statLabel: { color: '#64748b', fontSize: 10, fontWeight: '600', marginTop: 4 },
 
-    // Effort level
+    // Mức độ nỗ lực
     effortCard: {
         backgroundColor: '#fff',
         borderRadius: radius.xl,
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     },
     effortBtnText: { fontWeight: '700', fontSize: 12, color: '#475569' },
 
-    // Effort colors
+    // Màu sắc mức độ nỗ lực
     effortBtnEasy: { borderColor: '#ccfbf1' },
     effortBtnEasyActive: { backgroundColor: '#14b8a6', borderColor: '#14b8a6' },
     effortBtnNormal: { borderColor: '#dbeafe' },
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     effortBtnHard: { borderColor: '#fee2e2' },
     effortBtnHardActive: { backgroundColor: '#ef4444', borderColor: '#ef4444' },
 
-    // Video Management Card
+    // Thẻ quản lý video
     videoCard: {
         backgroundColor: '#fff',
         borderRadius: radius.xl,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
 
-    // Exercises
+    // Các bài tập
     exercisesList: {
         backgroundColor: '#fff',
         borderRadius: radius.xl,
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     exDetail: { color: '#64748b', marginTop: 2, fontSize: 11, fontWeight: '500' },
     rowCheckmark: { alignSelf: 'flex-start', marginTop: 2, marginLeft: spacing.sm },
 
-    // Thumbnails Row
+    // Hàng ảnh thu nhỏ
     thumbScroll: {
         marginTop: spacing.sm,
     },

@@ -42,14 +42,14 @@ export const ProfileScreen: React.FC = () => {
 
     const [isDark, setIsDark] = useState(false);
 
-    // Edit modal state
+    // Trạng thái modal chỉnh sửa
     const [editModal, setEditModal] = useState(false);
     const [editName, setEditName] = useState(userName || "");
     const [editPhone, setEditPhone] = useState((user as any)?.phone || "");
     const [editDOB, setEditDOB] = useState((user as any)?.dateOfBirth || "");
     const [saving, setSaving] = useState(false);
 
-    // Sync when user/userName changes
+    // Đồng bộ khi user/userName thay đổi
     useEffect(() => {
         setEditName(userName || "");
         setEditPhone((user as any)?.phone || "");
@@ -84,7 +84,7 @@ export const ProfileScreen: React.FC = () => {
                 dateOfBirth: editDOB.trim(),
             };
             await updateUserProfile(uid, updates);
-            // Update AuthContext immediately so the display reflects changes
+            // Cập nhật AuthContext ngay lập tức để màn hình phản ánh các thay đổi
             if (user) {
                 setUser({ ...user, ...updates });
             }
@@ -97,7 +97,7 @@ export const ProfileScreen: React.FC = () => {
         }
     };
 
-    // Theme
+    // Giao diện (Theme)
     const bgTheme = isDark ? "#0f172a" : "#f8fafd";
     const cardTheme = isDark ? "#1e293b" : "#fff";
     const textTheme = isDark ? "#f8fafc" : "#0f172a";
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     scroll: { flex: 1 },
     content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: 60 },
 
-    // Profile header
+    // Phần đầu hồ sơ
     profileHeader: { alignItems: "center", paddingVertical: spacing.md },
     avatarContainer: { position: "relative", marginBottom: spacing.md },
     avatarLarge: {
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 100,
     },
 
-    // Card
+    // Thẻ
     card: { borderRadius: 24, padding: spacing.lg, borderWidth: 1 },
     cardHeader: {
         flexDirection: "row", justifyContent: "space-between",
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     cardTitle: { fontSize: 17, fontWeight: "700" },
     editBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
 
-    // Info rows
+    // Các hàng thông tin
     infoRow: {
         flexDirection: "row", alignItems: "center", gap: 12,
         paddingVertical: spacing.md, borderBottomWidth: 1,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#f1f5f9", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 100,
     },
 
-    // Setting rows
+    // Các hàng cài đặt
     settingRow: {
         flexDirection: "row", alignItems: "center", gap: 12,
         paddingVertical: spacing.md, borderBottomWidth: 1,
@@ -424,14 +424,14 @@ const styles = StyleSheet.create({
     settingLabel: { flex: 1, fontWeight: "500" },
     settingValuePill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, marginRight: 4 },
 
-    // Logout
+    // Đăng xuất
     logoutBtn: {
         flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
         backgroundColor: "#fef2f2", paddingVertical: spacing.md, borderRadius: 16,
     },
     logoutText: { color: "#ef4444", fontWeight: "700" },
 
-    // Edit Modal
+    // Modal chỉnh sửa
     modalSafe: { flex: 1 },
     modalHeader: {
         flexDirection: "row", alignItems: "center", justifyContent: "space-between",

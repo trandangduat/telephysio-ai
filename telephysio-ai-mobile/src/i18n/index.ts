@@ -39,17 +39,17 @@ function getDeviceLanguage(): string {
             }
         }
     } catch {
-    // expo-localization may throw on web during SSR
+    // expo-localization có thể gây lỗi trên web trong quá trình SSR
     }
     return 'en';
 }
 
 i18n.use(initReactI18next).init({
     resources,
-    lng: 'en', // Default to English as requested
+    lng: 'en', // Mặc định là Tiếng Anh theo yêu cầu
     fallbackLng: 'en',
     interpolation: {
-        escapeValue: false, // React already escapes
+        escapeValue: false, // React đã tự động thoát HTML
     },
     compatibilityJSON: 'v4',
 });
