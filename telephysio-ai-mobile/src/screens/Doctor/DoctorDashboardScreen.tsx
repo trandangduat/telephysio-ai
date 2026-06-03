@@ -1,5 +1,6 @@
 /**
- * DoctorDashboardScreen — Patient list with today's assignment status.
+ * DoctorDashboardScreen — Màn hình Bảng điều khiển dành cho Bác sĩ.
+ * Hiển thị danh sách bệnh nhân cùng với trạng thái hoàn thành bài tập trong ngày.
  */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -42,6 +43,12 @@ interface PatientCard {
     todayTotal: number;
 }
 
+/**
+ * Component Màn hình chính của Bác sĩ (DoctorDashboardScreen).
+ * Lấy danh sách các bệnh nhân đang được bác sĩ quản lý và trạng thái luyện tập của họ.
+ * 
+ * @return React.FC Component DoctorDashboardScreen
+ */
 export const DoctorDashboardScreen: React.FC = () => {
     const navigation = useNavigation<DashboardNavProp>();
     const { userName, uid } = useAuth();

@@ -1,8 +1,8 @@
 /**
- * pose-html.ts
- * Self-contained HTML page that runs MediaPipe BlazePose in a WebView.
- * Accesses device camera via getUserMedia, draws skeleton overlay on canvas.
- * Calls window.ReactNativeWebView.postMessage with JSON pose data.
+ * @file pose-html.ts
+ * @description File chứa mã HTML dạng chuỗi độc lập để chạy MediaPipe BlazePose bên trong một WebView.
+ * Truy cập camera thiết bị thông qua getUserMedia, vẽ khung xương lên canvas và gửi dữ liệu tư thế
+ * định dạng JSON đến ứng dụng qua window.ReactNativeWebView.postMessage.
  */
 
 export const POSE_HTML = `<!DOCTYPE html>

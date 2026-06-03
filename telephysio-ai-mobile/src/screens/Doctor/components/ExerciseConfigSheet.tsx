@@ -1,3 +1,8 @@
+/**
+ * @file ExerciseConfigSheet.tsx
+ * @description Bottom sheet cho phép người dùng cấu hình chi tiết một bài tập trước khi thêm vào template.
+ * Bao gồm các thông số: số sets, số reps, mức độ khó, thời gian nghỉ giữa các sets và ghi chú.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,18 +14,37 @@ import type { Exercise, ExerciseDifficulty } from '../../../services/firebase/ty
 
 const REST_OPTIONS = [30, 60, 90, 120];
 
+/**
+ * Props của component ExerciseConfigSheet.
+ *
+ * @property visible - Trạng thái hiển thị/ẩn của sheet.
+ * @property exercise - Bài tập cần cấu hình, hoặc null nếu chưa chọn.
+ * @property onClose - Callback được gọi khi đóng sheet.
+ * @property onSave - Callback được gọi khi người dùng xác nhận lưu cấu hình.
+ */
 interface ExerciseConfigSheetProps {
-  visible: boolean;
-  exercise: Exercise | null;
-  onClose: () => void;
-  onSave: (configured: Exercise) => void;
+    visible: boolean;
+    exercise: Exercise | null;
+    onClose: () => void;
+    onSave: (configured: Exercise) => void;
 }
 
+/**
+ * Component bottom sheet cấu hình bài tập.
+ * Cho phép người dùng chỉnh sửa sets, reps, mức độ khó, thời gian nghỉ và ghi chú
+ * của một bài tập trước khi thêm vào template.
+ *
+ * @param visible - Hiển thị sheet khi true.
+ * @param exercise - Bài tập cần cấu hình.
+ * @param onClose - Hàm callback khi đóng sheet.
+ * @param onSave - Hàm callback với cấu hình đã chỉnh sửa khi người dùng xác nhận.
+ * @return Component JSX bottom sheet cấu hình bài tập, hoặc null nếu exercise là null.
+ */
 export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
-  visible,
-  exercise,
-  onClose,
-  onSave,
+    visible,
+    exercise,
+    onClose,
+    onSave,
 }) => {
   const { t } = useTranslation();
   
@@ -36,17 +60,17 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
   const [restBetweenSets, setRestBetweenSets] = useState(60);
   const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    if (exercise) {
-      setSets(exercise.sets || 3);
-      setReps(exercise.reps || 10);
-      setDifficulty(exercise.difficulty || 'medium');
-      setRestBetweenSets(exercise.restBetweenSets || 60);
-      setNotes(exercise.notes || '');
-    }
-  }, [exercise]);
+    useEffect(() => {
+        if (exercise) {
+            setSets(exercise.sets || 3);
+            setReps(exercise.reps || 10);
+            setDifficulty(exercise.difficulty || 'medium');
+            setRestBetweenSets(exercise.restBetweenSets || 60);
+            setNotes(exercise.notes || '');
+        }
+    }, [exercise]);
 
-  if (!exercise) return null;
+    if (!exercise) return null;
 
   const handleSave = () => {
     onSave({
@@ -61,15 +85,25 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
     onClose();
   };
 
-  const adjustSets = (delta: number) => {
-    const newVal = sets + delta;
-    if (newVal >= 1 && newVal <= 10) setSets(newVal);
-  };
+    /**
+   * Tăng hoặc giảm số sets trong khoảng hợp lệ [1, 10].
+   *
+   * @param delta - Giá trị thay đổi (+1 hoặc -1).
+   */
+    const adjustSets = (delta: number) => {
+        const newVal = sets + delta;
+        if (newVal >= 1 && newVal <= 10) setSets(newVal);
+    };
 
-  const adjustReps = (delta: number) => {
-    const newVal = reps + delta;
-    if (newVal >= 1 && newVal <= 50) setReps(newVal);
-  };
+    /**
+   * Tăng hoặc giảm số reps trong khoảng hợp lệ [1, 50].
+   *
+   * @param delta - Giá trị thay đổi (+1 hoặc -1).
+   */
+    const adjustReps = (delta: number) => {
+        const newVal = reps + delta;
+        if (newVal >= 1 && newVal <= 50) setReps(newVal);
+    };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -94,10 +128,6 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
                 <View style={styles.counterValue}>
                   <AppText variant="headlineLg" style={styles.counterText}>{sets}</AppText>
                 </View>
-                <TouchableOpacity style={styles.counterBtn} onPress={() => adjustSets(1)}>
-                  <Ionicons name="add" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
             </View>
 
             {/* Reps */}
@@ -185,138 +215,138 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-    paddingBottom: spacing.xl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.lg,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  title: {
-    color: '#0f172a',
-    fontWeight: '700',
-    fontSize: 18,
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  label: {
-    color: '#475569',
-    fontWeight: '700',
-    fontSize: 12,
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-  },
-  counterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xl,
-  },
-  counterBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  counterValue: {
-    width: 60,
-    alignItems: 'center',
-  },
-  counterText: {
-    color: '#0f172a',
-    fontWeight: '800',
-    fontSize: 28,
-  },
-  diffRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  diffBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    gap: 4,
-  },
-  diffBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: '#eff6ff',
-    borderWidth: 2,
-  },
-  diffEmoji: {
-    fontSize: 24,
-  },
-  restRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  restBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-  },
-  restBtnActive: {
-    backgroundColor: colors.primary,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    padding: spacing.md,
-    minHeight: 72,
-    textAlignVertical: 'top',
-    color: '#0f172a',
-    fontSize: 14,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
-  cancelBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  saveBtn: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-  },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
+        justifyContent: 'flex-end',
+    },
+    sheet: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: '85%',
+        paddingBottom: spacing.xl,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: spacing.lg,
+        paddingBottom: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    title: {
+        color: '#0f172a',
+        fontWeight: '700',
+        fontSize: 18,
+        flex: 1,
+        marginRight: spacing.md,
+    },
+    section: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
+    },
+    label: {
+        color: '#475569',
+        fontWeight: '700',
+        fontSize: 12,
+        letterSpacing: 0.5,
+        marginBottom: spacing.sm,
+    },
+    counterRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xl,
+    },
+    counterBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#f1f5f9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    counterValue: {
+        width: 60,
+        alignItems: 'center',
+    },
+    counterText: {
+        color: '#0f172a',
+        fontWeight: '800',
+        fontSize: 28,
+    },
+    diffRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    diffBtn: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        gap: 4,
+    },
+    diffBtnActive: {
+        borderColor: colors.primary,
+        backgroundColor: '#eff6ff',
+        borderWidth: 2,
+    },
+    diffEmoji: {
+        fontSize: 24,
+    },
+    restRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    restBtn: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: spacing.sm,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 8,
+    },
+    restBtnActive: {
+        backgroundColor: colors.primary,
+    },
+    textArea: {
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        padding: spacing.md,
+        minHeight: 72,
+        textAlignVertical: 'top',
+        color: '#0f172a',
+        fontSize: 14,
+    },
+    actions: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
+    },
+    cancelBtn: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    saveBtn: {
+        flex: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 14,
+        borderRadius: 12,
+        backgroundColor: colors.primary,
+    },
 });

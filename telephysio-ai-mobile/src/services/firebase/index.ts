@@ -1,7 +1,9 @@
 /**
- * Firebase Services — Barrel export.
+ * @file index.ts
+ * @description File xuất chung (Barrel export) cho tất cả các dịch vụ Firebase.
+ * Gom nhóm các hàm xử lý dữ liệu và logic liên quan đến Firebase để dễ dàng import ở nơi khác.
  *
- * Usage:
+ * Cách sử dụng:
  *   import { loginUser, getPatientSessions, sendMessage } from '../services/firebase';
  */
 
@@ -10,78 +12,78 @@ export { auth, db, storage } from './config';
 
 // Types
 export type {
-  UserProfile, UserRole,
-  TreatmentPlan, Exercise, ExerciseDifficulty, ExerciseTemplate, Assignment,
-  Session, ProgressSnapshot, IncompleteSession,
-  ExerciseFeedback, NotificationType, Notification,
-  ScheduleItem, LibraryItem,
+    UserProfile, UserRole,
+    TreatmentPlan, Exercise, ExerciseDifficulty, ExerciseTemplate, Assignment,
+    Session, ProgressSnapshot, IncompleteSession,
+    ExerciseFeedback, NotificationType, Notification,
+    ScheduleItem, LibraryItem,
 } from './types';
 
 // Auth
 export {
-  registerUser,
-  loginUser,
-  logoutUser,
-  getUserProfile,
-  onAuthChange,
-  getCurrentUser,
+    registerUser,
+    loginUser,
+    logoutUser,
+    getUserProfile,
+    onAuthChange,
+    getCurrentUser,
 } from './authService';
 
 // Users
 export {
-  getUser,
-  updateUserProfile,
-  uploadAvatar,
-  getPatients,
-  getPatientDoctor,
-  getAllPatients,
+    getUser,
+    updateUserProfile,
+    uploadAvatar,
+    getPatients,
+    getPatientDoctor,
+    getAllPatients,
 } from './userService';
 
 // Assignments & Treatment Plans
 export {
-  getActiveTreatmentPlan,
-  getDoctorTreatmentPlans,
-  createTreatmentPlan,
-  updateTreatmentPlan,
-  getPatientAssignments,
-  getDoctorAssignments,
-  createAssignment,
-  completeAssignment,
-  getExerciseTemplates,
-  createExerciseTemplate,
-  updateExerciseTemplate,
-  deleteExerciseTemplate,
-  getGlobalExercises,
+    getActiveTreatmentPlan,
+    getDoctorTreatmentPlans,
+    createTreatmentPlan,
+    updateTreatmentPlan,
+    getPatientAssignments,
+    getDoctorAssignments,
+    createAssignment,
+    completeAssignment,
+    getExerciseTemplates,
+    createExerciseTemplate,
+    updateExerciseTemplate,
+    deleteExerciseTemplate,
+    getGlobalExercises,
 } from './assignmentService';
 
 // Progress & Sessions
 export {
-  recordSession,
-  getPatientSessions,
-  submitDoctorFeedback,
-  getWeeklySessionCount,
-  getLatestProgress,
-  saveProgressSnapshot,
-  getProgressHistory,
-  submitFeedback,
-  getPatientFeedback,
-  getAverageAccuracy,
-  getIncompleteSession,
-  saveIncompleteSession,
-  updateIncompleteSession,
-  deleteIncompleteSession,
-  updateSessionEffort,
-  deleteSessionVideo,
+    recordSession,
+    getPatientSessions,
+    submitDoctorFeedback,
+    getWeeklySessionCount,
+    getLatestProgress,
+    saveProgressSnapshot,
+    getProgressHistory,
+    submitFeedback,
+    getPatientFeedback,
+    getAverageAccuracy,
+    getIncompleteSession,
+    saveIncompleteSession,
+    updateIncompleteSession,
+    deleteIncompleteSession,
+    updateSessionEffort,
+    deleteSessionVideo,
 } from './progressService';
 
 // Notifications
 export {
-  createNotification,
-  getUserNotifications,
-  markNotificationRead,
-  markAllRead,
-  getUnreadCount,
-  onNotificationsChange,
+    createNotification,
+    getUserNotifications,
+    markNotificationRead,
+    markAllRead,
+    getUnreadCount,
+    onNotificationsChange,
 } from './notificationService';
 
 // Video Recording Local
@@ -99,8 +101,8 @@ export {
 
 // Schedule
 export {
-  getTodaySchedule,
-  createScheduleItem,
+    getTodaySchedule,
+    createScheduleItem,
 } from './scheduleService';
 
 // Library

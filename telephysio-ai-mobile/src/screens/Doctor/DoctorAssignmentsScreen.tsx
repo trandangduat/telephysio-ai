@@ -1,5 +1,8 @@
 /**
- * DoctorAssignmentsScreen — Create and edit reusable exercise templates.
+ * @file DoctorAssignmentsScreen.tsx
+ * @description Màn hình quản lý mẫu bài tập (exercise templates) dành cho bác sĩ.
+ * Cho phép bác sĩ xem, tạo mới, chỉnh sửa và xóa các nhóm bài tập
+ * được tái sử dụng trong các kế hoạch chăm sóc bệnh nhân.
  */
 
 import React, { useEffect, useState } from "react";
@@ -40,6 +43,13 @@ type AssignmentsNavProp = CompositeNavigationProp<
     NativeStackNavigationProp<DoctorStackParamList>
 >;
 
+/**
+ * @component DoctorAssignmentsScreen
+ * @description Component màn hình quản lý mẫu bài tập của bác sĩ.
+ * Tải danh sách mẫu bài tập từ Firebase và tự động làm mới khi quay lại màn hình.
+ * Cho phép tạo mạu mới, chỉnh sửa mạu hiện có qua TemplateEditor và xóa mạu khỏi danh sách.
+ * @return {React.ReactElement} Giao diện danh sách mẫu bài tập với nút tạo và các thẻ mạu.
+ */
 export const DoctorAssignmentsScreen: React.FC = () => {
     const navigation = useNavigation<AssignmentsNavProp>();
     const { t } = useTranslation();

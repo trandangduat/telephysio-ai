@@ -1,19 +1,21 @@
 /**
- * DoctorSessionDetailScreen — Allows doctors to review a patient's session.
- * Features: Video playback, performance stats, and feedback submission.
+ * @file DoctorSessionDetailScreen.tsx
+ * @description Màn hình xem chi tiết buổi tập của bệnh nhân dành cho bác sĩ.
+ * Cho phép bác sĩ phát lại video buổi tập, xem thống kê hiệu suất (độ chính xác,
+ * thời lượng, mức đau), phân tích bài tập và gửi nhận xét lâm sàng cho bệnh nhân.
  */
 
 import React, { useState, useRef } from "react";
 import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
+    View,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+    Alert,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,50 +33,91 @@ import { submitDoctorFeedback } from "../../services/firebase";
 type NavProp = NativeStackNavigationProp<DoctorStackParamList, 'DoctorSessionDetail'>;
 type ScreenRouteProp = RouteProp<DoctorStackParamList, 'DoctorSessionDetail'>;
 
+/**
+ * @component DoctorSessionDetailScreen
+ * @description Component màn hình xem chi tiết buổi tập của bệnh nhân.
+ * Tự động phân giải URL video (có thể là đường dẫn tương đối từ Firebase Storage)
+ * và quản lý trạng thái phát video, nhận xét và nộp form.
+ * @return {React.ReactElement} Giao diện chi tiết buổi tập với video, thống kê và form nhận xét.
+ */
 export const DoctorSessionDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute<ScreenRouteProp>();
   const { session, patientName } = route.params;
   const { t } = useTranslation();
 
-  const videoRef = useRef<Video>(null);
-  const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
-  const [feedback, setFeedback] = useState(session.doctorFeedback || "");
-  const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<"video" | "analysis">("video");
+    const [resolvedVideoUri, setResolvedVideoUri] = useState<string>("");
+    const [loadingVideo, setLoadingVideo] = useState(false);
 
-  const isPlaying = status && (status as any).isPlaying;
+    /**
+   * @function resolveVideo
+   * @description Phân giải URL video của buổi tập.
+   * Nếu URL bắt đầu bằng "http" hoặc "blob:", sử dụng trực tiếp.
+   * Nếu là đường dẫn tương đối, tải xuống URL từ Firebase Storage.
+   * @return {Promise<void>}
+   */
+    React.useEffect(() => {
+        async function resolveVideo() {
+            const url = session.videoUrl;
+            if (!url) return;
 
-  const handleTogglePlay = async () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      await videoRef.current.pauseAsync();
-    } else {
-      await videoRef.current.playAsync();
-    }
-  };
+            setLoadingVideo(true);
+            try {
+                if (url.startsWith("http") || url.startsWith("blob:")) {
+                    setResolvedVideoUri(url);
+                } else {
+                    // It's a relative path! e.g., "videos/2JKbKHm37XkFKlgZidTR_20260526.mp4"
+                    console.log("[DoctorSessionDetail] Relative path detected. Fetching from Firebase Storage:", url);
+                    const { ref, getDownloadURL } = await import("firebase/storage");
+                    const { storage } = await import("../../services/firebase/config");
+                    const downloadUrl = await getDownloadURL(ref(storage, url));
+                    console.log("[DoctorSessionDetail] Successfully resolved relative path to download URL:", downloadUrl);
+                    setResolvedVideoUri(downloadUrl);
+                }
+            } catch (err) {
+                console.warn("[DoctorSessionDetail] Failed to resolve video URL:", err);
+                // Fallback to relative path starting with /
+                let fallback = url;
+                if (!fallback.startsWith("/")) {
+                    fallback = "/" + fallback;
+                }
+                setResolvedVideoUri(fallback);
+            } finally {
+                setLoadingVideo(false);
+            }
+        }
+        resolveVideo();
+    }, [session.videoUrl]);
 
-  const handleSaveFeedback = async () => {
-    if (!feedback.trim()) {
-      Alert.alert("Input Required", "Please enter feedback for the patient.");
-      return;
-    }
+    const isPlaying = status && (status as any).isPlaying;
 
-    setSubmitting(true);
-    try {
-      await submitDoctorFeedback(session.id, feedback.trim());
-      Alert.alert("Success", "Feedback shared with patient.");
-      navigation.goBack();
-    } catch (error) {
-      console.error("Feedback error:", error);
-      Alert.alert("Error", "Failed to save feedback.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    /**
+   * @function handleTogglePlay
+   * @description Bật/tắt phát video. Kiểm tra trạng thái phát hiện tại
+   * rồi gọi pause hoặc play tương ứng trên videoRef.
+   * @return {Promise<void>}
+   */
+    const handleTogglePlay = async () => {
+        if (!videoRef.current) return;
+        if (isPlaying) {
+            await videoRef.current.pauseAsync();
+        } else {
+            await videoRef.current.playAsync();
+        }
+    };
 
-  const dateStr = (session.date as any)?.toDate ? (session.date as any).toDate().toLocaleDateString() : "Recent";
-  const accuracy = session.accuracyScore || session.accuracy || 0;
+    /**
+   * @function handleSaveFeedback
+   * @description Lưu và gửi nhận xét lâm sàng của bác sĩ cho bệnh nhân.
+   * Kiểm tra dữ liệu đầu vào trước khi gửi. Hiển thị thông báo kết quả
+   * và quay lại màn hình trước nếu thành công.
+   * @return {Promise<void>}
+   */
+    const handleSaveFeedback = async () => {
+        if (!feedback.trim()) {
+            Alert.alert("Input Required", "Please enter feedback for the patient.");
+            return;
+        }
 
   const resolveVideoUrl = (url?: string | null) => {
     if (!url) return "";

@@ -1,3 +1,16 @@
+/**
+ * @file ExerciseResultScreen.tsx
+ * @description Màn hình hiển thị kết quả sau khi hoàn thành một bài tập đơn lẻ.
+ *
+ * Màn hình này thực hiện các chức năng sau:
+ *   - Tải thông tin bài tập từ Firestore dựa trên assignmentId và exerciseIndex.
+ *   - Hiển thị danh sách các set đã hoàn thành kèm độ chính xác, số lần lặp và thời gian.
+ *   - Cho phép người dùng xem lại video từng set trong chế độ rạp chiếu phim (cinema mode).
+ *   - Lưu tiến trình phiên tập hiện tại vào Firestore (incomplete session).
+ *   - Điều hướng đến bài tập tiếp theo hoặc màn hình tổng kết buổi tập.
+ *
+ * @module screens/Training
+ */
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Modal,Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,31 +30,51 @@ import { useTranslation } from 'react-i18next';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseResult'>;
 
+/**
+ * Trả về mã màu hex tương ứng với mức độ chính xác của bài tập.
+ *
+ * @param acc - Điểm độ chính xác (0–100).
+ * @return Chuỗi mã màu hex:
+ *   - '#10b981' (xanh lá) nếu acc >= 80,
+ *   - '#f59e0b' (vàng hổ phách) nếu acc >= 60,
+ *   - '#ef4444' (đỏ) nếu acc < 60.
+ */
 function accuracyColor(acc: number): string {
-  if (acc >= 80) return '#10b981'; // elegant green
-  if (acc >= 60) return '#f59e0b'; // amber
-  return '#ef4444'; // red
+    if (acc >= 80) return '#10b981'; // elegant green
+    if (acc >= 60) return '#f59e0b'; // amber
+    return '#ef4444'; // red
 }
 
+/**
+ * Component màn hình kết quả bài tập.
+ *
+ * Nhận các tham số điều hướng từ {@link RootStackParamList} bao gồm:
+ * assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets,
+ * recordVideo, setDurations và setsData.
+ *
+ * @param route - Đối tượng route chứa params từ màn hình trước.
+ * @param navigation - Đối tượng navigation để điều hướng giữa các màn hình.
+ * @return Giao diện React Native hiển thị kết quả bài tập và modal phát lại video.
+ */
 export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => {
   const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets, recordVideo, setDurations: routeSetDurations, setsData, videoResult } = route.params || { recordVideo: false };
   const { uid } = useAuth();
   const { t } = useTranslation();
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [assignment, setAssignment] = useState<Assignment | null>(null);
-  const [exercise, setExercise] = useState<Exercise | null>(null);
-  const [videoUri, setVideoUri] = useState<string>('');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [assignment, setAssignment] = useState<Assignment | null>(null);
+    const [exercise, setExercise] = useState<Exercise | null>(null);
+    const [videoUri, setVideoUri] = useState<string>('');
 
-  const [selectedSet, setSelectedSet] = useState<{
-    setNum: number;
-    reps: number;
-    accuracy: number;
-    duration: number;
-  } | null>(null);
-  const [playbackStatus, setPlaybackStatus] = useState<AVPlaybackStatus | null>(null);
-  const videoRef = useRef<Video>(null);
+    const [selectedSet, setSelectedSet] = useState<{
+        setNum: number;
+        reps: number;
+        accuracy: number;
+        duration: number;
+    } | null>(null);
+    const [playbackStatus, setPlaybackStatus] = useState<AVPlaybackStatus | null>(null);
+    const videoRef = useRef<Video>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -64,19 +97,30 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
 
   // Video URI will be set per selected set in handleOpenVideo
 
-  const handleNext = async () => {
-    if (!uid || !assignment) return;
-    setSaving(true);
-    try {
-      const incSession = await getIncompleteSession(uid, assignmentId);
+    /**
+   * Xử lý sự kiện nhấn nút "Bài Tập Tiếp Theo" hoặc "Kết Thúc Buổi Tập".
+   *
+   * Quy trình:
+   *   1. Lấy phiên tập chưa hoàn thành (incomplete session) từ Firestore.
+   *   2. Tạo bản ghi exercise và các set tương ứng.
+   *   3. Cập nhật hoặc tạo mới incomplete session với dữ liệu bài tập vừa hoàn thành.
+   *   4. Điều hướng đến bài tập tiếp theo hoặc màn hình tổng kết (WorkoutSummary).
+   *
+   * @return Promise<void>
+   */
+    const handleNext = async () => {
+        if (!uid || !assignment) return;
+        setSaving(true);
+        try {
+            const incSession = await getIncompleteSession(uid, assignmentId);
       
-      const newExerciseData = {
-        exerciseId: exercise?.id || `ex-${exerciseIndex}`,
-        accuracy,
-        durationSeconds,
-        reps,
-        sets
-      };
+            const newExerciseData = {
+                exerciseId: exercise?.id || `ex-${exerciseIndex}`,
+                accuracy,
+                durationSeconds,
+                reps,
+                sets
+            };
 
       const setsRecords: SetRecord[] = displaySets.map(s => ({
         setNumber: s.setNum,
@@ -111,42 +155,42 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         videoLocalPath: null,
       };
 
-      const nextIndex = exerciseIndex + 1;
+            const nextIndex = exerciseIndex + 1;
 
-      if (incSession) {
-        await updateIncompleteSession(incSession.id, {
-          currentExerciseIndex: nextIndex,
-          currentSetIndex: 1,
-          exercisesCompleted: nextIndex,
-          completedExercises: [...(incSession.completedExercises || []), newExerciseRecord],
-          completedExercisesData: [...(incSession.completedExercisesData || []), newExerciseData],
-          elapsedSeconds: (incSession.elapsedSeconds || 0) + durationSeconds,
-        });
-      } else {
-        await saveIncompleteSession({
-          patientId: uid,
-          assignmentId: assignmentId,
-          currentExerciseIndex: nextIndex,
-          currentSetIndex: 1,
-          exercisesCompleted: nextIndex,
-          completedExercises: [newExerciseRecord],
-          completedExercisesData: [newExerciseData],
-          elapsedSeconds: durationSeconds,
-          startedAt: new Date() as any,
-        });
-      }
+            if (incSession) {
+                await updateIncompleteSession(incSession.id, {
+                    currentExerciseIndex: nextIndex,
+                    currentSetIndex: 1,
+                    exercisesCompleted: nextIndex,
+                    completedExercises: [...(incSession.completedExercises || []), newExerciseRecord],
+                    completedExercisesData: [...(incSession.completedExercisesData || []), newExerciseData],
+                    elapsedSeconds: (incSession.elapsedSeconds || 0) + durationSeconds,
+                });
+            } else {
+                await saveIncompleteSession({
+                    patientId: uid,
+                    assignmentId: assignmentId,
+                    currentExerciseIndex: nextIndex,
+                    currentSetIndex: 1,
+                    exercisesCompleted: nextIndex,
+                    completedExercises: [newExerciseRecord],
+                    completedExercisesData: [newExerciseData],
+                    elapsedSeconds: durationSeconds,
+                    startedAt: new Date() as any,
+                });
+            }
 
-      if (nextIndex >= assignment.exercises.length) {
-        navigation.replace('WorkoutSummary', { assignmentId, recordVideo });
-      } else {
-        navigation.replace('Calibration', { assignmentId, exerciseIndex: nextIndex, recordVideo });
-      }
-    } catch (error) {
-      console.error('Failed to save exercise result:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
+            if (nextIndex >= assignment.exercises.length) {
+                navigation.replace('WorkoutSummary', { assignmentId, recordVideo });
+            } else {
+                navigation.replace('Calibration', { assignmentId, exerciseIndex: nextIndex, recordVideo });
+            }
+        } catch (error) {
+            console.error('Failed to save exercise result:', error);
+        } finally {
+            setSaving(false);
+        }
+    };
 
   // Use actual setsData if provided from TrainingScreen, otherwise use simulated breakdown
   const displaySets = setsData && setsData.length > 0
@@ -164,21 +208,77 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         const numSets = Math.max(1, sets);
         const setDurations = Array(numSets).fill(Math.floor(durationSeconds / numSets));
         
-        for (let i = 0; i < durationSeconds % numSets; i++) {
-          setDurations[i % numSets] += 1;
-        }
+            for (let i = 0; i < durationSeconds % numSets; i++) {
+                setDurations[i % numSets] += 1;
+            }
 
-        if (numSets >= 2 && durationSeconds > 20) {
-          const variance = Math.min(Math.floor(durationSeconds / (numSets * 4)), 12);
-          setDurations[0] += variance;
-          setDurations[1] -= variance;
+            if (numSets >= 2 && durationSeconds > 20) {
+                const variance = Math.min(Math.floor(durationSeconds / (numSets * 4)), 12);
+                setDurations[0] += variance;
+                setDurations[1] -= variance;
           
-          if (numSets >= 3) {
-            const variance2 = Math.min(Math.floor(variance / 2), 5);
-            setDurations[numSets - 1] += variance2;
-            setDurations[1] -= variance2;
-          }
+                if (numSets >= 3) {
+                    const variance2 = Math.min(Math.floor(variance / 2), 5);
+                    setDurations[numSets - 1] += variance2;
+                    setDurations[1] -= variance2;
+                }
+            }
+
+            return Array.from({ length: numSets }).map((_, idx) => {
+                const setDuration = Math.max(5, setDurations[idx]);
+                const repsPerSet = Math.ceil(reps / numSets);
+                const factor = (idx % 2 === 0 ? 1 : -1) * (2 + (idx % 3));
+                const setAccuracy = Math.min(100, Math.max(65, Math.round(accuracy + factor)));
+                return {
+                    setNum: idx + 1,
+                    reps: repsPerSet,
+                    accuracy: setAccuracy,
+                    duration: setDuration,
+                };
+            });
+        })();
+
+    /**
+   * Mở modal phát lại video cho một set cụ thể.
+   *
+   * @param set - Đối tượng set chứa thông tin số set, số lần lặp, độ chính xác và thời gian.
+   * @return void
+   */
+    const handleOpenVideo = (set: typeof displaySets[0]) => {
+        setSelectedSet(set);
+        setPlaybackStatus(null);
+    };
+
+    /**
+   * Đóng modal phát lại video và xóa trạng thái phát.
+   *
+   * @return void
+   */
+    const handleCloseVideo = () => {
+        setSelectedSet(null);
+        setPlaybackStatus(null);
+    };
+
+    /**
+   * Chuyển đổi trạng thái phát/tạm dừng của video đang xem.
+   *
+   * Nếu video đang phát thì tạm dừng, và ngược lại.
+   * Không làm gì nếu videoRef hoặc trạng thái phát chưa sẵn sàng.
+   *
+   * @return Promise<void>
+   */
+    const togglePlayPause = async () => {
+        if (!videoRef.current || !playbackStatus || !playbackStatus.isLoaded) return;
+        try {
+            if (playbackStatus.isPlaying) {
+                await videoRef.current.pauseAsync();
+            } else {
+                await videoRef.current.playAsync();
+            }
+        } catch (err) {
+            console.error('Failed to toggle play/pause:', err);
         }
+    };
 
         return Array.from({ length: numSets }).map((_, idx) => {
           const setDuration = Math.max(5, setDurations[idx]);
@@ -328,17 +428,17 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
           {t('result.setsSummary')}
         </AppText>
 
-        <ScrollView style={styles.setsScroll} contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
-          {displaySets.map((s) => (
-            <TouchableOpacity key={s.setNum} style={styles.setRowCard} onPress={() => handleOpenVideo(s)} activeOpacity={0.75}>
-              <View style={styles.setVideoThumb}>
-                <View style={styles.thumbPlayBtn}>
-                  <Ionicons name="play" size={12} color="#fff" />
-                </View>
-                <View style={styles.setOverlayBadge}>
-                  <AppText style={{ color: '#fff', fontSize: 8, fontWeight: '800' }}>S{s.setNum}</AppText>
-                </View>
-              </View>
+                <ScrollView style={styles.setsScroll} contentContainerStyle={{ gap: spacing.md }} showsVerticalScrollIndicator={false}>
+                    {displaySets.map((s) => (
+                        <TouchableOpacity key={s.setNum} style={styles.setRowCard} onPress={() => handleOpenVideo(s)} activeOpacity={0.75}>
+                            <View style={styles.setVideoThumb}>
+                                <View style={styles.thumbPlayBtn}>
+                                    <Ionicons name="play" size={12} color="#fff" />
+                                </View>
+                                <View style={styles.setOverlayBadge}>
+                                    <AppText style={{ color: '#fff', fontSize: 8, fontWeight: '800' }}>S{s.setNum}</AppText>
+                                </View>
+                            </View>
               
               <View style={{ flex: 1, gap: 2 }}>
                 <AppText variant="bodyMd" style={{ fontWeight: '700', color: '#0f172a' }}>{t('result.setNum', { num: s.setNum })}</AppText>
@@ -473,257 +573,320 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
               </TouchableOpacity>
             </View>
 
-            {/* Bottom Premium Controls Bar */}
-            <View style={styles.modalControlsBar}>
-              <TouchableOpacity onPress={togglePlayPause} style={styles.controlPlayBtn}>
-                <Ionicons name={isPlaying ? "pause" : "play"} size={22} color="#fff" />
-              </TouchableOpacity>
+            {/* Sleek, Cinema-mode Video Playback Modal */}
+            <Modal
+                visible={selectedSet !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={handleCloseVideo}
+            >
+                <View style={styles.modalOverlay}>
+                    <SafeAreaView style={styles.modalContent} edges={['top', 'bottom']}>
+            
+                        {/* Top Bar with elegant glass overlay */}
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity onPress={handleCloseVideo} style={styles.modalCloseBtn}>
+                                <Ionicons name="close" size={24} color="#fff" />
+                            </TouchableOpacity>
+              
+                            <View style={styles.modalHeaderDetails}>
+                                <AppText variant="headlineMd" style={styles.modalTitle} numberOfLines={1}>
+                                    {exercise?.name || 'Exercise Playback'}
+                                </AppText>
+                                <AppText variant="bodySm" style={styles.modalSubtitle}>
+                  Set {selectedSet?.setNum} • {selectedSet?.reps} reps
+                                </AppText>
+                            </View>
 
-              <View style={styles.progressContainer}>
-                <View style={styles.progressTimeContainer}>
-                  <AppText style={styles.progressTimeText}>
-                    {formatTime(positionMs)}
-                  </AppText>
-                  <AppText style={styles.progressTimeDivider}>/</AppText>
-                  <AppText style={styles.progressTimeText}>
-                    {formatTime(durationMs)}
-                  </AppText>
+                            {/* Accuracy chip with dynamic border color matching accuracy grade */}
+                            <View style={[styles.modalAccuracyChip, { borderColor: selectedSet ? accuracyColor(selectedSet.accuracy) : '#fff' }]}>
+                                <AppText style={[styles.modalAccuracyVal, { color: selectedSet ? accuracyColor(selectedSet.accuracy) : '#fff' }]}>
+                                    {selectedSet?.accuracy}%
+                                </AppText>
+                                <AppText style={styles.modalAccuracyLbl}>ACCURACY</AppText>
+                            </View>
+                        </View>
+
+                        {/* Video container */}
+                        <View style={styles.modalVideoContainer}>
+                            {selectedSet && (
+                                <Video
+                                    ref={videoRef}
+                                    source={{ uri: videoUri }}
+                                    style={styles.modalVideo}
+                                    resizeMode={ResizeMode.CONTAIN}
+                                    shouldPlay={true}
+                                    isMuted={true}
+                                    isLooping={true}
+                                    onPlaybackStatusUpdate={(s) => setPlaybackStatus(s)}
+                                />
+                            )}
+
+                            {/* Central Quick-Toggle Overlay Play Button */}
+                            <TouchableOpacity
+                                style={styles.videoOverlayPlayToggle}
+                                onPress={togglePlayPause}
+                                activeOpacity={0.8}
+                            >
+                                {!isPlaying && (
+                                    <View style={styles.videoOverlayPlayCircle}>
+                                        <Ionicons name="play" size={32} color="#fff" />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Bottom Premium Controls Bar */}
+                        <View style={styles.modalControlsBar}>
+                            <TouchableOpacity onPress={togglePlayPause} style={styles.controlPlayBtn}>
+                                <Ionicons name={isPlaying ? "pause" : "play"} size={22} color="#fff" />
+                            </TouchableOpacity>
+
+                            <View style={styles.progressContainer}>
+                                <View style={styles.progressTimeContainer}>
+                                    <AppText style={styles.progressTimeText}>
+                                        {formatTime(positionMs)}
+                                    </AppText>
+                                    <AppText style={styles.progressTimeDivider}>/</AppText>
+                                    <AppText style={styles.progressTimeText}>
+                                        {formatTime(durationMs)}
+                                    </AppText>
+                                </View>
+
+                                {/* Progress bar track */}
+                                <View style={styles.progressBarTrack}>
+                                    <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+                                </View>
+                            </View>
+                        </View>
+
+                    </SafeAreaView>
                 </View>
-
-                {/* Progress bar track */}
-                <View style={styles.progressBarTrack}>
-                  <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
-                </View>
-              </View>
-            </View>
-
-          </SafeAreaView>
-        </View>
-      </Modal>
-    </SafeAreaView>
-  );
+            </Modal>
+        </SafeAreaView>
+    );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafd' },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  header: { padding: spacing.gutter, alignItems: 'center' },
-  title: { color: '#0f172a', fontWeight: '800' },
-  subtitle: { color: '#64748b', marginTop: 4 },
-  content: { flex: 1, padding: spacing.gutter, justifyContent: 'center' },
-  videoPlaceholder: {
-    height: 300,
-    backgroundColor: '#e2e8f0',
-    borderRadius: radius.xl,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  setsScroll: {
-    flex: 1,
-    marginBottom: spacing.lg,
-  },
-  setRowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    gap: spacing.md,
-  },
-  setVideoThumb: {
-    width: 84,
-    height: 52,
-    borderRadius: 8,
-    backgroundColor: '#1e293b', // slate-800
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  thumbPlayBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 2, // offset play icon
-  },
-  setOverlayBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)', // transparent slate-900
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  footer: {
-    padding: spacing.gutter,
-    paddingBottom: spacing.xl,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
+    safe: { flex: 1, backgroundColor: '#f8fafd' },
+    center: { justifyContent: 'center', alignItems: 'center' },
+    header: { padding: spacing.gutter, alignItems: 'center' },
+    title: { color: '#0f172a', fontWeight: '800' },
+    subtitle: { color: '#64748b', marginTop: 4 },
+    content: { flex: 1, padding: spacing.gutter, justifyContent: 'center' },
+    videoPlaceholder: {
+        height: 300,
+        backgroundColor: '#e2e8f0',
+        borderRadius: radius.xl,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.xl,
+    },
+    setsScroll: {
+        flex: 1,
+        marginBottom: spacing.lg,
+    },
+    setRowCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: spacing.md,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        gap: spacing.md,
+    },
+    setVideoThumb: {
+        width: 84,
+        height: 52,
+        borderRadius: 8,
+        backgroundColor: '#1e293b', // slate-800
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    thumbPlayBtn: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingLeft: 2, // offset play icon
+    },
+    setOverlayBadge: {
+        position: 'absolute',
+        bottom: 2,
+        right: 2,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)', // transparent slate-900
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.sm,
+    },
+    statCard: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: spacing.lg,
+        borderRadius: radius.lg,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+    footer: {
+        padding: spacing.gutter,
+        paddingBottom: spacing.xl,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e2e8f0',
+    },
 
-  // Cinema Playback Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.95)', // ultra-deep slate transparent
-  },
-  modalContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.gutter,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-    backgroundColor: 'rgba(30, 41, 59, 0.4)', // slate-800 backdrop overlay
-    borderBottomWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  modalCloseBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalHeaderDetails: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  modalTitle: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 18,
-  },
-  modalSubtitle: {
-    color: '#94a3b8',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  modalAccuracyChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs || 4,
-    borderRadius: radius.md || 8,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-  },
-  modalAccuracyVal: {
-    fontWeight: '800',
-    fontSize: 16,
-  },
-  modalAccuracyLbl: {
-    color: '#94a3b8',
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    marginTop: 1,
-  },
-  modalVideoContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-    position: 'relative',
-  },
-  modalVideo: {
-    width: '100%',
-    height: '100%',
-  },
-  videoOverlayPlayToggle: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  videoOverlayPlayCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 4, // offset play icon
-  },
-  modalControlsBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.gutter,
-    paddingVertical: spacing.lg,
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    gap: spacing.md,
-  },
-  controlPlayBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 8,
-  },
-  progressTimeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  progressTimeText: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
-  progressTimeDivider: {
-    color: '#475569',
-    marginHorizontal: 4,
-    fontSize: 12,
-  },
-  progressBarTrack: {
-    height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 3,
-  },
+    // Cinema Playback Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(15, 23, 42, 0.95)', // ultra-deep slate transparent
+    },
+    modalContent: {
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.gutter,
+        paddingVertical: spacing.md,
+        gap: spacing.md,
+        backgroundColor: 'rgba(30, 41, 59, 0.4)', // slate-800 backdrop overlay
+        borderBottomWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    modalCloseBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalHeaderDetails: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    modalTitle: {
+        color: '#fff',
+        fontWeight: '800',
+        fontSize: 18,
+    },
+    modalSubtitle: {
+        color: '#94a3b8',
+        fontWeight: '600',
+        marginTop: 2,
+    },
+    modalAccuracyChip: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs || 4,
+        borderRadius: radius.md || 8,
+        borderWidth: 1.5,
+        alignItems: 'center',
+        backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    },
+    modalAccuracyVal: {
+        fontWeight: '800',
+        fontSize: 16,
+    },
+    modalAccuracyLbl: {
+        color: '#94a3b8',
+        fontSize: 8,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+        marginTop: 1,
+    },
+    modalVideoContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#000',
+        position: 'relative',
+    },
+    modalVideo: {
+        width: '100%',
+        height: '100%',
+    },
+    videoOverlayPlayToggle: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    videoOverlayPlayCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.25)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingLeft: 4, // offset play icon
+    },
+    modalControlsBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.gutter,
+        paddingVertical: spacing.lg,
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        borderTopWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        gap: spacing.md,
+    },
+    controlPlayBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    progressContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        gap: 8,
+    },
+    progressTimeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    progressTimeText: {
+        color: '#94a3b8',
+        fontSize: 12,
+        fontWeight: '600',
+        fontVariant: ['tabular-nums'],
+    },
+    progressTimeDivider: {
+        color: '#475569',
+        marginHorizontal: 4,
+        fontSize: 12,
+    },
+    progressBarTrack: {
+        height: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: 3,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: colors.primary,
+        borderRadius: 3,
+    },
 });
 

@@ -1,8 +1,8 @@
 /**
- * TrainingScreen — Live Workout Session
+ * TrainingScreen — Màn hình phiên tập luyện trực tiếp.
  *
- * Supports toggling between Full-Screen (Compact) and Normal (Detailed) modes.
- * Integrates real-time human pose estimation via MediaPipe BlazePose (WebView).
+ * Hỗ trợ chuyển đổi giữa chế độ Toàn màn hình (Gọn gàng) và Bình thường (Chi tiết).
+ * Tích hợp tính năng nhận diện tư thế người thực tế thông qua MediaPipe BlazePose (WebView).
  */
 
 import React, { useState, useEffect, useCallback,useRef } from 'react';
@@ -23,6 +23,13 @@ import type { PoseLandmark } from '../../components/PoseEstimationView';
 
 type TrainingProps = NativeStackScreenProps<RootStackParamList, 'Training'>;
 
+/**
+ * Component Màn hình Luyện tập (TrainingScreen).
+ * Xử lý luồng tập luyện, đếm số hiệp (sets), số lần (reps) và kiểm tra tư thế (form accuracy).
+ * 
+ * @param props Các thuộc tính truyền vào component (route, navigation)
+ * @return React.FC Component TrainingScreen
+ */
 export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) => {
     const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
     const { uid } = useAuth();
@@ -104,6 +111,11 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
     }, []);
 
     useEffect(() => {
+        /**
+         * Tải dữ liệu bài tập hiện tại từ Firebase dựa trên assignmentId.
+         * 
+         * @return Promise<void>
+         */
         async function loadData() {
             if (!uid || !assignmentId) return;
             const assignments = await getPatientAssignments(uid, 'active');
@@ -196,6 +208,13 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
 
     const handleStop = useCallback(() => { navigation.goBack(); }, [navigation]);
 
+    /**
+     * Chuyển sang bài tập tiếp theo hoặc kết thúc nếu đã hết bài.
+     * Tính toán điểm chính xác trung bình và tổng số lần lặp (reps) đã hoàn thành.
+     * 
+     * @param finalSets Mảng chứa dữ liệu của các hiệp tập (sets) đã hoàn thành
+     * @return Promise<void>
+     */
     const handleNextExercise = useCallback(async (finalSets: any[]) => {
         if (!uid || !exercise) return;
         if (isFinishingRef.current) return;

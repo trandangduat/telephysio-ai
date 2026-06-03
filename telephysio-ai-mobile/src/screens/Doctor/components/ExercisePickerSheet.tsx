@@ -1,3 +1,8 @@
+/**
+ * @file ExercisePickerSheet.tsx
+ * @description Bottom sheet cho phép người dùng tìm kiếm và chọn bài tập từ danh sách toàn cầu.
+ * Hỗ trợ lọc theo danh mục và tìm kiếm theo tên. Loại trừ các bài tập đã thêm vào template.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,17 +14,27 @@ import { getGlobalExercises } from '../../../services/firebase';
 import type { Exercise } from '../../../services/firebase/types';
 
 interface ExercisePickerSheetProps {
-  visible: boolean;
-  onClose: () => void;
-  onSelect: (exercise: Exercise) => void;
-  excludeIds?: string[];
+    visible: boolean;
+    onClose: () => void;
+    onSelect: (exercise: Exercise) => void;
+    excludeIds?: string[];
 }
 
+/**
+ * Component bottom sheet chọn bài tập.
+ * Hiển thị danh sách bài tập từ Firebase, hỗ trợ tìm kiếm và lọc theo danh mục.
+ *
+ * @param visible - Hiển thị sheet khi true.
+ * @param onClose - Hàm callback khi đóng sheet.
+ * @param onSelect - Hàm callback khi người dùng chọn một bài tập.
+ * @param excludeIds - Danh sách ID bài tập được loại trừ.
+ * @return Component JSX bottom sheet chọn bài tập.
+ */
 export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
-  visible,
-  onClose,
-  onSelect,
-  excludeIds = [],
+    visible,
+    onClose,
+    onSelect,
+    excludeIds = [],
 }) => {
   const { t } = useTranslation();
   const CATEGORIES = [
@@ -34,23 +49,26 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
 
-  useEffect(() => {
-    if (visible) {
-      loadExercises();
-    }
-  }, [visible]);
+    useEffect(() => {
+        if (visible) {
+            loadExercises();
+        }
+    }, [visible]);
 
-  const loadExercises = async () => {
-    setLoading(true);
-    try {
-      const data = await getGlobalExercises();
-      setExercises(data);
-    } catch (error) {
-      console.error('Error loading exercises:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    /**
+   * Tải danh sách bài tập toàn cầu từ Firebase và cập nhật state exercises.
+   */
+    const loadExercises = async () => {
+        setLoading(true);
+        try {
+            const data = await getGlobalExercises();
+            setExercises(data);
+        } catch (error) {
+            console.error('Error loading exercises:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
   const filtered = exercises.filter(ex => {
     const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -62,10 +80,16 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
     return matchesSearch && matchesCategory && notExcluded;
   });
 
-  const handleSelect = (exercise: Exercise) => {
-    onSelect(exercise);
-    onClose();
-  };
+    /**
+   * Xử lý khi người dùng chọn một bài tập.
+   * Gọi callback onSelect và đóng sheet.
+   *
+   * @param exercise - Bài tập được người dùng chọn.
+   */
+    const handleSelect = (exercise: Exercise) => {
+        onSelect(exercise);
+        onClose();
+    };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

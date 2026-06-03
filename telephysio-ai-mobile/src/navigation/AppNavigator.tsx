@@ -1,11 +1,11 @@
 /**
- * AppNavigator — Root navigator with Auth → Role-based routing.
+ * AppNavigator — Bộ điều hướng gốc kết hợp xác thực (Auth) và phân quyền (Role-based).
  *
- * Flow:
- *   isLoading?  → Splash (ActivityIndicator)
- *   !isAuthenticated? → AuthNavigator (Login / SignUp)
- *   role=patient → PatientNavigator
- *   role=doctor  → DoctorNavigator
+ * Luồng điều hướng (Flow):
+ *   isLoading?        → Màn hình chờ (Splash - ActivityIndicator)
+ *   !isAuthenticated? → Điều hướng Xác thực (AuthNavigator: Đăng nhập / Đăng ký)
+ *   role=patient      → Điều hướng dành cho Bệnh nhân (PatientNavigator)
+ *   role=doctor       → Điều hướng dành cho Bác sĩ (DoctorNavigator)
  */
 
 import React from "react";
@@ -39,92 +39,104 @@ import { DoctorSessionDetailScreen } from "../screens/Doctor/DoctorSessionDetail
 
 import { colors, typography } from "../theme";
 import type {
-  AuthStackParamList,
-  RootStackParamList,
-  DoctorStackParamList,
+    AuthStackParamList,
+    RootStackParamList,
+    DoctorStackParamList,
 } from "./types";
 
 // ── Auth Stack ──────────────────────────────────────
 const Auth = createNativeStackNavigator<AuthStackParamList>();
 
 const AuthNavigator: React.FC = () => (
-  <Auth.Navigator screenOptions={{ headerShown: false }}>
-    <Auth.Screen name="Login" component={LoginScreen} />
-    <Auth.Screen name="SignUp" component={SignUpScreen} />
-  </Auth.Navigator>
+    <Auth.Navigator screenOptions={{ headerShown: false }}>
+        <Auth.Screen name="Login" component={LoginScreen} />
+        <Auth.Screen name="SignUp" component={SignUpScreen} />
+    </Auth.Navigator>
 );
 
 // ── Patient Stack ───────────────────────────────────
 const PatientStack = createNativeStackNavigator<RootStackParamList>();
 
+/**
+ * Điều hướng dành cho Bệnh nhân.
+ * Quản lý các màn hình như Trang chủ, Luyện tập, Hồ sơ cá nhân của bệnh nhân, v.v.
+ * 
+ * @return React.FC Component chứa Stack Navigator của Bệnh nhân
+ */
 const PatientNavigator: React.FC = () => {
-  const { t } = useTranslation();
-  return (
-    <PatientStack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTitleStyle: {
-          fontFamily: typography.headlineMd.fontFamily,
-          fontSize: typography.headlineMd.fontSize,
-          fontWeight: typography.headlineMd.fontWeight,
-          color: colors.onSurface,
-        },
-        headerShadowVisible: false,
-        headerTintColor: colors.primary,
-      }}
-    >
-      <PatientStack.Screen
-        name="MainTabs"
-        component={BottomTabNavigator}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Calibration"
-        component={CalibrationScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Training"
-        component={TrainingScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="ExerciseResult"
-        component={ExerciseResultScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="WorkoutSummary"
-        component={WorkoutSummaryScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="MyAssignments"
-        component={MyAssignmentsScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="WorkoutDetail"
-        component={WorkoutDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ headerShown: false }}
-      />
-    </PatientStack.Navigator>
-  );
+    const { t } = useTranslation();
+    return (
+        <PatientStack.Navigator
+            screenOptions={{
+                headerStyle: { backgroundColor: colors.background },
+                headerTitleStyle: {
+                    fontFamily: typography.headlineMd.fontFamily,
+                    fontSize: typography.headlineMd.fontSize,
+                    fontWeight: typography.headlineMd.fontWeight,
+                    color: colors.onSurface,
+                },
+                headerShadowVisible: false,
+                headerTintColor: colors.primary,
+            }}
+        >
+            <PatientStack.Screen
+                name="MainTabs"
+                component={BottomTabNavigator}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Calibration"
+                component={CalibrationScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Training"
+                component={TrainingScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="ExerciseResult"
+                component={ExerciseResultScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="WorkoutSummary"
+                component={WorkoutSummaryScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="MyAssignments"
+                component={MyAssignmentsScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="WorkoutDetail"
+                component={WorkoutDetailScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+                options={{ headerShown: false }}
+            />
+        </PatientStack.Navigator>
+    );
 };
 
 // ── Doctor Stack ────────────────────────────────────
 const DoctorStack = createNativeStackNavigator<DoctorStackParamList>();
 
+/**
+ * Điều hướng dành cho Bác sĩ.
+ * Quản lý các màn hình như Quản lý bệnh nhân, Tạo mẫu bài tập (Template), v.v.
+ * 
+ * @return React.FC Component chứa Stack Navigator của Bác sĩ
+ */
 const DoctorNavigator: React.FC = () => {
   const { t } = useTranslation();
   return (
@@ -181,32 +193,38 @@ const DoctorNavigator: React.FC = () => {
 };
 
 // ── Root: Auth → Role-based ─────────────────────────
+/**
+ * Component gốc xử lý luồng điều hướng dựa trên trạng thái xác thực và phân quyền.
+ * Hiển thị màn hình tải (loading) trong lúc chờ kiểm tra xác thực.
+ * 
+ * @return React.FC Component AppNavigator
+ */
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, role, uid } = useAuth();
+    const { isAuthenticated, isLoading, role, uid } = useAuth();
 
-  // Show splash while checking Firebase Auth state
-  if (isLoading) {
-    return (
-      <View style={styles.splash}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+    // Show splash while checking Firebase Auth state
+    if (isLoading) {
+        return (
+            <View style={styles.splash}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
+    }
 
-  // Not logged in → show Login/SignUp
-  if (!isAuthenticated) {
-    return <AuthNavigator />;
-  }
+    // Not logged in → show Login/SignUp
+    if (!isAuthenticated) {
+        return <AuthNavigator />;
+    }
 
-  // Logged in → show role-based navigator
-  return role === "doctor" ? <DoctorNavigator /> : <PatientNavigator />;
+    // Logged in → show role-based navigator
+    return role === "doctor" ? <DoctorNavigator /> : <PatientNavigator />;
 };
 
 const styles = StyleSheet.create({
-  splash: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
-  },
+    splash: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: colors.background,
+    },
 });

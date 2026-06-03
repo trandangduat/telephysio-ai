@@ -1,3 +1,8 @@
+/**
+ * @file ExerciseCard.tsx
+ * @description Component thẻ hiển thị thông tin một bài tập trong template.
+ * Hiển thị tên, số sets/reps, danh mục, độ khó và cho phép xóa bài tập khỏi danh sách.
+ */
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,18 +18,37 @@ const DIFFICULTY_STYLES: Record<ExerciseDifficulty, { color: string; bg: string 
   hard: { color: '#991b1b', bg: '#fef2f2' },
 };
 
+/**
+ * Props của component ExerciseCard.
+ *
+ * @property exercise - Đối tượng bài tập cần hiển thị.
+ * @property onPress - Callback được gọi khi người dùng nhấn vào thẻ (tùy chọn).
+ * @property onRemove - Callback được gọi khi người dùng nhấn nút xóa (tùy chọn).
+ * @property showRemove - Cờ bật/tắt hiển thị nút xóa, mặc định là true.
+ */
 interface ExerciseCardProps {
-  exercise: Exercise;
-  onPress?: () => void;
-  onRemove?: () => void;
-  showRemove?: boolean;
+    exercise: Exercise;
+    onPress?: () => void;
+    onRemove?: () => void;
+    showRemove?: boolean;
 }
 
+/**
+ * Component thẻ hiển thị thông tin một bài tập.
+ * Hiển thị icon, tên, số sets x reps, thời gian, danh mục và độ khó của bài tập.
+ * Hỗ trợ xóa bài tập khỏi danh sách thông qua prop onRemove.
+ *
+ * @param exercise - Dữ liệu bài tập cần hiển thị.
+ * @param onPress - Hàm callback khi nhấn vào thẻ (tùy chọn).
+ * @param onRemove - Hàm callback khi nhấn nút xóa (tùy chọn).
+ * @param showRemove - Hiển thị nút xóa hay không, mặc định là true.
+ * @return Component JSX hiển thị thẻ bài tập.
+ */
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({
-  exercise,
-  onPress,
-  onRemove,
-  showRemove = true,
+    exercise,
+    onPress,
+    onRemove,
+    showRemove = true,
 }) => {
   const { t } = useTranslation();
   const diffStyle = exercise.difficulty ? DIFFICULTY_STYLES[exercise.difficulty] : null;
@@ -68,63 +92,63 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  info: {
-    flex: 1,
-  },
-  name: {
-    color: '#0f172a',
-    fontWeight: '700',
-    fontSize: 15,
-    marginBottom: 2,
-  },
-  meta: {
-    color: '#64748b',
-    marginBottom: 6,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  categoryTag: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  categoryText: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  diffTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  diffText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  removeBtn: {
-    padding: 4,
-  },
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: spacing.md,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    iconBox: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    info: {
+        flex: 1,
+    },
+    name: {
+        color: '#0f172a',
+        fontWeight: '700',
+        fontSize: 15,
+        marginBottom: 2,
+    },
+    meta: {
+        color: '#64748b',
+        marginBottom: 6,
+    },
+    tagsRow: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    categoryTag: {
+        backgroundColor: '#f1f5f9',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    categoryText: {
+        color: '#475569',
+        fontSize: 10,
+        fontWeight: '600',
+    },
+    diffTag: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    diffText: {
+        fontSize: 10,
+        fontWeight: '600',
+    },
+    removeBtn: {
+        padding: 4,
+    },
 });

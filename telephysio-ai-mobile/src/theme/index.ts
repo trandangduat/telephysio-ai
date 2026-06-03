@@ -1,7 +1,9 @@
 /**
- * Theme barrel — import everything from one place.
+ * @file index.ts
+ * @description Barrel export cho module theme của ứng dụng TelePhysioAI.
+ * Import tất cả các token thiết kế (màu sắc, kiểu chữ, khoảng cách) từ một nơi duy nhất.
  *
- * Usage:
+ * Cách sử dụng:
  *   import { colors, palette, typography, spacing, radius, shadows } from '../theme';
  */
 

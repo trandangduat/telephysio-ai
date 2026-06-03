@@ -44,12 +44,25 @@ type AssignTemplateRouteProp = RouteProp<
     "AssignTemplate"
 >;
 
+/**
+ * Trả về đối tượng Date tương ứng với đầu ngày (00:00:00.000) của ngày được truyền vào.
+ *
+ * @param date - Ngày cần chuẩn hóa về đầu ngày.
+ * @return Đối tượng Date với giờ được đặt về 00:00:00.000.
+ */
 const startOfDay = (date: Date) => {
     const copy = new Date(date);
     copy.setHours(0, 0, 0, 0);
     return copy;
 };
 
+/**
+ * Lấy đối tượng Date từ một Assignment.
+ * Ưu tiên trường scheduledDate, nếu không có thì lấy assignedAt.
+ *
+ * @param assignment - Đối tượng assignment cần lấy ngày.
+ * @return Đối tượng Date tương ứng hoặc null nếu không có.
+ */
 const getAssignmentDate = (assignment: Assignment) =>
     ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ??
     null;
@@ -68,6 +81,12 @@ const getLatestSessionForAssignment = (
     );
 };
 
+/**
+ * Màn hình gán buổi tập cho bệnh nhân.
+ * Hiển thị lịch tháng/ngày của bệnh nhân và cho phép bác sĩ tạo buổi tập mới.
+ *
+ * @return Component màn hình AssignTemplate.
+ */
 export const AssignTemplateScreen: React.FC = () => {
     const navigation = useNavigation<AssignTemplateNavProp>();
     const route = useRoute<AssignTemplateRouteProp>();
@@ -176,6 +195,7 @@ export const AssignTemplateScreen: React.FC = () => {
                 status: "active",
                 scheduledDate: Timestamp.fromDate(scheduleDate),
             });
+            const generatedName = selectedTemplates.map(t => t.name).join(' + ');
 
             setIsAddModalVisible(false);
             setSelectedTemplateIds([]);

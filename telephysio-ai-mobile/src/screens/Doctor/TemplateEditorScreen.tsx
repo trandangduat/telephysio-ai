@@ -1,3 +1,8 @@
+/**
+ * @file TemplateEditorScreen.tsx
+ * @description Màn hình tạo mới hoặc chỉnh sửa một template bài tập vật lý trị liệu.
+ * Cho phép bác sĩ đặt tên, mô tả và thêm/xóa các bài tập trong template.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,9 +18,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { DoctorStackParamList } from '../../navigation/types';
 import type { Exercise } from '../../services/firebase/types';
 import {
-  getExerciseTemplates,
-  createExerciseTemplate,
-  updateExerciseTemplate,
+    getExerciseTemplates,
+    createExerciseTemplate,
+    updateExerciseTemplate,
 } from '../../services/firebase';
 import { ExerciseCard } from './components/ExerciseCard';
 import { ExercisePickerSheet } from './components/ExercisePickerSheet';
@@ -24,31 +29,38 @@ import { ExerciseConfigSheet } from './components/ExerciseConfigSheet';
 type TemplateEditorNavProp = NativeStackNavigationProp<DoctorStackParamList, 'TemplateEditor'>;
 type TemplateEditorRouteProp = RouteProp<DoctorStackParamList, 'TemplateEditor'>;
 
+/**
+ * Màn hình soạn thảo template bài tập.
+ * Hỗ trợ cả chế độ tạo mới và chỉnh sửa template hiện có.
+ * Sử dụng ExercisePickerSheet và ExerciseConfigSheet để thêm bài tập.
+ *
+ * @return Component màn hình TemplateEditor.
+ */
 export const TemplateEditorScreen: React.FC = () => {
   const navigation = useNavigation<TemplateEditorNavProp>();
   const route = useRoute<TemplateEditorRouteProp>();
   const { uid } = useAuth();
   const { t } = useTranslation();
 
-  const templateId = route.params?.templateId;
-  const isEditing = !!templateId;
+    const templateId = route.params?.templateId;
+    const isEditing = !!templateId;
 
-  const [loading, setLoading] = useState(isEditing);
-  const [saving, setSaving] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+    const [loading, setLoading] = useState(isEditing);
+    const [saving, setSaving] = useState(false);
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [exercises, setExercises] = useState<Exercise[]>([]);
 
-  // Picker state
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const [configVisible, setConfigVisible] = useState(false);
-  const [configExercise, setConfigExercise] = useState<Exercise | null>(null);
+    // Picker state
+    const [pickerVisible, setPickerVisible] = useState(false);
+    const [configVisible, setConfigVisible] = useState(false);
+    const [configExercise, setConfigExercise] = useState<Exercise | null>(null);
 
-  useEffect(() => {
-    if (isEditing) {
-      loadTemplate();
-    }
-  }, [templateId]);
+    useEffect(() => {
+        if (isEditing) {
+            loadTemplate();
+        }
+    }, [templateId]);
 
   const loadTemplate = async () => {
     if (!uid || !templateId) return;
@@ -69,27 +81,50 @@ export const TemplateEditorScreen: React.FC = () => {
     }
   };
 
-  const handleAddExercise = (exercise: Exercise) => {
-    setConfigExercise(exercise);
-    setConfigVisible(true);
-  };
+    /**
+   * Xử lý khi người dùng chọn một bài tập từ ExercisePickerSheet.
+   * Mở ExerciseConfigSheet để cấu hình chi tiết bài tập vừa chọn.
+   *
+   * @param exercise - Bài tập được chọn từ danh sách.
+   */
+    const handleAddExercise = (exercise: Exercise) => {
+        setConfigExercise(exercise);
+        setConfigVisible(true);
+    };
 
-  const handleConfigSave = (configured: Exercise) => {
-    setExercises(prev => [...prev, { ...configured, id: `ex-${Date.now()}` }]);
-    setConfigExercise(null);
-  };
+    /**
+   * Lưu cấu hình bài tập và thêm vào danh sách bài tập của template.
+   * Gán ID tạm thời cho bài tập dựa trên timestamp hiện tại.
+   *
+   * @param configured - Bài tập đã được cấu hình đầy đủ từ ExerciseConfigSheet.
+   */
+    const handleConfigSave = (configured: Exercise) => {
+        setExercises(prev => [...prev, { ...configured, id: `ex-${Date.now()}` }]);
+        setConfigExercise(null);
+    };
 
-  const handleRemoveExercise = (index: number) => {
-    setExercises(prev => prev.filter((_, i) => i !== index));
-  };
+    /**
+   * Xóa bài tập khỏi danh sách bài tập của template theo chỉ số.
+   *
+   * @param index - Chỉ số (index) của bài tập cần xóa trong mảng exercises.
+   */
+    const handleRemoveExercise = (index: number) => {
+        setExercises(prev => prev.filter((_, i) => i !== index));
+    };
 
-  const calculateTotalDuration = (): string => {
-    const totalMins = exercises.reduce((sum, ex) => {
-      const mins = parseInt(ex.duration) || 2;
-      return sum + mins * ex.sets;
-    }, 0);
-    return `${totalMins} min`;
-  };
+    /**
+   * Tính tổng thời gian ước tính của template dựa trên danh sách bài tập.
+   * Mỗi bài tập ước tính số phút theo trường duration nhân với số sets.
+   *
+   * @return Chuỗi tổng thời gian dạng "X min".
+   */
+    const calculateTotalDuration = (): string => {
+        const totalMins = exercises.reduce((sum, ex) => {
+            const mins = parseInt(ex.duration) || 2;
+            return sum + mins * ex.sets;
+        }, 0);
+        return `${totalMins} min`;
+    };
 
   const handleSave = async () => {
     if (!uid) return;
@@ -135,11 +170,27 @@ export const TemplateEditorScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </SafeAreaView>
-    );
-  }
+        <SafeAreaView style={styles.safe} edges={['top']}>
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
+                </TouchableOpacity>
+                <AppText variant="headlineMd" style={styles.headerTitle}>
+                    {isEditing ? 'Edit Template' : 'Create Template'}
+                </AppText>
+                <TouchableOpacity
+                    style={[styles.saveHeaderBtn, saving && { opacity: 0.6 }]}
+                    onPress={handleSave}
+                    disabled={saving}
+                >
+                    {saving ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                        <AppText variant="labelMd" style={{ color: '#fff', fontWeight: '700' }}>Save</AppText>
+                    )}
+                </TouchableOpacity>
+            </View>
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -234,114 +285,114 @@ export const TemplateEditorScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Sheets */}
-      <ExercisePickerSheet
-        visible={pickerVisible}
-        onClose={() => setPickerVisible(false)}
-        onSelect={handleAddExercise}
-        excludeIds={exercises.map(e => e.id)}
-      />
-      <ExerciseConfigSheet
-        visible={configVisible}
-        exercise={configExercise}
-        onClose={() => { setConfigVisible(false); setConfigExercise(null); }}
-        onSave={handleConfigSave}
-      />
-    </SafeAreaView>
-  );
+            {/* Sheets */}
+            <ExercisePickerSheet
+                visible={pickerVisible}
+                onClose={() => setPickerVisible(false)}
+                onSelect={handleAddExercise}
+                excludeIds={exercises.map(e => e.id)}
+            />
+            <ExerciseConfigSheet
+                visible={configVisible}
+                exercise={configExercise}
+                onClose={() => { setConfigVisible(false); setConfigExercise(null); }}
+                onSave={handleConfigSave}
+            />
+        </SafeAreaView>
+    );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafd' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  backBtn: { padding: 4 },
-  headerTitle: { color: '#0f172a', fontWeight: '700', fontSize: 18, flex: 1, textAlign: 'center' },
-  saveHeaderBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  scroll: { flex: 1 },
-  content: { padding: spacing.gutter, gap: spacing.md, paddingBottom: spacing.xl * 2 },
-  field: {},
-  label: {
-    color: '#475569',
-    fontWeight: '700',
-    fontSize: 12,
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#0f172a',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  sectionTitleRow: {},
-  sectionLabel: {
-    color: '#475569',
-    fontWeight: '700',
-    fontSize: 12,
-    letterSpacing: 0.8,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#e0f2fe',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  emptyCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: spacing.xl,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#e2e8f0',
-    borderStyle: 'dashed',
-  },
-  emptyAddBtn: {
-    marginTop: spacing.md,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#fff',
-    padding: spacing.md,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
+    safe: { flex: 1, backgroundColor: '#f8fafd' },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.gutter,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+    },
+    backBtn: { padding: 4 },
+    headerTitle: { color: '#0f172a', fontWeight: '700', fontSize: 18, flex: 1, textAlign: 'center' },
+    saveHeaderBtn: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+        minWidth: 60,
+        alignItems: 'center',
+    },
+    scroll: { flex: 1 },
+    content: { padding: spacing.gutter, gap: spacing.md, paddingBottom: spacing.xl * 2 },
+    field: {},
+    label: {
+        color: '#475569',
+        fontWeight: '700',
+        fontSize: 12,
+        letterSpacing: 0.5,
+        marginBottom: spacing.sm,
+    },
+    input: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 12,
+        fontSize: 15,
+        color: '#0f172a',
+    },
+    textArea: {
+        minHeight: 80,
+        textAlignVertical: 'top',
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: spacing.sm,
+    },
+    sectionTitleRow: {},
+    sectionLabel: {
+        color: '#475569',
+        fontWeight: '700',
+        fontSize: 12,
+        letterSpacing: 0.8,
+    },
+    addBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#e0f2fe',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    emptyCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: spacing.xl,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+    },
+    emptyAddBtn: {
+        marginTop: spacing.md,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.primary,
+    },
+    totalRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#fff',
+        padding: spacing.md,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
 });

@@ -19,9 +19,9 @@ import Svg, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  useNavigation,
-  useRoute,
-  useFocusEffect,
+    useNavigation,
+    useRoute,
+    useFocusEffect,
 } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
@@ -37,9 +37,9 @@ import {
   getPatientSessions,
 } from "../../services/firebase";
 import type {
-  TreatmentPlan,
-  ProgressSnapshot,
-  Session,
+    TreatmentPlan,
+    ProgressSnapshot,
+    Session,
 } from "../../services/firebase/types";
 
 type ChartMetric = "ROM" | "Pain" | "Accuracy";
@@ -441,7 +441,7 @@ const RecoveryLineChart = ({
 };
 
 export const PatientDetailScreen: React.FC = () => {
-  const navigation =
+    const navigation =
     useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
   const route = useRoute<RouteProp<DoctorStackParamList, "PatientDetail">>();
   const { t } = useTranslation();
@@ -504,15 +504,47 @@ export const PatientDetailScreen: React.FC = () => {
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
-  }
 
-  const accuracy = progress?.movementScore ?? 0;
-  const sessionsCount = sessions.length;
-  // Calculate average pain from sessions
-  const avgPain =
+    /**
+   * @function handleAssign
+   * @description Điều hướng đến màn hình giao bài tập (AssignTemplate)
+   * với thông tin ID và tên bệnh nhân hiện tại.
+   * @return {void}
+   */
+    const handleAssign = () => {
+        navigation.navigate("AssignTemplate", { patientId, patientName });
+    };
+
+    /**
+   * @function handleViewSessions
+   * @description Điều hướng đến màn hình xem lịch sử buổi tập (PatientSessions)
+   * với thông tin ID và tên bệnh nhân hiện tại.
+   * @return {void}
+   */
+    const handleViewSessions = () => {
+        navigation.navigate("PatientSessions", { patientId, patientName });
+    };
+
+    if (loading) {
+        return (
+            <SafeAreaView
+                style={[
+                    styles.safe,
+                    { justifyContent: "center", alignItems: "center" },
+                ]}
+            >
+                <ActivityIndicator size="large" color={colors.primary} />
+            </SafeAreaView>
+        );
+    }
+
+    const accuracy = progress?.movementScore ?? 0;
+    const sessionsCount = sessions.length;
+    // Calculate average pain from sessions
+    const avgPain =
     sessionsCount > 0
-      ? Math.round(
-          sessions.reduce((acc, s) => acc + (s.averagePain || 0), 0) /
+        ? Math.round(
+            sessions.reduce((acc, s) => acc + (s.averagePain || 0), 0) /
             sessionsCount,
         )
       : 0;
@@ -638,23 +670,16 @@ export const PatientDetailScreen: React.FC = () => {
             <View style={styles.toggleGroup}>
               {(["ROM", "Pain", "Accuracy"] as ChartMetric[]).map((tab) => (
                 <TouchableOpacity
-                  key={tab}
-                  style={[
-                    styles.toggleBtn,
-                    activeChart === tab && styles.toggleBtnActive,
-                  ]}
-                  onPress={() => setActiveChart(tab)}
+                    style={styles.navBackBtn}
+                    onPress={() => navigation.goBack()}
                 >
-                  <AppText
-                    variant="labelSm"
-                    style={{ color: activeChart === tab ? "#fff" : "#475569" }}
-                  >
-                    {tab}
-                  </AppText>
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
-              ))}
+                <AppText variant="headlineMd" style={styles.navTitle}>
+          Patient Details
+                </AppText>
+                <View style={{ width: 28 }} />
             </View>
-          </View>
 
           {/* Chart */}
           <View style={styles.chartWrapper}>
@@ -696,84 +721,84 @@ export const PatientDetailScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f8fafd" },
-  navBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.gutter,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  navBackBtn: { padding: 4, marginLeft: -4 },
-  navTitle: { color: colors.onSurface, fontWeight: "700", fontSize: 18 },
+    safe: { flex: 1, backgroundColor: "#f8fafd" },
+    navBar: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: spacing.gutter,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
+    },
+    navBackBtn: { padding: 4, marginLeft: -4 },
+    navTitle: { color: colors.onSurface, fontWeight: "700", fontSize: 18 },
 
-  scroll: { flex: 1 },
-  content: {
-    padding: spacing.gutter,
-    gap: spacing.lg,
-    paddingBottom: spacing.xl * 2,
-  },
+    scroll: { flex: 1 },
+    content: {
+        padding: spacing.gutter,
+        gap: spacing.lg,
+        paddingBottom: spacing.xl * 2,
+    },
 
-  profileCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  profileAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileName: { color: "#0f172a", fontWeight: "800", fontSize: 20 },
-  profileCondition: { color: "#64748b", marginTop: 4, marginBottom: 8 },
-  profileBadges: { flexDirection: "row", gap: 8 },
-  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
+    profileCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: "#e2e8f0",
+    },
+    profileAvatar: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: "#f1f5f9",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    profileName: { color: "#0f172a", fontWeight: "800", fontSize: 20 },
+    profileCondition: { color: "#64748b", marginTop: 4, marginBottom: 8 },
+    profileBadges: { flexDirection: "row", gap: 8 },
+    badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 100 },
 
-  quickStats: { flexDirection: "row", gap: spacing.sm },
-  quickStatItem: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: spacing.md,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    gap: 4,
-  },
-  quickStatValue: { fontWeight: "800", fontSize: 18 },
-  quickStatLabel: { color: "#64748b", fontSize: 10 },
+    quickStats: { flexDirection: "row", gap: spacing.sm },
+    quickStatItem: {
+        flex: 1,
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: spacing.md,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#e2e8f0",
+        gap: 4,
+    },
+    quickStatValue: { fontWeight: "800", fontSize: 18 },
+    quickStatLabel: { color: "#64748b", fontSize: 10 },
 
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  cardTitle: { color: "#0f172a", fontWeight: "700", fontSize: 18 },
-  chartHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  toggleGroup: {
-    flexDirection: "row",
-    backgroundColor: "#f1f5f9",
-    borderRadius: 8,
-    padding: 2,
-  },
-  toggleBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  toggleBtnActive: { backgroundColor: colors.primary },
+    card: {
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: "#e2e8f0",
+    },
+    cardTitle: { color: "#0f172a", fontWeight: "700", fontSize: 18 },
+    chartHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: spacing.md,
+    },
+    toggleGroup: {
+        flexDirection: "row",
+        backgroundColor: "#f1f5f9",
+        borderRadius: 8,
+        padding: 2,
+    },
+    toggleBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
+    toggleBtnActive: { backgroundColor: colors.primary },
 
   chartAxisRow: {
     flexDirection: "row",

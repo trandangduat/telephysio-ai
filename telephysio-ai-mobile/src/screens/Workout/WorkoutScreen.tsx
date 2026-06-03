@@ -1,3 +1,8 @@
+/**
+ * @file WorkoutScreen.tsx
+ * @description Màn hình chính hiển thị lịch tập và buổi tập theo tuần của bệnh nhân.
+ * Hiển thị dải lịch tuần, các buổi tập active, đã hoàn thành và tiến độ trong ngày.
+ */
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,23 +24,36 @@ import { getVideoThumbnailUri } from '../../utils/videoUtils';
 import { Image } from 'react-native';
 
 type WorkoutNavProp = CompositeNavigationProp<
-  BottomTabNavigationProp<BottomTabParamList, 'Workout'>,
-  NativeStackNavigationProp<RootStackParamList>
+BottomTabNavigationProp<BottomTabParamList, 'Workout'>,
+NativeStackNavigationProp<RootStackParamList>
 >;
 
+/**
+ * Props của component WorkoutScreen.
+ *
+ * @property navigation - Đối tượng navigation dùng để điều hướng giữa các màn hình.
+ */
 interface Props {
-  navigation: WorkoutNavProp;
+    navigation: WorkoutNavProp;
 }
 
 const DIFFICULTY_CONFIG: Record<ExerciseDifficulty, { label: string; color: string; bg: string }> = {
-  easy: { label: 'Easy', color: '#166534', bg: '#dcfce7' },
-  medium: { label: 'Medium', color: '#b45309', bg: '#fef3c7' },
-  hard: { label: 'Hard', color: '#991b1b', bg: '#fef2f2' },
+    easy: { label: 'Easy', color: '#166534', bg: '#dcfce7' },
+    medium: { label: 'Medium', color: '#b45309', bg: '#fef3c7' },
+    hard: { label: 'Hard', color: '#991b1b', bg: '#fef2f2' },
 };
 
+/**
+ * Màn hình chính hiển thị lịch tập thèo tuần cho bệnh nhân.
+ * Hiển thị dải ngày trong tuần, các buổi tập active/upcoming/đã hoàn thành
+ * và tiến độ theo ngày được chọn.
+ *
+ * @param navigation - Đối tượng navigation của React Navigation.
+ * @return Component JSX màn hình WorkoutScreen.
+ */
 export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
-  const { t } = useTranslation();
-  const { uid } = useAuth();
+    const { t } = useTranslation();
+    const { uid } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [activeAssignments, setActiveAssignments] = useState<Assignment[]>([]);
@@ -44,103 +62,100 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
   const [weekSessions, setWeekSessions] = useState<Session[]>([]);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
-  // Date setup for weekly schedule
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    // Date setup for weekly schedule
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
   
-  const startOfWeek = new Date(today);
-  const dayOffset = startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1;
-  startOfWeek.setDate(startOfWeek.getDate() - dayOffset);
+    const startOfWeek = new Date(today);
+    const dayOffset = startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1;
+    startOfWeek.setDate(startOfWeek.getDate() - dayOffset);
 
-  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const weekDates = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date(startOfWeek);
-    d.setDate(d.getDate() + i);
-    return d;
-  });
+    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weekDates = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date(startOfWeek);
+        d.setDate(d.getDate() + i);
+        return d;
+    });
 
-  const todayIndex = dayOffset;
-  const [selectedDayIndex, setSelectedDayIndex] = useState(todayIndex);
+    const todayIndex = dayOffset;
+    const [selectedDayIndex, setSelectedDayIndex] = useState(todayIndex);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!uid) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const assignments = await getPatientAssignments(uid, 'active');
-        setActiveAssignments(assignments);
-
-        if (assignments.length > 0) {
-          if (assignments[0].doctorId) {
-            const doctor = await getUser(assignments[0].doctorId);
-            setDoctorName(doctor?.displayName || 'Your doctor');
-          }
-          
-          const incSess: Record<string, IncompleteSession> = {};
-          await Promise.all(assignments.map(async (a) => {
-            const inc = await getIncompleteSession(uid, a.id);
-            if (inc) {
-              incSess[a.id] = inc;
+    useEffect(() => {
+        async function loadData() {
+            if (!uid) {
+                setLoading(false);
+                return;
             }
-          }));
-          setIncompleteSessions(incSess);
+            try {
+                const assignments = await getPatientAssignments(uid, 'active');
+                setActiveAssignments(assignments);
+
+                if (assignments.length > 0) {
+                    if (assignments[0].doctorId) {
+                        const doctor = await getUser(assignments[0].doctorId);
+                        setDoctorName(doctor?.displayName || 'Your doctor');
+                    }
+          
+                    const incSess: Record<string, IncompleteSession> = {};
+                    await Promise.all(assignments.map(async (a) => {
+                        const inc = await getIncompleteSession(uid, a.id);
+                        if (inc) {
+                            incSess[a.id] = inc;
+                        }
+                    }));
+                    setIncompleteSessions(incSess);
+                }
+
+                const sessions = await getPatientSessions(uid, 20);
+                setWeekSessions(sessions);
+            } catch (error) {
+                console.error('Error loading assignments:', error);
+            } finally {
+                setLoading(false);
+            }
         }
+        loadData();
+    }, [uid]);
 
-        const sessions = await getPatientSessions(uid, 20);
-        setWeekSessions(sessions);
-      } catch (error) {
-        console.error('Error loading assignments:', error);
-      } finally {
-        setLoading(false);
-      }
+    if (loading) {
+        return (
+            <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </SafeAreaView>
+        );
     }
-    loadData();
-  }, [uid]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </SafeAreaView>
-    );
-  }
-
-  const isSameDate = (d1: Date, d2: Date) => 
-    d1.getDate() === d2.getDate() && 
+    /**
+   * Kiểm tra hai đối tượng Date có cùng ngày (ngày/tháng/năm) không.
+   *
+   * @param d1 - Ngày thứ nhất.
+   * @param d2 - Ngày thứ hai.
+   * @return true nếu cùng ngày, false nếu khác ngày.
+   */
+    const isSameDate = (d1: Date, d2: Date) => 
+        d1.getDate() === d2.getDate() && 
     d1.getMonth() === d2.getMonth() && 
     d1.getFullYear() === d2.getFullYear();
 
-  const selectedDate = weekDates[selectedDayIndex];
-  const isSelectedToday = selectedDayIndex === todayIndex;
+    const selectedDate = weekDates[selectedDayIndex];
+    const isSelectedToday = selectedDayIndex === todayIndex;
 
-  const sessionsForSelectedDay = weekSessions.filter(s => {
-    if (!s.date) return false;
-    const sDate = (s.date as any).toDate ? (s.date as any).toDate() : new Date(s.date as any);
-    return isSameDate(sDate, selectedDate);
-  });
-
-  const handleNavigateToDetail = (assignmentId: string) => {
-    navigation.navigate('WorkoutDetail', {
-      assignmentId,
+    const sessionsForSelectedDay = weekSessions.filter(s => {
+        if (!s.date) return false;
+        const sDate = (s.date as any).toDate ? (s.date as any).toDate() : new Date(s.date as any);
+        return isSameDate(sDate, selectedDate);
     });
-  };
 
-  return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.topBar}>
-        <View style={styles.logoRow}>
-          <Ionicons name="medical" size={20} color={colors.primary} />
-          <AppText variant="labelMd" style={styles.logoText}>TelePhysioAI</AppText>
-        </View>
-        <View style={styles.topBarIcons}>
-          <NotificationBell />
-          <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile' as any)}>
-            <Ionicons name="person" size={14} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    /**
+   * Điều hướng đến màn hình chi tiết buổi tập của một assignment cụ thể.
+   *
+   * @param assignmentId - ID của assignment cần xem chi tiết.
+   */
+    const handleNavigateToDetail = (assignmentId: string) => {
+        navigation.navigate('WorkoutDetail', {
+            assignmentId,
+        });
+    };
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -466,23 +481,15 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
                   </AppText>
                   <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', gap: 12 }}>
                     <Ionicons name="medical" size={20} color={colors.primary} />
-                    <View style={{ flex: 1 }}>
-                      {((session as any).doctorFeedback || (session as any).doctorReview) ? (
-                        <AppText variant="bodyMd" style={{ color: '#334155' }}>
-                          {(session as any).doctorFeedback || (session as any).doctorReview}
-                        </AppText>
-                      ) : (
-                        <AppText variant="bodyMd" style={{ color: '#94a3b8', fontStyle: 'italic' }}>
-                          Doctor has not reviewed this session yet. Feedback will appear here once available.
-                        </AppText>
-                      )}
-                    </View>
-                  </View>
+                    <AppText variant="labelMd" style={styles.logoText}>TelePhysioAI</AppText>
                 </View>
-              ))}
-            </>
-          );
-        })()}
+                <View style={styles.topBarIcons}>
+                    <NotificationBell />
+                    <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile' as any)}>
+                        <Ionicons name="person" size={14} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+            </View>
 
       </ScrollView>
       <VideoPlaybackModal
@@ -495,259 +502,259 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafd' },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.sm },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
-  topBarIcons: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBtn: { padding: 4 },
-  avatarBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  header: { padding: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.md },
-  title: { color: '#0f172a', fontWeight: '800' },
-  subtitle: { color: '#64748b', marginTop: 4 },
-  scroll: { flex: 1 },
-  content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: spacing.xl * 2 },
+    safe: { flex: 1, backgroundColor: '#f8fafd' },
+    topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.sm },
+    logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    logoText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+    topBarIcons: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconBtn: { padding: 4 },
+    avatarBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+    header: { padding: spacing.gutter, paddingTop: spacing.md, paddingBottom: spacing.md },
+    title: { color: '#0f172a', fontWeight: '800' },
+    subtitle: { color: '#64748b', marginTop: 4 },
+    scroll: { flex: 1 },
+    content: { padding: spacing.gutter, gap: spacing.lg, paddingBottom: spacing.xl * 2 },
 
-  // Assignment Info Card
-  assignmentCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  assignmentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm },
-  assignmentLabel: { color: colors.primary, fontWeight: '700', letterSpacing: 0.8, fontSize: 11 },
-  assignmentName: { color: '#0f172a', fontWeight: '700', fontSize: 22, marginBottom: spacing.md },
-  assignmentMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.lg },
-  metaChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 100,
-    gap: 6,
-  },
-  cardStartButton: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-    marginTop: spacing.sm,
-  },
-  detailsHeaderLabel: {
-    color: '#475569',
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    fontSize: 11,
-    marginTop: spacing.lg,
-    marginBottom: spacing.xs,
-    paddingHorizontal: 4,
-  },
-  metaText: { color: '#64748b' },
+    // Assignment Info Card
+    assignmentCard: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 3,
+    },
+    assignmentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm },
+    assignmentLabel: { color: colors.primary, fontWeight: '700', letterSpacing: 0.8, fontSize: 11 },
+    assignmentName: { color: '#0f172a', fontWeight: '700', fontSize: 22, marginBottom: spacing.md },
+    assignmentMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.lg },
+    metaChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f1f5f9',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 100,
+        gap: 6,
+    },
+    cardStartButton: {
+        backgroundColor: colors.primary,
+        flexDirection: 'row',
+        paddingVertical: 14,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
+        marginTop: spacing.sm,
+    },
+    detailsHeaderLabel: {
+        color: '#475569',
+        fontWeight: '700',
+        letterSpacing: 0.8,
+        fontSize: 11,
+        marginTop: spacing.lg,
+        marginBottom: spacing.xs,
+        paddingHorizontal: 4,
+    },
+    metaText: { color: '#64748b' },
 
-  // Empty State
-  emptyCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: spacing.xl,
-    borderWidth: 2,
-    borderColor: '#e2e8f0',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-  },
+    // Empty State
+    emptyCard: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: spacing.xl,
+        borderWidth: 2,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+        alignItems: 'center',
+    },
 
-  // Exercise Card
-  exerciseCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  exerciseHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.lg },
-  exerciseIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  exerciseInfo: { flex: 1 },
-  exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  exerciseName: { color: '#0f172a', fontWeight: '700', fontSize: 18 },
-  diffBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  diffText: { fontSize: 10, fontWeight: '600' },
-  exerciseDetails: { color: '#64748b', marginTop: 4 },
-  exerciseRest: { color: '#94a3b8', marginTop: 2, fontSize: 12 },
-  exerciseNotes: { color: '#64748b', fontSize: 12, flex: 1, fontStyle: 'italic' },
-  notesRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm },
-  activeExerciseBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primaryContainer, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 100, alignSelf: 'flex-start', marginTop: spacing.md },
-  completedExerciseBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#dcfce7', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 100, alignSelf: 'flex-start', marginTop: spacing.md },
+    // Exercise Card
+    exerciseCard: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 3,
+    },
+    exerciseHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.lg },
+    exerciseIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+    exerciseInfo: { flex: 1 },
+    exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+    exerciseName: { color: '#0f172a', fontWeight: '700', fontSize: 18 },
+    diffBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+    diffText: { fontSize: 10, fontWeight: '600' },
+    exerciseDetails: { color: '#64748b', marginTop: 4 },
+    exerciseRest: { color: '#94a3b8', marginTop: 2, fontSize: 12 },
+    exerciseNotes: { color: '#64748b', fontSize: 12, flex: 1, fontStyle: 'italic' },
+    notesRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm },
+    activeExerciseBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primaryContainer, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 100, alignSelf: 'flex-start', marginTop: spacing.md },
+    completedExerciseBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#dcfce7', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 100, alignSelf: 'flex-start', marginTop: spacing.md },
 
-  // Sticky Bottom Button
-  stickyBottom: {
-    padding: spacing.gutter,
-    paddingBottom: spacing.xl,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    paddingVertical: 16,
-    borderRadius: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+    // Sticky Bottom Button
+    stickyBottom: {
+        padding: spacing.gutter,
+        paddingBottom: spacing.xl,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e2e8f0',
+    },
+    primaryButton: {
+        backgroundColor: colors.primary,
+        flexDirection: 'row',
+        paddingVertical: 16,
+        borderRadius: 100,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
+    },
 
-  // Calendar Strip
-  calendarContainer: {
-    paddingHorizontal: spacing.gutter,
-    marginBottom: spacing.md,
-  },
-  calendarRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 4,
-  },
-  dayPill: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    elevation: 1,
-  },
-  dayPillSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-    elevation: 4,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  dayPillToday: {
-    borderColor: colors.primary + '33', // 20% opacity
-    backgroundColor: colors.primary + '08', // 5% opacity
-  },
-  dayLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94a3b8',
-    marginBottom: 8,
-  },
-  dayLabelSelected: {
-    color: '#fff',
-  },
-  dayDotContainer: {
-    height: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dotPlaceholder: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#f1f5f9',
-  },
+    // Calendar Strip
+    calendarContainer: {
+        paddingHorizontal: spacing.gutter,
+        marginBottom: spacing.md,
+    },
+    calendarRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 4,
+    },
+    dayPill: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
+        elevation: 1,
+    },
+    dayPillSelected: {
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
+        elevation: 4,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
+    dayPillToday: {
+        borderColor: colors.primary + '33', // 20% opacity
+        backgroundColor: colors.primary + '08', // 5% opacity
+    },
+    dayLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#94a3b8',
+        marginBottom: 8,
+    },
+    dayLabelSelected: {
+        color: '#fff',
+    },
+    dayDotContainer: {
+        height: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    dotPlaceholder: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#f1f5f9',
+    },
 
-  // Past & Future Cards
-  pastDayCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    alignItems: 'stretch', // Stretch children to allow multi-line blocks
-  },
-  pastDayHeader: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f1f5f9',
-    width: '100%',
-    marginBottom: spacing.lg,
-  },
-  pastDayStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: spacing.xl,
-  },
-  statBox: {
-    alignItems: 'center',
-  },
-  reviewBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 100,
-    backgroundColor: colors.primary + '15',
-    alignSelf: 'center', // Keep the button centered
-  },
-  futureDayCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: spacing.xl * 1.5,
-    borderWidth: 2,
-    borderColor: '#f1f5f9',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    // Past & Future Cards
+    pastDayCard: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: spacing.xl,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        alignItems: 'stretch', // Stretch children to allow multi-line blocks
+    },
+    pastDayHeader: {
+        alignItems: 'center',
+        marginBottom: spacing.lg,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#f1f5f9',
+        width: '100%',
+        marginBottom: spacing.lg,
+    },
+    pastDayStats: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        marginBottom: spacing.xl,
+    },
+    statBox: {
+        alignItems: 'center',
+    },
+    reviewBtn: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 100,
+        backgroundColor: colors.primary + '15',
+        alignSelf: 'center', // Keep the button centered
+    },
+    futureDayCard: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: spacing.xl * 1.5,
+        borderWidth: 2,
+        borderColor: '#f1f5f9',
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
   
-  // Add new mock items
-  mockSummaryRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  mockSummaryIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 0,
-  },
-  mockThumbBox: {
-    width: 60,
-    gap: 2,
-    marginRight: 8,
-  },
-  mockThumbVideo: {
-    width: 60,
-    height: 36,
-    backgroundColor: '#334155',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    // Add new mock items
+    mockSummaryRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: spacing.md,
+        marginBottom: spacing.md,
+    },
+    mockSummaryIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: colors.primary + '15',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 0,
+    },
+    mockThumbBox: {
+        width: 60,
+        gap: 2,
+        marginRight: 8,
+    },
+    mockThumbVideo: {
+        width: 60,
+        height: 36,
+        backgroundColor: '#334155',
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
