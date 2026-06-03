@@ -1,6 +1,8 @@
 /**
- * DoctorSessionDetailScreen — Allows doctors to review a patient's session.
- * Features: Video playback, performance stats, and feedback submission.
+ * @file DoctorSessionDetailScreen.tsx
+ * @description Màn hình xem chi tiết buổi tập của bệnh nhân dành cho bác sĩ.
+ * Cho phép bác sĩ phát lại video buổi tập, xem thống kê hiệu suất (độ chính xác,
+ * thời lượng, mức đau), phân tích bài tập và gửi nhận xét lâm sàng cho bệnh nhân.
  */
 
 import React, { useState, useRef } from "react";
@@ -30,6 +32,13 @@ import { submitDoctorFeedback } from "../../services/firebase";
 type NavProp = NativeStackNavigationProp<DoctorStackParamList, 'DoctorSessionDetail'>;
 type ScreenRouteProp = RouteProp<DoctorStackParamList, 'DoctorSessionDetail'>;
 
+/**
+ * @component DoctorSessionDetailScreen
+ * @description Component màn hình xem chi tiết buổi tập của bệnh nhân.
+ * Tự động phân giải URL video (có thể là đường dẫn tương đối từ Firebase Storage)
+ * và quản lý trạng thái phát video, nhận xét và nộp form.
+ * @return {React.ReactElement} Giao diện chi tiết buổi tập với video, thống kê và form nhận xét.
+ */
 export const DoctorSessionDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavProp>();
   const route = useRoute<ScreenRouteProp>();
@@ -42,6 +51,13 @@ export const DoctorSessionDetailScreen: React.FC = () => {
   const [resolvedVideoUri, setResolvedVideoUri] = useState<string>("");
   const [loadingVideo, setLoadingVideo] = useState(false);
 
+  /**
+   * @function resolveVideo
+   * @description Phân giải URL video của buổi tập.
+   * Nếu URL bắt đầu bằng "http" hoặc "blob:", sử dụng trực tiếp.
+   * Nếu là đường dẫn tương đối, tải xuống URL từ Firebase Storage.
+   * @return {Promise<void>}
+   */
   React.useEffect(() => {
     async function resolveVideo() {
       const url = session.videoUrl;
@@ -77,6 +93,12 @@ export const DoctorSessionDetailScreen: React.FC = () => {
 
   const isPlaying = status && (status as any).isPlaying;
 
+  /**
+   * @function handleTogglePlay
+   * @description Bật/tắt phát video. Kiểm tra trạng thái phát hiện tại
+   * rồi gọi pause hoặc play tương ứng trên videoRef.
+   * @return {Promise<void>}
+   */
   const handleTogglePlay = async () => {
     if (!videoRef.current) return;
     if (isPlaying) {
@@ -86,6 +108,13 @@ export const DoctorSessionDetailScreen: React.FC = () => {
     }
   };
 
+  /**
+   * @function handleSaveFeedback
+   * @description Lưu và gửi nhận xét lâm sàng của bác sĩ cho bệnh nhân.
+   * Kiểm tra dữ liệu đầu vào trước khi gửi. Hiển thị thông báo kết quả
+   * và quay lại màn hình trước nếu thành công.
+   * @return {Promise<void>}
+   */
   const handleSaveFeedback = async () => {
     if (!feedback.trim()) {
       Alert.alert("Input Required", "Please enter feedback for the patient.");

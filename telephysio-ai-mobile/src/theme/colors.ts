@@ -1,9 +1,11 @@
 /**
- * Clinical Vitality — Color Tokens
+ * @file colors.ts
+ * @description Bảng màu token cho hệ thống thiết kế Clinical Vitality.
  * Nguồn: DESIGN.md
  *
- * Không hardcode hex trong component.
- * Chỉ import `colors` hoặc `palette`.
+ * Nguyên tắc sử dụng:
+ *   - Không hardcode giá trị hex trực tiếp trong component.
+ *   - Chỉ import `colors` hoặc `palette` từ file này.
  */
 
 export const colors = {
@@ -72,7 +74,9 @@ export const colors = {
 } as const;
 
 /**
- * Alias ngắn — import nhanh trong component.
+ * @constant palette
+ * @description Alias ngắn gọn cho các màu được dùng thường xuyên nhất trong component.
+ * Giúp viết code ngắn hơn bằng cách nhóm các token quan trọng dưới tên sử dụng ngắn.
  */
 export const palette = {
   primary:   colors.primary,

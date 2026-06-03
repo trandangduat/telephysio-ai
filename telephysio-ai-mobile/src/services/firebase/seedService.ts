@@ -1,3 +1,8 @@
+/**
+ * @file seedService.ts
+ * @description Dịch vụ cung cấp dữ liệu giả (mock data) để thử nghiệm và phát triển ứng dụng.
+ */
+
 import {
   collection,
   doc,
@@ -29,7 +34,10 @@ const getRandomItem = <T>(arr: T[]): T => {
 };
 
 /**
- * Seed data specifically revolving around the given Doctor and Patient accounts.
+ * Tạo dữ liệu giả mẫu xoay quanh tài khoản Bác sĩ và Bệnh nhân cụ thể.
+ * Chèn dữ liệu vào Firestore bao gồm bài tập, lộ trình, kết quả, phản hồi,...
+ * 
+ * @return {Promise<boolean>} True nếu thành công, False nếu có lỗi
  */
 export const seedMockData = async () => {
   console.log("Starting data seeding for specific accounts...");

@@ -1,7 +1,9 @@
 /**
- * Firebase Services — Barrel export.
+ * @file index.ts
+ * @description File xuất chung (Barrel export) cho tất cả các dịch vụ Firebase.
+ * Gom nhóm các hàm xử lý dữ liệu và logic liên quan đến Firebase để dễ dàng import ở nơi khác.
  *
- * Usage:
+ * Cách sử dụng:
  *   import { loginUser, getPatientSessions, sendMessage } from '../services/firebase';
  */
 

@@ -1,3 +1,8 @@
+/**
+ * @file ExerciseConfigSheet.tsx
+ * @description Bottom sheet cho phép người dùng cấu hình chi tiết một bài tập trước khi thêm vào template.
+ * Bao gồm các thông số: số sets, số reps, mức độ khó, thời gian nghỉ giữa các sets và ghi chú.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,14 +11,28 @@ import { AppText } from '../../../components/ui';
 import { colors, spacing } from '../../../theme';
 import type { Exercise, ExerciseDifficulty } from '../../../services/firebase/types';
 
+/**
+ * Danh sách các mức độ khó có thể chọn.
+ */
 const DIFFICULTIES: { key: ExerciseDifficulty; label: string; emoji: string }[] = [
   { key: 'easy', label: 'Easy', emoji: '😊' },
   { key: 'medium', label: 'Medium', emoji: '😐' },
   { key: 'hard', label: 'Hard', emoji: '🔥' },
 ];
 
+/**
+ * Các lựa chọn thời gian nghỉ giữa các sets (tính bằng giây).
+ */
 const REST_OPTIONS = [30, 60, 90, 120];
 
+/**
+ * Props của component ExerciseConfigSheet.
+ *
+ * @property visible - Trạng thái hiển thị/ẩn của sheet.
+ * @property exercise - Bài tập cần cấu hình, hoặc null nếu chưa chọn.
+ * @property onClose - Callback được gọi khi đóng sheet.
+ * @property onSave - Callback được gọi khi người dùng xác nhận lưu cấu hình.
+ */
 interface ExerciseConfigSheetProps {
   visible: boolean;
   exercise: Exercise | null;
@@ -21,6 +40,17 @@ interface ExerciseConfigSheetProps {
   onSave: (configured: Exercise) => void;
 }
 
+/**
+ * Component bottom sheet cấu hình bài tập.
+ * Cho phép người dùng chỉnh sửa sets, reps, mức độ khó, thời gian nghỉ và ghi chú
+ * của một bài tập trước khi thêm vào template.
+ *
+ * @param visible - Hiển thị sheet khi true.
+ * @param exercise - Bài tập cần cấu hình.
+ * @param onClose - Hàm callback khi đóng sheet.
+ * @param onSave - Hàm callback với cấu hình đã chỉnh sửa khi người dùng xác nhận.
+ * @return Component JSX bottom sheet cấu hình bài tập, hoặc null nếu exercise là null.
+ */
 export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
   visible,
   exercise,
@@ -45,6 +75,10 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 
   if (!exercise) return null;
 
+  /**
+   * Xây dựng đối tượng bài tập đã cấu hình và gọi callback onSave.
+   * Tính toán thời gian dựa trên số sets, sau đó đóng sheet.
+   */
   const handleSave = () => {
     onSave({
       ...exercise,
@@ -58,11 +92,21 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
     onClose();
   };
 
+  /**
+   * Tăng hoặc giảm số sets trong khoảng hợp lệ [1, 10].
+   *
+   * @param delta - Giá trị thay đổi (+1 hoặc -1).
+   */
   const adjustSets = (delta: number) => {
     const newVal = sets + delta;
     if (newVal >= 1 && newVal <= 10) setSets(newVal);
   };
 
+  /**
+   * Tăng hoặc giảm số reps trong khoảng hợp lệ [1, 50].
+   *
+   * @param delta - Giá trị thay đổi (+1 hoặc -1).
+   */
   const adjustReps = (delta: number) => {
     const newVal = reps + delta;
     if (newVal >= 1 && newVal <= 50) setReps(newVal);

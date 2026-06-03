@@ -1,8 +1,14 @@
 /**
- * CalibrationScreen — UC1: camera permission + pose alignment.
+ * CalibrationScreen.tsx — Màn hình hiệu chỉnh tư thế trước khi tập luyện.
  *
- * Full-screen camera with silhouette overlay and status indicator.
- * Button only active when pose detected (green state).
+ * <p>Triển khai Use Case UC1: xầy dựng luồng xin quyền camera và định vị tư thế người dùng
+ * trước khi bắt đầu phương àn tập.
+ * </p>
+ *
+ * <p>Giao diện toàn màn hình với camera trước, lớp phủ silhouette mô phỏng tư thế
+ * và bảng trạng thái nhận diện. Nút bắt đầu chỉ được kích hoạt khi tư thế
+ * đã sẵn sàng (trạng thái green/ready).
+ * </p>
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,8 +23,30 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 
 type CalibrationProps = NativeStackScreenProps<RootStackParamList, 'Calibration'>;
 
+/**
+ * Kiểu trạng thái hiệu chỉnh tư thế.
+ *
+ * <ul>
+ *   <li>{@code not-ready} — Chưa phát hiện được tư thế người dùng (hiển thị màu đỏ)</li>
+ *   <li>{@code partial} — Phát hiện được một phần tư thế (hiển thị màu primary)</li>
+ *   <li>{@code ready} — Tư thế đúng, sẵn sàng bắt đầu (hiển thị màu xanh tertiary)</li>
+ * </ul>
+ */
 type CalibrationStatus = 'not-ready' | 'partial' | 'ready';
 
+/**
+ * Component màn hình hiệu chỉnh tư thế trước khi tập.
+ *
+ * <p>Hiển thị camera mặt trước để phát hiện và hướng dẫn người dùng đồng bộ tư thế.
+ * Sau khi tư thế sẵn sàng ({@code ready}), người dùng có thể nhấn nút để
+ * chuyển sang màn hình Training.
+ * </p>
+ *
+ * @param route - Tham số route chứa {@code assignmentId}, {@code exerciseIndex}
+ *                và {@code recordVideo} tùy chọn
+ * @param navigation - Đối tượng điều hướng để chuyển sang màn hình Training
+ * @return JSX element hiển thị giao diện hiệu chỉnh toàn màn hình
+ */
 export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigation }) => {
   const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };
   const { t } = useTranslation();
@@ -31,12 +59,24 @@ export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigatio
     ready:       { color: colors.tertiary, label: t('calibration.ready') },
   };
 
+  /**
+   * Giả lập quá trình nhận diện tư thế theo thời gian.
+   *
+   * <p>Sau 1,5 giây chuyển sang trạng thái {@code partial};
+   * sau 3,5 giây chuyển sang trạng thái {@code ready}.
+   * Dọn dẹp bộ đếm thời gian khi component bị hủy.
+   * </p>
+   */
   useEffect(() => {
     const t1 = setTimeout(() => setStatus('partial'), 1500);
     const t2 = setTimeout(() => setStatus('ready'), 3500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  /**
+   * Tự động yêu cầu quyền camera khi component được mount
+   * nếu quyền chưa được cấp và hệ thống còn cho phép hỏi lại.
+   */
   // Automatically request camera permission on mount if not yet decided
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {

@@ -1,3 +1,8 @@
+/**
+ * @file AssignTemplateScreen.tsx
+ * @description Màn hình cho phép bác sĩ gán bài tập (template) cho bệnh nhân theo lịch.
+ * Hiển thị lịch tháng hoặc lịch ngày, cho phép tạo và quản lý các buổi tập được gán.
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -31,15 +36,34 @@ import {
 type AssignTemplateNavProp = NativeStackNavigationProp<DoctorStackParamList, 'AssignTemplate'>;
 type AssignTemplateRouteProp = RouteProp<DoctorStackParamList, 'AssignTemplate'>;
 
+/**
+ * Trả về đối tượng Date tương ứng với đầu ngày (00:00:00.000) của ngày được truyền vào.
+ *
+ * @param date - Ngày cần chuẩn hóa về đầu ngày.
+ * @return Đối tượng Date với giờ được đặt về 00:00:00.000.
+ */
 const startOfDay = (date: Date) => {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy;
 };
 
+/**
+ * Lấy đối tượng Date từ một Assignment.
+ * Ưu tiên trường scheduledDate, nếu không có thì lấy assignedAt.
+ *
+ * @param assignment - Đối tượng assignment cần lấy ngày.
+ * @return Đối tượng Date tương ứng hoặc null nếu không có.
+ */
 const getAssignmentDate = (assignment: Assignment) =>
   ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ?? null;
 
+/**
+ * Màn hình gán buổi tập cho bệnh nhân.
+ * Hiển thị lịch tháng/ngày của bệnh nhân và cho phép bác sĩ tạo buổi tập mới.
+ *
+ * @return Component màn hình AssignTemplate.
+ */
 export const AssignTemplateScreen: React.FC = () => {
   const navigation = useNavigation<AssignTemplateNavProp>();
   const route = useRoute<AssignTemplateRouteProp>();
@@ -72,6 +96,10 @@ export const AssignTemplateScreen: React.FC = () => {
     loadData();
   }, [uid, patientId]);
 
+  /**
+   * Tải dữ liệu template bài tập và danh sách buổi tập đã gán của bệnh nhân từ Firebase.
+   * Cập nhật state allTemplates và patientAssignments sau khi tải xong.
+   */
   const loadData = async () => {
     if (!uid || !patientId) return;
     setLoading(true);
@@ -89,18 +117,32 @@ export const AssignTemplateScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Danh sách template đã được lọc theo từ khóa tìm kiếm.
+   * Tính toán lại mỗi khi allTemplates hoặc templateSearchQuery thay đổi.
+   */
   const filteredTemplates = useMemo(() => {
     if (!templateSearchQuery.trim()) return allTemplates;
     const q = templateSearchQuery.toLowerCase();
     return allTemplates.filter(t => t.name.toLowerCase().includes(q));
   }, [allTemplates, templateSearchQuery]);
 
+  /**
+   * Bật/tắt trạng thái chọn của một template trong danh sách.
+   *
+   * @param id - ID của template cần thay đổi trạng thái chọn.
+   */
   const toggleTemplateSelection = (id: string) => {
     setSelectedTemplateIds(prev => 
       prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     );
   };
 
+  /**
+   * Xử lý logic gán buổi tập cho bệnh nhân.
+   * Gộp các bài tập từ các template được chọn, tính tổng thời gian và lưu lên Firebase.
+   * Hiển thị thông báo thành công hoặc lỗi sau khi hoàn tất.
+   */
   const handleAssign = async () => {
     if (!uid || !patientId || selectedTemplateIds.length === 0) return;
     
@@ -144,6 +186,13 @@ export const AssignTemplateScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Hiển thị giao diện lịch theo tháng.
+   * Vẽ lưới ngày của tháng đang xem, đánh dấu hôm nay, ngày được chọn
+   * và hiển thị tóm tắt các buổi tập đã gán trên mỗi ô ngày.
+   *
+   * @return JSX element lịch tháng.
+   */
   const renderMonthView = () => {
     const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
     const startDay = visibleMonth.getDay();
@@ -229,6 +278,12 @@ export const AssignTemplateScreen: React.FC = () => {
     );
   };
 
+  /**
+   * Hiển thị giao diện lịch theo ngày.
+   * Vẽ timeline 24 giờ, liệt kê các buổi tập đã gán trong từng khung giờ.
+   *
+   * @return JSX element lịch ngày.
+   */
   const renderDayView = () => {
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const assignmentsToday = patientAssignments.filter(a => {

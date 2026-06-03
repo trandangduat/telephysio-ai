@@ -1,11 +1,11 @@
 /**
- * AppNavigator — Root navigator with Auth → Role-based routing.
+ * AppNavigator — Bộ điều hướng gốc kết hợp xác thực (Auth) và phân quyền (Role-based).
  *
- * Flow:
- *   isLoading?  → Splash (ActivityIndicator)
- *   !isAuthenticated? → AuthNavigator (Login / SignUp)
- *   role=patient → PatientNavigator
- *   role=doctor  → DoctorNavigator
+ * Luồng điều hướng (Flow):
+ *   isLoading?        → Màn hình chờ (Splash - ActivityIndicator)
+ *   !isAuthenticated? → Điều hướng Xác thực (AuthNavigator: Đăng nhập / Đăng ký)
+ *   role=patient      → Điều hướng dành cho Bệnh nhân (PatientNavigator)
+ *   role=doctor       → Điều hướng dành cho Bác sĩ (DoctorNavigator)
  */
 
 import React from "react";
@@ -58,6 +58,12 @@ const AuthNavigator: React.FC = () => (
 // ── Patient Stack ───────────────────────────────────
 const PatientStack = createNativeStackNavigator<RootStackParamList>();
 
+/**
+ * Điều hướng dành cho Bệnh nhân.
+ * Quản lý các màn hình như Trang chủ, Luyện tập, Hồ sơ cá nhân của bệnh nhân, v.v.
+ * 
+ * @return React.FC Component chứa Stack Navigator của Bệnh nhân
+ */
 const PatientNavigator: React.FC = () => {
   const { t } = useTranslation();
   return (
@@ -126,6 +132,12 @@ const PatientNavigator: React.FC = () => {
 // ── Doctor Stack ────────────────────────────────────
 const DoctorStack = createNativeStackNavigator<DoctorStackParamList>();
 
+/**
+ * Điều hướng dành cho Bác sĩ.
+ * Quản lý các màn hình như Quản lý bệnh nhân, Tạo mẫu bài tập (Template), v.v.
+ * 
+ * @return React.FC Component chứa Stack Navigator của Bác sĩ
+ */
 const DoctorNavigator: React.FC = () => {
   const { t } = useTranslation();
   return (
@@ -187,6 +199,12 @@ const DoctorNavigator: React.FC = () => {
 };
 
 // ── Root: Auth → Role-based ─────────────────────────
+/**
+ * Component gốc xử lý luồng điều hướng dựa trên trạng thái xác thực và phân quyền.
+ * Hiển thị màn hình tải (loading) trong lúc chờ kiểm tra xác thực.
+ * 
+ * @return React.FC Component AppNavigator
+ */
 export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, role, uid } = useAuth();
 

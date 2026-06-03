@@ -1,3 +1,10 @@
+/**
+ * @file PatientSessionsScreen.tsx
+ * @description Màn hình xem lịch sử buổi tập của bệnh nhân dành cho bác sĩ.
+ * Hiển thị các buổi tập được nhóm theo ngày với thanh trượt ngày (day slider)
+ * và lịch tháng (calendar modal). Cho phép bác sĩ chọn ngày và xem chi tiết từng buổi.
+ */
+
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,26 +34,66 @@ type DayOption = {
   count: number;
 };
 
+/**
+ * @function getSessionDate
+ * @description Lấy đối tượng Date từ buổi tập. Hỗ trợ cả Firestore Timestamp lẫn giá trị thời gian thần.
+ * @param {Session} session - Đối tượng buổi tập cần lấy ngày.
+ * @return {Date} Đối tượng Date tương ứng với thời điểm buổi tập.
+ */
 const getSessionDate = (session: Session) =>
   (session.date as any)?.toDate?.() ?? new Date();
 
+/**
+ * @function startOfDay
+ * @description Trả về đối tượng Date ảnh hưởng đến 0 giờ 0 phút 0 giây của ngày đã cho.
+ * @param {Date} date - Ngày cần lấy đầu ngày.
+ * @return {Date} Đối tượng Date lúc 00:00:00.000 của ngày đó.
+ */
 const startOfDay = (date: Date) => {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy;
 };
 
+/**
+ * @function startOfMonth
+ * @description Trả về đối tượng Date đầu tiên của tháng chứa ngày đã cho.
+ * @param {Date} date - Ngày bất kỳ trong tháng.
+ * @return {Date} Ngày 1 của tháng đó.
+ */
 const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+
+/**
+ * @function addDays
+ * @description Thêm số ngày chỉ định vào một ngày và trả về ngày mới.
+ * @param {Date} date - Ngày gốc.
+ * @param {number} days - Số ngày cần thêm (có thể âm để trừ ngày).
+ * @return {Date} Ngày sau khi đã cộng thêm số ngày.
+ */
 const addDays = (date: Date, days: number) => {
   const copy = new Date(date);
   copy.setDate(copy.getDate() + days);
   return copy;
 };
+/**
+ * @function getDayKey
+ * @description Tạo chuỗi khóa định danh duy nhất cho một ngày theo định dạng "YYYY-MM-DD".
+ * Dùng để nhóm và so sánh các buổi tập theo ngày.
+ * @param {Date} date - Ngày cần tạo khóa.
+ * @return {string} Chuỗi định dạng "YYYY-MM-DD".
+ */
 const getDayKey = (date: Date) => {
   const local = startOfDay(date);
   return `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, "0")}-${String(local.getDate()).padStart(2, "0")}`;
 };
 
+/**
+ * @component PatientSessionsScreen
+ * @description Component màn hình xem lịch sử buổi tập của bệnh nhân.
+ * Cho phép bác sĩ chọn ngày qua thanh trượt hoặc lịch modal, xem danh sách
+ * buổi tập của ngày đó và nhấn vào từng buổi để xem chi tiết.
+ * @return {React.ReactElement} Giao diện danh sách buổi tập với bộ chọn ngày.
+ */
 export const PatientSessionsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
   const route = useRoute<RouteProp<DoctorStackParamList, "PatientSessions">>();
@@ -58,6 +105,12 @@ export const PatientSessionsScreen: React.FC = () => {
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(new Date()));
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  /**
+   * @function loadSessions
+   * @description Tải danh sách buổi tập của bệnh nhân từ Firebase (tối đa 100 buổi).
+   * Cập nhật state sessions và quản lý trạng thái loading.
+   * @return {Promise<void>}
+   */
   const loadSessions = useCallback(async () => {
     setLoading(true);
     try {
@@ -76,6 +129,11 @@ export const PatientSessionsScreen: React.FC = () => {
     }, [loadSessions]),
   );
 
+  /**
+   * @description Nhóm các buổi tập theo ngày, trả về Map với khóa là chuỗi YYYY-MM-DD
+   * và giá trị là đối tượng chứa ngày và số buổi tập trong ngày đó.
+   * @return {Map<string, { date: Date; count: number }>}
+   */
   const sessionsByDay = useMemo(() => {
     const grouped = new Map<string, { date: Date; count: number }>();
     sessions.forEach((session) => {
@@ -87,6 +145,11 @@ export const PatientSessionsScreen: React.FC = () => {
     return grouped;
   }, [sessions]);
 
+  /**
+   * @description Tạo danh sách 21 ngày (7 ngày trước, ngày hiện tại và 13 ngày sau)
+   * tính từ ngày đang được chọn, dùng để hiển thị thanh trượt ngày nằm ngang.
+   * @return {DayOption[]} Mảng các đối tượng ngày bao gồm nhãn, thứ trong tuần và số buổi tập.
+   */
   const sliderDays = useMemo<DayOption[]>(() => {
     const anchor = selectedDate;
     return Array.from({ length: 21 }, (_, index) => {
@@ -102,6 +165,10 @@ export const PatientSessionsScreen: React.FC = () => {
     });
   }, [selectedDate, sessionsByDay]);
 
+  /**
+   * @description Lọc và sắp xếp các buổi tập theo ngày đang được chọn (mới nhất trước).
+   * @return {Session[]} Mảng các buổi tập thuộc ngày đang chọn.
+   */
   const visibleSessions = useMemo(() => {
     const sorted = [...sessions].sort(
       (a, b) => getSessionDate(b).getTime() - getSessionDate(a).getTime(),

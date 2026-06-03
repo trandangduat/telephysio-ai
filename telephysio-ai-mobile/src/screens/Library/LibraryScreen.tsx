@@ -1,3 +1,15 @@
+/**
+ * @file LibraryScreen.tsx
+ * @description Màn hình thư viện tài nguyên phục hồi của ứng dụng TelePhysioAI.
+ *
+ * Màn hình này cung cấp các chức năng sau:
+ *   - Hiển thị danh sách tài nguyên giáo dục (video, PDF, bài viết) tải từ Firestore.
+ *   - Lọc tài nguyên theo danh mục (All, Videos, PDFs, Articles).
+ *   - Tìm kiếm bài tập, hướng dẫn hoặc video.
+ *   - Hiển thị gợi ý hàng ngày (Daily Tip) và bài tập đã lưu (Saved Exercises).
+ *
+ * @module screens/Library
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +24,14 @@ import type { RootStackParamList } from '../../navigation/types';
 import { getLibraryItems, type LibraryItem } from '../../services/firebase';
 import { NotificationBell } from '../../components/NotificationBell';
 
+/**
+ * Component màn hình thư viện tài nguyên.
+ *
+ * Tải danh sách mục thư viện từ Firestore, cho phép lọc theo danh mục
+ * và hiển thị các tài liệu giáo dục có liên quan đến vật lý trị liệu.
+ *
+ * @return Giao diện React Native hiển thị thư viện tài nguyên phục hồi.
+ */
 export const LibraryScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
@@ -28,6 +48,14 @@ export const LibraryScreen: React.FC = () => {
   const [items, setItems] = useState<LibraryItem[]>([]);
 
   useEffect(() => {
+    /**
+     * Tải danh sách tài nguyên từ Firestore và cập nhật state.
+     *
+     * Gọi {@link getLibraryItems} để lấy toàn bộ mục thư viện và cài đặt
+     * vào state `items`. Xử lý lỗi và dùng flag loading để quản lý trạng thái tải.
+     *
+     * @return Promise<void>
+     */
     async function loadData() {
       try {
         const data = await getLibraryItems();
@@ -41,6 +69,12 @@ export const LibraryScreen: React.FC = () => {
     loadData();
   }, []);
 
+  /**
+   * Lọc danh sách tài nguyên theo bộ lọc danh mục hiện tại.
+   *
+   * @return Mảng {@link LibraryItem} phù hợp với bộ lọc đang chọn.
+   *         Trả về toàn bộ mảng nếu bộ lọc là 'filterAll'.
+   */
   const filteredItems = items.filter(item => {
     if (activeFilter === 'filterAll') return true;
     if (activeFilter === 'filterVideos') return item.category === 'Videos';

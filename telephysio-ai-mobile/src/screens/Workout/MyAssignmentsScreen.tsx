@@ -1,3 +1,8 @@
+/**
+ * @file MyAssignmentsScreen.tsx
+ * @description Màn hình hiển thị tất cả các buổi tập được gán cho bệnh nhân.
+ * Phân loại theo trạng thái: đang active và đã hoàn thành/tạm dừng.
+ */
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,12 +17,22 @@ import type { RootStackParamList } from '../../navigation/types';
 import { getPatientAssignments, getUser } from '../../services/firebase';
 import type { Assignment, ExerciseDifficulty } from '../../services/firebase/types';
 
+/**
+ * Cấu hình hiển thị nhãn, màu và icon theo trạng thái của buổi tập.
+ */
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
   active: { label: 'Active', color: '#0369a1', bg: '#e0f2fe', icon: 'play-circle-outline' },
   completed: { label: 'Completed', color: '#166534', bg: '#dcfce7', icon: 'checkmark-circle-outline' },
   paused: { label: 'Paused', color: '#b45309', bg: '#fef3c7', icon: 'pause-circle-outline' },
 };
 
+/**
+ * Màn hình danh sách buổi tập của bệnh nhân.
+ * Tải tất cả các assignment (active + completed), hiển thị kèm thông tin bác sĩ.
+ * Phân chia thành hai nhóm: đang hoạt động và đã hoàn thành.
+ *
+ * @return Component JSX màn hình danh sách buổi tập.
+ */
 export const MyAssignmentsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { uid } = useAuth();

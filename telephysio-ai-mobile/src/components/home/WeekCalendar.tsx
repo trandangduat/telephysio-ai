@@ -1,6 +1,8 @@
 /**
- * WeekCalendar — horizontal row of day chips.
- * Active day = primary bg, inactive = surfaceContainerHigh.
+ * @file WeekCalendar.tsx
+ * @description Component lịch tuần dạng hàng ngang gồm 7 chip ngày (T2-CN).
+ * Ngày đang chọn hiển thị nền màu primary, ngày đã hoàn thành hiển thị nền xanh lá,
+ * các ngày còn lại hiển thị nền surfaceContainerHigh.
  */
 
 import React from 'react';
@@ -9,11 +11,23 @@ import { useTranslation } from 'react-i18next';
 import { AppText } from '../ui';
 import { colors, radius, spacing } from '../../theme';
 
+/**
+ * Props của component WeekCalendar.
+ * @param activeIndex     Chỉ số ngày đang được chọn (0 = Thứ Hai; mặc định: ngày hiện tại).
+ * @param completedDays   Mảng các chỉ số ngày đã hoàn thành tập luyện (mặc định: [0, 1, 2, 3]).
+ */
 interface WeekCalendarProps {
   activeIndex?: number; // 0 = Monday
   completedDays?: number[];
 }
 
+/**
+ * Component hiển thị lịch tuần dạng hàng ngang.
+ *
+ * @param activeIndex     Chỉ số ngày đang được chọn (mặc định: ngày hiện tại).
+ * @param completedDays   Danh sách chỉ số ngày đã hoàn thành.
+ * @return                Hàng View gồm 7 TouchableOpacity chip ngày trong tuần.
+ */
 export const WeekCalendar: React.FC<WeekCalendarProps> = ({
   activeIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1,
   completedDays = [0, 1, 2, 3],

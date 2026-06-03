@@ -1,3 +1,8 @@
+/**
+ * @file GlobalNotificationToast.tsx
+ * @description Component hiển thị thông báo toàn cục (toast) nổi lên màn hình khi có thông báo mới.
+ */
+
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +14,12 @@ import { onNotificationsChange } from '../services/firebase/notificationService'
 import { colors, spacing } from '../theme';
 import type { Notification } from '../services/firebase/types';
 
+/**
+ * Component hiển thị danh sách các thông báo toàn cục (toast) cho người dùng.
+ * Các thông báo sẽ tự động biến mất sau 5 giây.
+ * 
+ * @return {React.FC} Component hiển thị danh sách toast thông báo
+ */
 export const GlobalNotificationToast: React.FC = () => {
   const { uid } = useAuth();
   const navigation = useNavigation<any>();
@@ -202,3 +213,4 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
+

@@ -1,3 +1,8 @@
+/**
+ * @file config.ts
+ * @description Cấu hình và khởi tạo kết nối với Firebase (App, Auth, Firestore, Storage) dựa trên biến môi trường.
+ */
+
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";

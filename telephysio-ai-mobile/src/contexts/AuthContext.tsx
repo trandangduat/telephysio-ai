@@ -1,11 +1,11 @@
 /**
- * AuthContext — Firebase Auth + Firestore role-based context.
+ * AuthContext — Context quản lý xác thực Firebase và phân quyền người dùng thông qua Firestore.
  *
- * Handles:
- *   - Firebase Auth state listener (auto-login on app restart)
- *   - Firestore user profile fetch (role, displayName)
- *   - Loading state while checking auth
- *   - switchRole for dev-mode toggling
+ * Nhiệm vụ chính:
+ *   - Lắng nghe trạng thái đăng nhập Firebase Auth (tự động đăng nhập khi mở lại app).
+ *   - Lấy thông tin hồ sơ (profile) của người dùng từ Firestore (vai trò, tên hiển thị).
+ *   - Cung cấp trạng thái đang tải (loading) trong khi kiểm tra xác thực.
+ *   - Cung cấp hàm switchRole để chuyển đổi vai trò (dành cho chế độ phát triển - dev mode).
  */
 
 import React, {
@@ -52,12 +52,24 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
 });
 
+/**
+ * Hook tùy chỉnh (Custom hook) để truy cập AuthContext.
+ * 
+ * @return AuthContextType Dữ liệu và các hàm thao tác liên quan đến xác thực
+ */
 export const useAuth = () => useContext(AuthContext);
 
 interface Props {
   children: ReactNode;
 }
 
+/**
+ * Component Provider cung cấp Context xác thực cho toàn bộ ứng dụng.
+ * 
+ * @param props Các thuộc tính của component
+ * @param props.children Các component con được bọc bên trong provider này
+ * @return React.FC Component React Provider
+ */
 export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);

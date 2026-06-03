@@ -1,3 +1,8 @@
+/**
+ * @file TemplateEditorScreen.tsx
+ * @description Màn hình tạo mới hoặc chỉnh sửa một template bài tập vật lý trị liệu.
+ * Cho phép bác sĩ đặt tên, mô tả và thêm/xóa các bài tập trong template.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +28,13 @@ import { ExerciseConfigSheet } from './components/ExerciseConfigSheet';
 type TemplateEditorNavProp = NativeStackNavigationProp<DoctorStackParamList, 'TemplateEditor'>;
 type TemplateEditorRouteProp = RouteProp<DoctorStackParamList, 'TemplateEditor'>;
 
+/**
+ * Màn hình soạn thảo template bài tập.
+ * Hỗ trợ cả chế độ tạo mới và chỉnh sửa template hiện có.
+ * Sử dụng ExercisePickerSheet và ExerciseConfigSheet để thêm bài tập.
+ *
+ * @return Component màn hình TemplateEditor.
+ */
 export const TemplateEditorScreen: React.FC = () => {
   const navigation = useNavigation<TemplateEditorNavProp>();
   const route = useRoute<TemplateEditorRouteProp>();
@@ -48,6 +60,10 @@ export const TemplateEditorScreen: React.FC = () => {
     }
   }, [templateId]);
 
+  /**
+   * Tải thông tin template hiện có từ Firebase theo templateId.
+   * Chỉ được gọi khi đang ở chế độ chỉnh sửa (isEditing = true).
+   */
   const loadTemplate = async () => {
     if (!uid || !templateId) return;
     setLoading(true);
@@ -67,20 +83,43 @@ export const TemplateEditorScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Xử lý khi người dùng chọn một bài tập từ ExercisePickerSheet.
+   * Mở ExerciseConfigSheet để cấu hình chi tiết bài tập vừa chọn.
+   *
+   * @param exercise - Bài tập được chọn từ danh sách.
+   */
   const handleAddExercise = (exercise: Exercise) => {
     setConfigExercise(exercise);
     setConfigVisible(true);
   };
 
+  /**
+   * Lưu cấu hình bài tập và thêm vào danh sách bài tập của template.
+   * Gán ID tạm thời cho bài tập dựa trên timestamp hiện tại.
+   *
+   * @param configured - Bài tập đã được cấu hình đầy đủ từ ExerciseConfigSheet.
+   */
   const handleConfigSave = (configured: Exercise) => {
     setExercises(prev => [...prev, { ...configured, id: `ex-${Date.now()}` }]);
     setConfigExercise(null);
   };
 
+  /**
+   * Xóa bài tập khỏi danh sách bài tập của template theo chỉ số.
+   *
+   * @param index - Chỉ số (index) của bài tập cần xóa trong mảng exercises.
+   */
   const handleRemoveExercise = (index: number) => {
     setExercises(prev => prev.filter((_, i) => i !== index));
   };
 
+  /**
+   * Tính tổng thời gian ước tính của template dựa trên danh sách bài tập.
+   * Mỗi bài tập ước tính số phút theo trường duration nhân với số sets.
+   *
+   * @return Chuỗi tổng thời gian dạng "X min".
+   */
   const calculateTotalDuration = (): string => {
     const totalMins = exercises.reduce((sum, ex) => {
       const mins = parseInt(ex.duration) || 2;
@@ -89,6 +128,12 @@ export const TemplateEditorScreen: React.FC = () => {
     return `${totalMins} min`;
   };
 
+  /**
+   * Xử lý lưu template lên Firebase.
+   * Thực hiện validate tên template và danh sách bài tập trước khi lưu.
+   * Gọi createExerciseTemplate hoặc updateExerciseTemplate tùy theo chế độ.
+   * Điều hướng về màn hình trước sau khi lưu thành công.
+   */
   const handleSave = async () => {
     if (!uid) return;
     if (!name.trim()) {

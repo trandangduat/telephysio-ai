@@ -1,3 +1,8 @@
+/**
+ * @file poseAnalyzer.ts
+ * @description Module phân tích tư thế (Pose Analysis). Chịu trách nhiệm nhận diện góc độ, 
+ * đếm số lần lặp (reps) và đánh giá độ chính xác của tư thế (form accuracy).
+ */
 import { PoseLandmark } from './PoseEstimationView';
 
 export interface PoseAnalysisResult {
@@ -8,6 +13,11 @@ export interface PoseAnalysisResult {
   isRepCounted: boolean;
 }
 
+/**
+ * Lớp (Class) PoseAnalyzer.
+ * Quản lý trạng thái phân tích tư thế cho một bài tập cụ thể.
+ * Tính toán độ chính xác và đếm số lần tập thành công dựa trên các điểm ảnh (landmarks).
+ */
 export class PoseAnalyzer {
   private exerciseName: string;
   private reps: number = 0;
@@ -34,6 +44,11 @@ export class PoseAnalyzer {
     this.lastRepTime = Date.now();
   }
   
+  /**
+   * Khởi tạo lại trạng thái của quá trình phân tích (đặt lại số reps, điểm số, v.v. về 0).
+   * 
+   * @return {void}
+   */
   public reset() {
     this.reps = 0;
     this.formAccuracySum = 0;
@@ -46,6 +61,14 @@ export class PoseAnalyzer {
     this.lastRepTime = Date.now();
   }
   
+  /**
+   * Phân tích các điểm nhận diện (landmarks) từ khung hình hiện tại.
+   * Tính toán góc, kiểm tra tư thế, cập nhật điểm chính xác và đếm số rep.
+   * 
+   * @param landmarks Mảng các điểm nhận diện tư thế từ MediaPipe
+   * @param totalReps Tổng số lần lặp mục tiêu của hiệp tập
+   * @return PoseAnalysisResult Kết quả phân tích (số reps, độ chính xác, nhận xét)
+   */
   public analyze(landmarks: PoseLandmark[], totalReps: number = 999): PoseAnalysisResult {
     let isRepCounted = false;
     let feedback = "Ready to start!";
@@ -379,6 +402,13 @@ export class PoseAnalyzer {
     };
   }
   
+  /**
+   * Tăng bộ đếm số lần tập (rep) lên 1 và lưu trữ kết quả nhận xét.
+   * 
+   * @param feedbackMsg Tin nhắn phản hồi (có chứa {rep} để thay thế bằng số rep hiện tại)
+   * @param totalReps Tổng số lần lặp mục tiêu
+   * @return {Object} Đối tượng chứa trạng thái đếm rep và tin nhắn phản hồi
+   */
   private incrementRep(feedbackMsg: string, totalReps: number): { isRepCounted: boolean; feedback: string } {
     if (this.reps < totalReps) {
       this.reps += 1;
@@ -389,16 +419,36 @@ export class PoseAnalyzer {
     return { isRepCounted: false, feedback: `Goal of ${totalReps} reps reached! Great job!` };
   }
   
+  /**
+   * Lưu trữ và cộng dồn điểm số độ chính xác của tư thế.
+   * 
+   * @param score Điểm số độ chính xác của lần lặp (0-100)
+   * @return {void}
+   */
   private addAccuracy(score: number) {
     this.formAccuracySum += score;
     this.completedRepsCount += 1;
   }
   
+  /**
+   * Lấy giá trị trung bình độ chính xác của tất cả các lần tập đã hoàn thành.
+   * Nếu chưa hoàn thành lần nào, trả về độ chính xác tại thời điểm hiện tại.
+   * 
+   * @return {number} Giá trị trung bình độ chính xác (0-100)
+   */
   private getAverageAccuracy(): number {
     if (this.completedRepsCount === 0) return this.liveAccuracy;
     return Math.round(this.formAccuracySum / this.completedRepsCount);
   }
   
+  /**
+   * Tính toán góc tạo bởi 3 điểm nhận diện (Ví dụ: Vai, Khuỷu tay, Cổ tay).
+   * 
+   * @param a Điểm thứ nhất (Ví dụ: Vai)
+   * @param b Điểm đỉnh góc (Ví dụ: Khuỷu tay)
+   * @param c Điểm thứ ba (Ví dụ: Cổ tay)
+   * @return number Góc tính bằng độ (từ 0 đến 180)
+   */
   private calculateAngle(a: PoseLandmark, b: PoseLandmark, c: PoseLandmark): number {
     const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
     let angle = Math.abs((radians * 180.0) / Math.PI);

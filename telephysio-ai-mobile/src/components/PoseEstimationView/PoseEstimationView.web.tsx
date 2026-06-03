@@ -1,12 +1,13 @@
 /**
- * PoseEstimationView — WEB platform implementation
+ * @file PoseEstimationView.web.tsx
+ * @description Phiên bản triển khai của PoseEstimationView cho nền tảng WEB.
  *
- * Metro automatically picks this file over PoseEstimationView.tsx when
- * bundling for the web platform (expo start --web).
+ * Metro tự động chọn file này thay vì PoseEstimationView.tsx khi
+ * bundle cho nền tảng web (expo start --web).
  *
- * Uses a native <iframe> with srcdoc to load the MediaPipe BlazePose HTML.
- * Camera access requires the `allow="camera"` attribute on the iframe.
- * Messages from the iframe are received via window.addEventListener('message').
+ * Sử dụng thẻ <iframe> nà tiếu với srcdoc để tải HTML MediaPipe BlazePose.
+ * Truy cập camera yêu cầu thuộc tính allow="camera" trên iframe.
+ * Tin nhắn từ iframe được nhận qua window.addEventListener('message').
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -16,14 +17,37 @@ import type { PoseLandmark } from './PoseEstimationView';
 
 // ── Props (same interface as the native version) ──────────────────────────────
 
+/**
+ * @interface PoseEstimationViewProps
+ * @description Các props truyền vào component (giống hệt phiên bản native).
+ */
 interface PoseEstimationViewProps {
+  /** Style tùy chỉnh cho container bên ngoài */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Callback được gọi mỗi khung hình khi phát hiện tư thế.
+   * @param landmarks Mảng 33 điểm mốc BlazePose
+   * @param fps Số khung hình trên giây hiện tại
+   */
   onPoseDetected?: (landmarks: PoseLandmark[], fps: number) => void;
+  /**
+   * Callback được gọi khi xảy ra lỗi khởi tạo camera.
+   * @param message Thông báo lỗi
+   */
   onError?: (message: string) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * @component PoseEstimationView
+ * @description Phiên bản Web của PoseEstimationView, sử dụng iframe DOM để
+ * nhúng trang HTML BlazePose. Quản lý vòng đời iframe, lắng nghe tin nhắn
+ * từ iframe và chuyển tiếp kết quả landmark/lỗi lên component cha.
+ *
+ * @param {PoseEstimationViewProps} props - Props của component
+ * @returns {JSX.Element} Một View (div DOM) chứa iframe BlazePose
+ */
 export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
   style,
   onPoseDetected,

@@ -1,5 +1,7 @@
 /**
- * TodayCard — Level 2 floating card showing today's workout.
+ * @file TodayCard.tsx
+ * @description Component thẻ (card) nổi mức 2 hiển thị thông tin về bài tập của ngày hôm nay.
+ * Bao gồm tên bài tập, thời lượng, số hiệp (sets), số lần lặp (reps) và nút bắt đầu bài tập.
  */
 
 import React from 'react';
@@ -17,6 +19,18 @@ interface TodayCardProps {
   phase?: string;
 }
 
+/**
+ * Component thẻ hiển thị bài tập của ngày hôm nay.
+ * 
+ * @param {TodayCardProps} props Thuộc tính của component
+ * @param {Function} props.onStart Hàm xử lý khi nhấn nút bắt đầu bài tập
+ * @param {string} [props.name] Tên bài tập
+ * @param {string} [props.duration] Thời lượng bài tập
+ * @param {number} [props.sets] Số hiệp tập
+ * @param {number} [props.reps] Số lần lặp lại mỗi hiệp
+ * @param {string} [props.phase] Giai đoạn tập luyện
+ * @return {React.FC<TodayCardProps>} Component thẻ bài tập hôm nay
+ */
 export const TodayCard: React.FC<TodayCardProps> = ({ 
   onStart,
   name = 'Daily Workout',

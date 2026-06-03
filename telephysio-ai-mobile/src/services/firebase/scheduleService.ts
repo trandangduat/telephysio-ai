@@ -1,8 +1,9 @@
 /**
- * scheduleService — Doctor schedule management.
+ * @file scheduleService.ts
+ * @description Dịch vụ quản lý lịch trình của bác sĩ.
  *
- * Maps to:
- *   - DoctorDashboardScreen (Today's Schedule card)
+ * Hỗ trợ các tính năng:
+ *   - DoctorDashboardScreen (Danh sách lịch trình hôm nay)
  */
 
 import {
@@ -15,6 +16,12 @@ import type { ScheduleItem } from './types';
 
 // ── Get Today's Schedule ────────────────────────────
 // Called by DoctorDashboardScreen (schedule list)
+/**
+ * Lấy lịch trình hôm nay của bác sĩ.
+ * 
+ * @param {string} doctorId ID của bác sĩ
+ * @return {Promise<ScheduleItem[]>} Mảng danh sách các mục lịch trình trong ngày hôm nay
+ */
 export async function getTodaySchedule(doctorId: string): Promise<ScheduleItem[]> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -34,6 +41,12 @@ export async function getTodaySchedule(doctorId: string): Promise<ScheduleItem[]
 }
 
 // ── Create Schedule Item ────────────────────────────
+/**
+ * Tạo mới một mục lịch trình.
+ * 
+ * @param {Omit<ScheduleItem, 'id'>} data Dữ liệu lịch trình cần tạo
+ * @return {Promise<string>} ID của mục lịch trình vừa được tạo
+ */
 export async function createScheduleItem(
   data: Omit<ScheduleItem, 'id'>
 ): Promise<string> {

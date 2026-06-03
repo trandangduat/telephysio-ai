@@ -1,3 +1,8 @@
+/**
+ * @file WorkoutDetailScreen.tsx
+ * @description Màn hình chi tiết buổi tập của bệnh nhân.
+ * Hiển thị danh sách bài tập, tiến độ hiện tại, và cho phép bắt đầu hoặc tiếp tục buổi tập.
+ */
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +25,15 @@ const DIFFICULTY_CONFIG: Record<ExerciseDifficulty, { label: string; color: stri
   hard: { label: 'Hard', color: '#991b1b', bg: '#fef2f2' },
 };
 
+/**
+ * Màn hình chi tiết buổi tập của bệnh nhân.
+ * Hiển thị thông tin assignment, các bài tập còn lại và đã hoàn thành,
+ * cho phép bắt đầu/tiếp tục buổi tập từ vị trí đã lưu.
+ *
+ * @param route - Đối tượng route chứa tham số assignmentId.
+ * @param navigation - Đối tượng navigation để điều hướng màn hình.
+ * @return Component JSX màn hình chi tiết buổi tập.
+ */
 export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { assignmentId } = route.params;
   const { t } = useTranslation();
@@ -87,6 +101,11 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const completedExercises = exercises.slice(0, currentIndex);
   const remainingExercises = exercises.slice(currentIndex);
 
+  /**
+   * Xử lý bắt đầu hoặc tiếp tục buổi tập.
+   * Nếu có buổi tập dở, hiển thị hộp thoại hỏi người dùng muốn tiếp tục hay bắt đầu lại.
+   * Sau đó điều hướng đến màn hình Calibration với điểm bắt đầu phù hợp.
+   */
   const handleStartWorkout = () => {
     if (incompleteSession) {
       Alert.alert(
@@ -135,6 +154,15 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   };
 
+  /**
+   * Render một thẻ bài tập (hoàn thành hoặc chưa hoàn thành).
+   * Thẻ hoàn thành được hiển thị mờ hơn và có biểu tượng đánh dấu đã xong.
+   *
+   * @param ex - Dữ liệu bài tập cần hiển thị.
+   * @param originalIndex - Chỉ số gốc của bài tập trong danh sách.
+   * @param isCompleted - true nếu bài tập đã hoàn thành.
+   * @return JSX element thẻ bài tập.
+   */
   const renderExerciseCard = (ex: Exercise, originalIndex: number, isCompleted: boolean) => {
     const diffConfig = ex.difficulty ? DIFFICULTY_CONFIG[ex.difficulty] : null;
     

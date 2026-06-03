@@ -1,7 +1,9 @@
 /**
- * Input — text field with floating label.
+ * @file Input.tsx
+ * @description Component ô nhập liệu văn bản có nhãn nổi (floating label).
+ * Hiển thị viền sáng khi được focus và hỗ trợ toàn bộ props của TextInput.
  *
- * Usage:
+ * Cách dùng:
  *   <Input label="Tên bệnh nhân" value={v} onChangeText={setV} />
  */
 
@@ -16,10 +18,21 @@ import {
 import { AppText } from './AppText';
 import { colors, typography, radius, spacing } from '../../theme';
 
+/**
+ * Props của component Input.
+ * @param label   Nhãn hiển thị phía trên ô nhập liệu (tùy chọn).
+ */
 interface InputProps extends TextInputProps {
   label?: string;
 }
 
+/**
+ * Component ô nhập liệu văn bản có nhãn và hiệu ứng focus.
+ *
+ * @param label   Nhãn hiển thị phía trên (tùy chọn).
+ * @param style   Style bổ sung cho TextInput.
+ * @return        View bao gồm nhãn (nếu có) và TextInput có viền focus.
+ */
 export const Input: React.FC<InputProps> = ({ label, style, ...rest }) => {
   const [focused, setFocused] = useState(false);
 

@@ -1,9 +1,18 @@
 /**
- * NotificationsScreen — Full-screen list of in-app notifications.
+ * @file NotificationsScreen.tsx
+ * @description Màn hình danh sách đầy đủ thông báo trong ứng dụng (in-app notifications).
  *
- * Notification types:
- *   session_completed  → doctor taps → DoctorSessionDetail
- *   session_assigned   → patient taps → WorkoutDetail
+ * Các loại thông báo được hỗ trợ:
+ *   - session_completed  → bác sĩ nhấn → điến DoctorSessionDetail
+ *   - session_assigned   → bệnh nhân nhấn → điến WorkoutDetail
+ *
+ * Tính năng:
+ *   - Hiển thị danh sách thông báo có phân biệt đã đọc / chưa đọc.
+ *   - Hỗ trợ khăn nguồn (pull-to-refresh) để tải lại danh sách.
+ *   - Đánh dấu tất cả là đã đọc chỉ bằng một nút nhấn.
+ *   - Điều hướng đến màn hình tương ứng khi nhấn vào thông báo.
+ *
+ * @module screens/Notifications
  */
 
 import React, { useEffect, useState } from "react";
@@ -33,6 +42,14 @@ import type { Notification } from "../../services/firebase/types";
 
 // ── Helpers ─────────────────────────────────────────
 
+/**
+ * Chuyển đổi đối tượng Date thành chuỗi thời gian tương đối (relative time).
+ *
+ * Ví dụ kết quả trả về: 'Just now', '5m ago', '2h ago', 'Yesterday', '3d ago'.
+ *
+ * @param date - Đối tượng Date cần chuyển đổi. Nếu không có sẽ trả về chuỗi rỗng.
+ * @return Chuỗi thời gian tương đối dạng chất lượng con người (đọc được).
+ */
 const formatTimeAgo = (date?: Date) => {
   if (!date) return "";
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
@@ -46,6 +63,12 @@ const formatTimeAgo = (date?: Date) => {
   return `${days}d ago`;
 };
 
+/**
+ * Trả về cấu hình biểu tượng (icon name, màu sắc, màu nền) tương ứng với loại thông báo.
+ *
+ * @param type - Loại thông báo, ví dụ 'session_completed', 'session_assigned'.
+ * @return Đối tượng chứa: name (tên icon Ionicons), color (màu icon), bg (màu nền).
+ */
 const getNotificationIcon = (
   type: string,
 ): { name: string; color: string; bg: string } => {
@@ -73,6 +96,14 @@ const getNotificationIcon = (
 
 // ── Component ───────────────────────────────────────
 
+/**
+ * Component màn hình thông báo.
+ *
+ * Tải và hiển thị danh sách thông báo của người dùng, hỗ trợ
+ * tương tác đánh dấu đã đọc và điều hướng đến màn hình phù hợp.
+ *
+ * @return Giao diện React Native hiển thị danh sách thông báo.
+ */
 export const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const { uid, role } = useAuth();
@@ -81,6 +112,14 @@ export const NotificationsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  /**
+   * Tải danh sách thông báo của người dùng từ Firebase.
+   *
+   * Gọi {@link getUserNotifications} và cập nhật state `notifications`.
+   * Quản lý cả trạng thái `loading` và `refreshing`.
+   *
+   * @return Promise<void>
+   */
   const loadNotifications = async () => {
     if (!uid) return;
     try {
@@ -98,11 +137,26 @@ export const NotificationsScreen: React.FC = () => {
     loadNotifications();
   }, [uid]);
 
+  /**
+   * Xử lý sự kiện kéo làm mới (pull-to-refresh) danh sách thông báo.
+   *
+   * Thiết lập `refreshing` thành true và gọi lại {@link loadNotifications}.
+   *
+   * @return void
+   */
   const handleRefresh = () => {
     setRefreshing(true);
     loadNotifications();
   };
 
+  /**
+   * Đánh dấu tất cả thông báo là đã đọc.
+   *
+   * Gọi {@link markAllRead} và cập nhật toàn bộ mảng `notifications`
+   * để đặt thuộc tính `read` thành true cho tất cả mục.
+   *
+   * @return Promise<void>
+   */
   const handleMarkAllRead = async () => {
     if (!uid) return;
     try {
@@ -113,6 +167,18 @@ export const NotificationsScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Xử lý sự kiện người dùng nhấn vào một thông báo.
+   *
+   * Thực hiện hai việc:
+   *   1. Đánh dấu thông báo là đã đọc nếu chưa đọc.
+   *   2. Điều hướng đến màn hình tương ứng dựa trên loại thông báo:
+   *      - 'session_completed': điến DoctorSessionDetail (dành cho bác sĩ).
+   *      - 'session_assigned': điến WorkoutDetail (dành cho bệnh nhân).
+   *
+   * @param notification - Đối tượng {@link Notification} người dùng vừa nhấn.
+   * @return Promise<void>
+   */
   const handleTap = async (notification: Notification) => {
     // Mark as read
     if (!notification.read) {

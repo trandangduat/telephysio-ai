@@ -1,8 +1,7 @@
 /**
- * Firebase TypeScript Types — Derived from UI data shapes.
- *
- * Every interface here maps 1:1 to a Firestore document shape
- * that the UI screens already display or write.
+ * @file types.ts
+ * @description Chứa định nghĩa các kiểu dữ liệu (Types/Interfaces) TypeScript dùng trong toàn ứng dụng.
+ * Mỗi Interface ánh xạ tỉ lệ 1:1 với định dạng tài liệu lưu trữ trong Firestore.
  */
 
 import { Timestamp } from "firebase/firestore";

@@ -1,5 +1,7 @@
 /**
- * QuickSelectChips — multi-select chips for feedback symptoms.
+ * @file QuickSelectChips.tsx
+ * @description Component cung cấp danh sách các thẻ chọn nhanh (chips) cho phép người dùng chọn nhiều lựa chọn cùng lúc.
+ * Thường được sử dụng để người dùng chọn nhanh các triệu chứng hoặc phản hồi.
  */
 
 import React from 'react';
@@ -28,6 +30,15 @@ export const SYMPTOM_OPTIONS: QuickSelectOption[] = [
   { id: 'better',   label: 'Better',     description: 'Clear improvement' },
 ];
 
+/**
+ * Component hiển thị danh sách các thẻ (chips) để chọn nhiều lựa chọn.
+ * 
+ * @param {QuickSelectChipsProps} props Thuộc tính của component
+ * @param {QuickSelectOption[]} props.options Danh sách các tùy chọn
+ * @param {string[]} props.selected Danh sách id của các tùy chọn đang được chọn
+ * @param {Function} props.onToggle Hàm xử lý khi một thẻ được nhấn
+ * @return {React.FC<QuickSelectChipsProps>} Component danh sách thẻ chọn
+ */
 export const QuickSelectChips: React.FC<QuickSelectChipsProps> = ({
   options,
   selected,

@@ -540,6 +540,12 @@ const StatCard = ({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
+/**
+ * Component Màn hình Phiên tập luyện (SessionScreen).
+ * Hiển thị lịch sử các buổi tập, video ghi hình lại và nhận xét từ bác sĩ.
+ * 
+ * @return React.FC Component SessionScreen
+ */
 export const SessionScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -554,6 +560,12 @@ export const SessionScreen: React.FC = () => {
   const [detailVisible, setDetailVisible] = useState(false);
 
   useEffect(() => {
+    /**
+     * Tải dữ liệu các phiên tập luyện từ Firebase.
+     * Lấy tối đa 20 phiên tập gần nhất và kế hoạch điều trị hiện tại của bệnh nhân.
+     * 
+     * @return Promise<void>
+     */
     async function loadData() {
       if (!uid) {
         setLoading(false);
@@ -575,6 +587,11 @@ export const SessionScreen: React.FC = () => {
     loadData();
   }, [uid]);
 
+  /**
+   * Mở modal chi tiết cho một phiên tập luyện cụ thể.
+   * 
+   * @param session Phiên tập luyện cần xem chi tiết
+   */
   const openDetail = (session: Session) => {
     setSelectedSession(session);
     setDetailVisible(true);

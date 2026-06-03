@@ -1,3 +1,8 @@
+/**
+ * @file ProfileScreen.tsx
+ * @description Màn hình hồ sơ cá nhân và cài đặt tài khoản người dùng.
+ * Cho phép xem thông tin cá nhân, chỉnh sửa hồ sơ, cài đặt giao diện, ngôn ngữ và đăng xuất.
+ */
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -23,6 +28,13 @@ import { useAuth } from "../../contexts/AuthContext";
 import type { RootStackParamList } from "../../navigation/types";
 import { updateUserProfile } from "../../services/firebase";
 
+/**
+ * Màn hình hồ sơ người dùng.
+ * Hiển thị avatar, tên, vai trò, thông tin cá nhân và các mục cài đặt (giao diện, ngôn ngữ).
+ * Hỗ trợ chỉnh sửa thông tin qua modal và đăng xuất tài khoản.
+ *
+ * @return Component JSX màn hình ProfileScreen.
+ */
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t, i18n } = useTranslation();
@@ -44,11 +56,20 @@ export const ProfileScreen: React.FC = () => {
     setEditDOB((user as any)?.dateOfBirth || "");
   }, [userName, user]);
 
+  /**
+   * Chuyển đổi ngôn ngữ hiển thị giữa tiếng Việt và tiếng Anh.
+   * Sử dụng i18n của react-i18next để thay đổi ngôn ngữ toàn ứng dụng.
+   */
   const toggleLanguage = () => {
     const nextLang = i18n.language === "vi" ? "en" : "vi";
     i18n.changeLanguage(nextLang);
   };
 
+  /**
+   * Lưu thông tin hồ sơ người dùng lên Firebase.
+   * Validate tên hiển thị trước khi gọi API cập nhật.
+   * Cập nhật state của AuthContext ngay lập tức sau khi lưu thành công.
+   */
   const handleSaveProfile = async () => {
     if (!uid) return;
     if (!editName.trim()) {

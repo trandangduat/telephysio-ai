@@ -1,10 +1,10 @@
 /**
- * userService — Firestore CRUD for user profiles.
+ * userService — Dịch vụ quản lý Hồ sơ người dùng (User Profile) trên Firestore (CRUD).
  *
- * Maps to:
- *   - ProfileScreen (displayName, email, phone, dateOfBirth, avatarUrl)
- *   - DoctorDashboardScreen (userName, specialty)
- *   - DoctorPatientsScreen (patient list with name, condition, progress)
+ * Nhiệm vụ chính:
+ *   - Lấy, cập nhật thông tin cá nhân của người dùng.
+ *   - Tải lên ảnh đại diện (avatar).
+ *   - Lấy danh sách bệnh nhân cho bác sĩ và ngược lại.
  */
 
 import {
@@ -17,6 +17,12 @@ import { db, storage } from './config';
 import type { UserProfile, UserRole } from './types';
 
 // ── Get User by UID ─────────────────────────────────
+/**
+ * Lấy thông tin hồ sơ của một người dùng bất kỳ thông qua UID.
+ * 
+ * @param uid ID duy nhất của người dùng
+ * @return Promise<UserProfile | null> Hồ sơ người dùng hoặc null
+ */
 export async function getUser(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   return snap.exists() ? (snap.data() as UserProfile) : null;
@@ -24,6 +30,14 @@ export async function getUser(uid: string): Promise<UserProfile | null> {
 
 // ── Update Profile ──────────────────────────────────
 // Called when user edits profile (ProfileScreen "Edit" button)
+/**
+ * Cập nhật thông tin hồ sơ người dùng trên Firestore.
+ * Thường được gọi khi người dùng nhấn lưu trong màn hình chỉnh sửa hồ sơ.
+ * 
+ * @param uid ID của người dùng cần cập nhật
+ * @param data Các trường dữ liệu cần cập nhật (Tên, Số điện thoại, Ngày sinh, Chuyên khoa)
+ * @return Promise<void>
+ */
 export async function updateUserProfile(
   uid: string,
   data: Partial<Pick<UserProfile, 'displayName' | 'phone' | 'dateOfBirth' | 'specialty'>>
@@ -36,6 +50,13 @@ export async function updateUserProfile(
 
 // ── Upload Avatar ───────────────────────────────────
 // Called when user taps Edit Avatar on ProfileScreen
+/**
+ * Tải ảnh đại diện (avatar) của người dùng lên Firebase Storage và cập nhật URL vào Firestore.
+ * 
+ * @param uid ID của người dùng
+ * @param fileUri Đường dẫn URI của file ảnh trên thiết bị
+ * @return Promise<string> URL tải xuống của ảnh đại diện mới
+ */
 export async function uploadAvatar(uid: string, fileUri: string): Promise<string> {
   const response = await fetch(fileUri);
   const blob = await response.blob();
@@ -51,6 +72,12 @@ export async function uploadAvatar(uid: string, fileUri: string): Promise<string
 
 // ── Get All Patients (Doctor use) ───────────────────
 // Called by DoctorPatientsScreen, DoctorDashboardScreen
+/**
+ * Lấy danh sách các bệnh nhân đang được điều trị bởi một bác sĩ cụ thể.
+ * 
+ * @param doctorId ID của bác sĩ
+ * @return Promise<UserProfile[]> Danh sách hồ sơ các bệnh nhân
+ */
 export async function getPatients(doctorId: string): Promise<UserProfile[]> {
   console.log(`[Service] getPatients called with doctorId: ${doctorId}`);
   // Query users where role=patient AND they have an active treatment plan with this doctor
@@ -74,6 +101,12 @@ export async function getPatients(doctorId: string): Promise<UserProfile[]> {
 
 // ── Get Doctor for Patient ──────────────────────────
 // Called by various screens (to display doctor/user name)
+/**
+ * Lấy thông tin hồ sơ của bác sĩ đang điều trị cho một bệnh nhân.
+ * 
+ * @param patientId ID của bệnh nhân
+ * @return Promise<UserProfile | null> Hồ sơ của bác sĩ hoặc null
+ */
 export async function getPatientDoctor(patientId: string): Promise<UserProfile | null> {
   const plansSnap = await getDocs(
     query(
@@ -88,6 +121,12 @@ export async function getPatientDoctor(patientId: string): Promise<UserProfile |
 }
 
 // ── Get All Patients in DB (for doctor's assign search) ──────────────────────
+/**
+ * Lấy danh sách toàn bộ bệnh nhân có trong hệ thống.
+ * (Sử dụng cho màn hình Bác sĩ tìm kiếm và giao bài tập)
+ * 
+ * @return Promise<UserProfile[]> Danh sách toàn bộ bệnh nhân
+ */
 export async function getAllPatients(): Promise<UserProfile[]> {
   const snap = await getDocs(
     query(collection(db, 'users'), where('role', '==', 'patient'))

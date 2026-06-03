@@ -1,8 +1,14 @@
 /**
- * LoginScreen — Email/Password authentication.
+ * LoginScreen.tsx — Màn hình đăng nhập bằng Email và Mật khẩu.
  *
- * Design: Clinical Vitality style with gradient hero, floating card, and smooth inputs.
- * Connected to: authService.loginUser → Firestore users collection
+ * <p>Cho phép người dùng đăng nhập vào hệ thống TelePhysioAI thông qua
+ * xác thực Firebase. Sau khi đăng nhập thành công, hồ sơ người dùng được
+ * lưu vào {@code AuthContext} và ứng dụng tự động điều hướng dựa trên vai trò.
+ * </p>
+ *
+ * <p>Thiết kế: Clinical Vitality style với gradient hero, floating card và smooth inputs.</p>
+ *
+ * <p>Kết nối tới: {@code authService.loginUser} → Firestore users collection</p>
  */
 
 import React, { useState } from 'react';
@@ -35,6 +41,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
+  /**
+   * Kiểm tra hợp lệ các trường nhập liệu trong form đăng nhập.
+   *
+   * <p>Kiểm tra các điều kiện:
+   * <ul>
+   *   <li>Email không được để trống và phải đúng định dạng email</li>
+   *   <li>Mật khẩu không được để trống và phải có tối thiểu 6 ký tự</li>
+   * </ul>
+   * Nếu có lỗi, cập nhật state {@code errors} để hiển thị thông báo lỗi.
+   * </p>
+   *
+   * @return {@code true} nếu tất cả các trường hợp lệ; {@code false} nếu có lỗi
+   */
   const validate = (): boolean => {
     const e: typeof errors = {};
     if (!email.trim()) e.email = 'Email is required';
@@ -45,6 +64,22 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     return Object.keys(e).length === 0;
   };
 
+  /**
+   * Xử lý sự kiện đăng nhập của người dùng.
+   *
+   * <p>Thực hiện tuần tự:
+   * <ol>
+   *   <li>Kiểm tra hợp lệ form nhập liệu</li>
+   *   <li>Gọi {@code loginUser} từ authService để xác thực với Firebase</li>
+   *   <li>Cập nhật {@code AuthContext} với hồ sơ người dùng nhận được</li>
+   *   <li>Nếu thất bại, hiển thị thông báo lỗi phù hợp với mã lỗi Firebase</li>
+   * </ol>
+   * Việc điều hướng sau đăng nhập do {@code AppNavigator} điều khiển tự động
+   * khi {@code isAuthenticated} chuyển thành {@code true}.
+   * </p>
+   *
+   * @return Promise<void> — hàm bất đồng bộ, không trả về giá trị
+   */
   const handleLogin = async () => {
     if (!validate()) return;
     setLoading(true);

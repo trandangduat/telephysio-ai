@@ -1,10 +1,18 @@
 /**
- * BottomTabNavigator — 4 tabs: Home, Workout, Library, Progress.
+ * PatienttabNavigator — Điều hướng thanh tab phía dưới dành cho vai trò Bệnh nhân.
  *
- * Styling follows Clinical Vitality Design System:
- * - Active: primary (Medical Blue), stroke-based icons
- * - Inactive: onSurfaceVariant
- * - Label: typography.labelSm (Inter 11px/500)
+ * <p>Cung cấp giao diện điều hướng bottom-tab cho bệnh nhân với các tab chính:
+ * <ul>
+ *   <li>Home (Workout) — Màn hình bài tập chính</li>
+ *   <li>Sessions — Lịch sử các phiên tập luyện</li>
+ * </ul>
+ * Tuân theo hệ thống thiết kế Clinical Vitality:
+ * <ul>
+ *   <li>Active: màu primary (Medical Blue), icon dạng stroke</li>
+ *   <li>Inactive: {@code onSurfaceVariant}</li>
+ *   <li>Nhãn tab: {@code typography.labelSm} (Inter 11px/500)</li>
+ * </ul>
+ * </p>
  */
 
 import React from "react";
@@ -22,6 +30,16 @@ import type { BottomTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
+/**
+ * Bảng ánh xạ tên tab sang tên icon Ionicons tương ứng cho bệnh nhân.
+ *
+ * <p>Mỗi tab có hai trạng thái icon:
+ * <ul>
+ *   <li>{@code active} — icon đầy/filled khi tab đang được chọn</li>
+ *   <li>{@code inactive} — icon outline khi tab không được chọn</li>
+ * </ul>
+ * </p>
+ */
 const TAB_ICONS: Record<
   keyof BottomTabParamList,
   { active: string; inactive: string }
@@ -36,6 +54,18 @@ const TAB_ICONS: Record<
   Progress: { active: "trending-up", inactive: "trending-up-outline" },
 };
 
+/**
+ * Component điều hướng bottom-tab dành cho bệnh nhân.
+ *
+ * <p>Hiển thị thanh tab phía dưới màn hình gồm các tab Workout và Sessions.
+ * Sử dụng hook {@code useTranslation} để hỗ trợ đa ngôn ngữ cho nhãn tab.
+ * Áp dụng style theo hệ thống thiết kế Clinical Vitality với header không có bóng đổ.</p>
+ *
+ * <p>Một số tab (Home gốc, Library, Progress) hiện đang bị vô hiệu hóa (commented out)
+ * chờ hoàn thiện màn hình tương ứng.</p>
+ *
+ * @return JSX element chứa {@code Tab.Navigator} với các màn hình bệnh nhân
+ */
 export const BottomTabNavigator: React.FC = () => {
   const { t } = useTranslation();
 

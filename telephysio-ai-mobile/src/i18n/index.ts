@@ -1,12 +1,13 @@
 /**
- * i18n configuration — TelePhysioAI
+ * @file index.ts
+ * @description Cấu hình quốc tế hóa (i18n) cho ứng dụng TelePhysioAI.
  *
- * Uses i18next + react-i18next + expo-localization.
- * Default language: English ('en').
- * Supported languages: English ('en'), Vietnamese ('vi').
+ * Sử dụng thư viện: i18next + react-i18next + expo-localization.
+ * Ngôn ngữ mặc định: Tiếng Anh ('en').
+ * Ngôn ngữ hỗ trợ: Tiếng Anh ('en'), Tiếng Việt ('vi').
  *
- * Import this file once at app root (App.tsx) so the i18n instance
- * is initialised before any component renders.
+ * File này phải được import một lần tại gốc ứng dụng (App.tsx)
+ * để khởi tạo instance i18n trước khi bất kỳ component nào render.
  */
 
 import i18n from 'i18next';
@@ -22,8 +23,11 @@ const resources = {
 };
 
 /**
- * Detect device locale and resolve to a supported language.
- * Falls back to 'en' if the device language is not supported.
+ * @function getDeviceLanguage
+ * @description Phát hiện ngôn ngữ địa phương của thiết bị và đối chiếu với danh sách
+ * ngôn ngữ được hỗ trợ. Nếu không tìm thấy ngôn ngữ phù hợp, trả về 'en'.
+ *
+ * @returns {string} Mã ngôn ngữ (ví dụ: 'en', 'vi')
  */
 function getDeviceLanguage(): string {
   try {
@@ -53,6 +57,7 @@ i18n.use(initReactI18next).init({
 export default i18n;
 
 /**
- * Utility: get device language (useful for switching to device locale).
+ * @description Tiện ích xuất ra ngoài: lấy ngôn ngữ thiết bị
+ * (hữu ích khi muốn chuyển sang ngôn ngữ của thiết bị).
  */
 export { getDeviceLanguage };

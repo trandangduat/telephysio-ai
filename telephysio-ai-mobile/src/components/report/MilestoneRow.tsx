@@ -1,5 +1,6 @@
 /**
- * MilestoneRow — single milestone item with achieved/pending state.
+ * @file MilestoneRow.tsx
+ * @description Component hiển thị một hàng mục tiêu (milestone) đơn lẻ với trạng thái đã hoàn thành (achieved) hoặc đang chờ (pending).
  */
 
 import React from 'react';
@@ -18,6 +19,13 @@ interface MilestoneRowProps {
   milestone: Milestone;
 }
 
+/**
+ * Component hiển thị thông tin về một cột mốc (milestone).
+ * 
+ * @param {MilestoneRowProps} props Thuộc tính của component
+ * @param {Milestone} props.milestone Dữ liệu cột mốc chứa id, nhãn, trạng thái và ngày hoàn thành
+ * @return {React.FC<MilestoneRowProps>} Component hàng cột mốc
+ */
 export const MilestoneRow: React.FC<MilestoneRowProps> = ({ milestone }) => {
   return (
     <View style={styles.container}>

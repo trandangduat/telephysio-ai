@@ -1,3 +1,11 @@
+/**
+ * @file PatientDetailScreen.tsx
+ * @description Màn hình chi tiết bệnh nhân dành cho bác sĩ.
+ * Hiển thị thông tin tổng quan về bệnh nhân bao gồm kế hoạch điều trị đang hoạt động,
+ * tiến trình phục hồi, thống kê nhanh (độ chính xác, số buổi tập, streak, mức đau trung bình)
+ * và biểu đồ tiến độ phục hồi. Cho phép bác sĩ giao bài tập và xem lịch sử buổi tập.
+ */
+
 import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
@@ -31,6 +39,14 @@ import type {
   Session,
 } from "../../services/firebase/types";
 
+/**
+ * @component PatientDetailScreen
+ * @description Component màn hình chi tiết bệnh nhân.
+ * Tải và hiển thị kế hoạch điều trị, tiến trình và lịch sử buổi tập của bệnh nhân.
+ * Tự động tải lại dữ liệu mỗi khi màn hình được focus.
+ * @return {React.ReactElement} Giao diện chi tiết bệnh nhân bao gồm thẻ hồ sơ,
+ *   thống kê nhanh, biểu đồ tiến độ và các nút hành động.
+ */
 export const PatientDetailScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
@@ -48,6 +64,13 @@ export const PatientDetailScreen: React.FC = () => {
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
 
+  /**
+   * @function loadData
+   * @description Tải đồng thời kế hoạch điều trị đang hoạt động, tiến trình mới nhất
+   * và danh sách buổi tập (tối đa 20 buổi) của bệnh nhân từ Firebase.
+   * Cập nhật các state tương ứng sau khi tải xong.
+   * @return {Promise<void>}
+   */
   const loadData = useCallback(async () => {
     try {
       const [fetchedPlan, fetchedProgress, fetchedSessions] = await Promise.all(
@@ -73,10 +96,22 @@ export const PatientDetailScreen: React.FC = () => {
     }, [loadData]),
   );
 
+  /**
+   * @function handleAssign
+   * @description Điều hướng đến màn hình giao bài tập (AssignTemplate)
+   * với thông tin ID và tên bệnh nhân hiện tại.
+   * @return {void}
+   */
   const handleAssign = () => {
     navigation.navigate("AssignTemplate", { patientId, patientName });
   };
 
+  /**
+   * @function handleViewSessions
+   * @description Điều hướng đến màn hình xem lịch sử buổi tập (PatientSessions)
+   * với thông tin ID và tên bệnh nhân hiện tại.
+   * @return {void}
+   */
   const handleViewSessions = () => {
     navigation.navigate("PatientSessions", { patientId, patientName });
   };

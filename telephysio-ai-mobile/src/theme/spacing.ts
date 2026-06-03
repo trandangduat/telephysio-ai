@@ -1,10 +1,16 @@
 /**
- * Clinical Vitality — Spacing, Radius & Shadow Tokens
+ * @file spacing.ts
+ * @description Token khoảng cách, bo góc và đổ bóng (shadow) cho hệ thống thiết kế Clinical Vitality.
  *
- * base-unit: 4px
- * Elevation: "flat-plus" clinical style
+ * Đơn vị cơ sở: 4px
+ * Phong cách đổ bóng: "flat-plus" theo clinical design
  */
 
+/**
+ * @constant spacing
+ * @description Các giá trị khoảng cách chuẩn dựa trên đơn vị cơ sở 4px.
+ * Dùng cho margin, padding và các khoảng cách trong layout.
+ */
 // Spacing — base unit 4px
 export const spacing = {
   xs:     4,
@@ -15,6 +21,10 @@ export const spacing = {
   gutter: 16,   // margin ngang mobile
 } as const;
 
+/**
+ * @constant radius
+ * @description Bán kính bo góc cho các phần tử UI (nút, card, input, v.v.).
+ */
 // Border radius
 export const radius = {
   sm:   4,     // 0.25rem
@@ -25,6 +35,11 @@ export const radius = {
   full: 9999,  // pill / chip
 } as const;
 
+/**
+ * @constant shadows
+ * @description Xu đổ bóng theo phong cách "flat-plus". Level 1 dùng viền thay bóng;
+ * Level 2 dùng bóng mỜm lan tỏa màu xanh y tế cho phần tử floating.
+ */
 // Elevation — "flat-plus" theo Design System
 export const shadows = {
   // Level 1: Cards tiêu chuẩn — border thay shadow

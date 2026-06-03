@@ -1,3 +1,8 @@
+/**
+ * @file WorkoutScreen.tsx
+ * @description Màn hình chính hiển thị lịch tập và buổi tập theo tuần của bệnh nhân.
+ * Hiển thị dải lịch tuần, các buổi tập active, đã hoàn thành và tiến độ trong ngày.
+ */
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +25,11 @@ type WorkoutNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<RootStackParamList>
 >;
 
+/**
+ * Props của component WorkoutScreen.
+ *
+ * @property navigation - Đối tượng navigation dùng để điều hướng giữa các màn hình.
+ */
 interface Props {
   navigation: WorkoutNavProp;
 }
@@ -30,6 +40,14 @@ const DIFFICULTY_CONFIG: Record<ExerciseDifficulty, { label: string; color: stri
   hard: { label: 'Hard', color: '#991b1b', bg: '#fef2f2' },
 };
 
+/**
+ * Màn hình chính hiển thị lịch tập thèo tuần cho bệnh nhân.
+ * Hiển thị dải ngày trong tuần, các buổi tập active/upcoming/đã hoàn thành
+ * và tiến độ theo ngày được chọn.
+ *
+ * @param navigation - Đối tượng navigation của React Navigation.
+ * @return Component JSX màn hình WorkoutScreen.
+ */
 export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
   const { uid } = useAuth();
@@ -103,6 +121,13 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
+  /**
+   * Kiểm tra hai đối tượng Date có cùng ngày (ngày/tháng/năm) không.
+   *
+   * @param d1 - Ngày thứ nhất.
+   * @param d2 - Ngày thứ hai.
+   * @return true nếu cùng ngày, false nếu khác ngày.
+   */
   const isSameDate = (d1: Date, d2: Date) => 
     d1.getDate() === d2.getDate() && 
     d1.getMonth() === d2.getMonth() && 
@@ -117,6 +142,11 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
     return isSameDate(sDate, selectedDate);
   });
 
+  /**
+   * Điều hướng đến màn hình chi tiết buổi tập của một assignment cụ thể.
+   *
+   * @param assignmentId - ID của assignment cần xem chi tiết.
+   */
   const handleNavigateToDetail = (assignmentId: string) => {
     navigation.navigate('WorkoutDetail', {
       assignmentId,

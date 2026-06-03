@@ -1,13 +1,12 @@
 /**
- * PoseEstimationView
+ * @file PoseEstimationView.tsx
+ * @description Component React Native hiển thị toàn màn hình WebView để:
+ *   1. Mở camera thiết bị qua getUserMedia (mặc định camera trước)
+ *   2. Chạy MediaPipe BlazePose (WASM/JS qua CDN) để ước tính tư thế người theo thời gian thực
+ *   3. Vẽ khung xương (skeleton) và các khớp lên canvas chồng trên luồng video
+ *   4. Báo cáo dữ liệu landmark tư thế về component cha thông qua callback onPoseDetected
  *
- * Renders a full-screen WebView that:
- * 1. Opens the device camera via getUserMedia (front-facing by default)
- * 2. Runs MediaPipe BlazePose (WASM/JS, CDN) for real-time human pose estimation
- * 3. Draws skeleton joints + connections as a canvas overlay on the video feed
- * 4. Reports pose landmark data back via onPoseDetected callback
- *
- * Usage:
+ * Cách dùng:
  *   <PoseEstimationView
  *     style={{ flex: 1 }}
  *     onPoseDetected={(landmarks) => console.log(landmarks)}
@@ -22,23 +21,53 @@ import { POSE_HTML } from './pose-html';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+/**
+ * @interface PoseLandmark
+ * @description Đại diện cho một điểm mốc (landmark) tư thế của BlazePose.
+ * Mỗi landmark tương ứng với một khớp hoặc điểm giải phẫu trên cơ thể người.
+ */
 export interface PoseLandmark {
+  /** Tọa độ ngang, chuẩn hóa về [0..1] theo chiều rộng khung hình */
   x: number;         // normalised [0..1] relative to frame width
+  /** Tọa độ dọc, chuẩn hóa về [0..1] theo chiều cao khung hình */
   y: number;         // normalised [0..1] relative to frame height
+  /** Độ sâu tương đối (dấu có ý nghĩa, không phải giá trị tuyệt đối) */
   z: number;         // depth (relative, sign matters, not absolute)
+  /** Độ tin cậy phát hiện, trong khoảng [0..1] */
   visibility: number; // confidence [0..1]
 }
 
+/**
+ * @interface PoseEstimationViewProps
+ * @description Các props được truyền vào component PoseEstimationView.
+ */
 interface PoseEstimationViewProps {
+  /** Style tùy chỉnh cho container bên ngoài */
   style?: StyleProp<ViewStyle>;
-  /** Called every frame a pose is detected, with 33 BlazePose landmarks */
+  /**
+   * Callback được gọi mỗi khung hình khi phát hiện tư thế.
+   * @param landmarks Mảng 33 điểm mốc BlazePose
+   * @param fps Số khung hình trên giây hiện tại
+   */
   onPoseDetected?: (landmarks: PoseLandmark[], fps: number) => void;
-  /** Called when camera or model initialisation fails */
+  /**
+   * Callback được gọi khi khởi tạo camera hoặc mô hình thất bại.
+   * @param message Thông báo lỗi mô tả nguyên nhân
+   */
   onError?: (message: string) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * @component PoseEstimationView
+ * @description Component chính hiển thị WebView nhúng HTML ước tính tư thế MediaPipe.
+ * Xử lý các quyền camera cho cả Android và iOS, nhận kết quả landmark qua
+ * postMessage từ WebView.
+ *
+ * @param {PoseEstimationViewProps} props - Props của component
+ * @returns {JSX.Element} Một View chứa WebView chạy BlazePose
+ */
 export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
   style,
   onPoseDetected,
@@ -46,6 +75,13 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
 }) => {
   const webViewRef = useRef<WebView>(null);
 
+  /**
+   * @function handleMessage
+   * @description Xử lý các tin nhắn postMessage nhận được từ bên trong WebView.
+   * Hỗ trợ hai loại tin nhắn: POSE_LANDMARKS (kết quả tư thế) và CAMERA_ERROR (lỗi camera).
+   *
+   * @param {WebViewMessageEvent} event - Sự kiện chứa dữ liệu JSON từ WebView
+   */
   const handleMessage = useCallback(
     (event: WebViewMessageEvent) => {
       try {

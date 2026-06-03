@@ -1,5 +1,7 @@
 /**
- * ExerciseCard — Card Level 1, radius xxl, shows exercise info + badge.
+ * @file ExerciseCard.tsx
+ * @description Component thẻ (card) mức 1 dùng để hiển thị thông tin tóm tắt về một bài tập.
+ * Bao gồm hình ảnh thu nhỏ, tên bài tập, thời lượng, số hiệp, số lần lặp và nhãn phân loại.
  */
 
 import React from 'react';
@@ -13,6 +15,14 @@ interface ExerciseCardProps {
   onPress?: () => void;
 }
 
+/**
+ * Component thẻ hiển thị thông tin về bài tập trong thư viện.
+ * 
+ * @param {ExerciseCardProps} props Thuộc tính của component
+ * @param {Exercise} props.exercise Dữ liệu chi tiết của bài tập
+ * @param {Function} [props.onPress] Hàm xử lý khi nhấn vào thẻ
+ * @return {React.FC<ExerciseCardProps>} Component thẻ bài tập
+ */
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onPress }) => {
   return (
     <Card level={1} onPress={onPress} style={styles.card}>

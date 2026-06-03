@@ -1,12 +1,13 @@
 /**
- * progressService — Sessions, progress snapshots, and AI insights.
+ * @file progressService.ts
+ * @description Dịch vụ quản lý quá trình tập luyện, ảnh chụp dữ liệu tiến độ (snapshots) và nhận xét của AI.
  *
- * Maps to:
- *   - HomeScreen (movementScore, timeActive, sessions count)
- *   - ProgressScreen (weeklyConsistency, ROM, strength, milestones)
- *   - TrainingScreen (session recording: reps, accuracy, elapsed)
- *   - PatientDetailScreen (session history, quick stats)
- *   - DoctorPatientsScreen (progress, sessions, accuracy per patient)
+ * Hỗ trợ các tính năng:
+ *   - HomeScreen (Điểm chuyển động, thời gian hoạt động, số buổi tập)
+ *   - ProgressScreen (Độ kiên trì hàng tuần, phạm vi chuyển động ROM, sức mạnh, cột mốc)
+ *   - TrainingScreen (Lưu lịch sử tập: số rep, độ chính xác, thời gian tập)
+ *   - PatientDetailScreen (Lịch sử buổi tập, số liệu nhanh)
+ *   - DoctorPatientsScreen (Tiến độ, số buổi tập, độ chính xác trung bình mỗi bệnh nhân)
  */
 
 import {
@@ -32,6 +33,13 @@ import { createNotification } from "./notificationService";
 // INCOMPLETE SESSIONS (Active Workout State)
 // ═══════════════════════════════════════════════════
 
+/**
+ * Lấy buổi tập đang thực hiện dang dở của bệnh nhân.
+ * 
+ * @param {string} patientId ID bệnh nhân
+ * @param {string} assignmentId ID bài tập được giao
+ * @return {Promise<IncompleteSession | null>} Buổi tập dang dở hoặc null
+ */
 export async function getIncompleteSession(
   patientId: string,
   assignmentId: string,
@@ -48,6 +56,12 @@ export async function getIncompleteSession(
   return { id: snap.docs[0].id, ...snap.docs[0].data() } as IncompleteSession;
 }
 
+/**
+ * Lưu thông tin một buổi tập đang dang dở.
+ * 
+ * @param {Omit<IncompleteSession, "id" | "lastUpdated">} data Dữ liệu buổi tập
+ * @return {Promise<string>} ID của buổi tập dang dở
+ */
 export async function saveIncompleteSession(
   data: Omit<IncompleteSession, "id" | "lastUpdated">,
 ): Promise<string> {
@@ -58,6 +72,13 @@ export async function saveIncompleteSession(
   return ref.id;
 }
 
+/**
+ * Cập nhật thông tin của buổi tập dang dở.
+ * 
+ * @param {string} sessionId ID buổi tập
+ * @param {Partial<Omit<IncompleteSession, "id" | "lastUpdated">>} data Dữ liệu cập nhật
+ * @return {Promise<void>}
+ */
 export async function updateIncompleteSession(
   sessionId: string,
   data: Partial<Omit<IncompleteSession, "id" | "lastUpdated">>,
@@ -70,6 +91,12 @@ export async function updateIncompleteSession(
 
 import { deleteDoc } from "firebase/firestore";
 
+/**
+ * Xóa dữ liệu buổi tập dang dở.
+ * 
+ * @param {string} sessionId ID buổi tập dang dở cần xóa
+ * @return {Promise<void>}
+ */
 export async function deleteIncompleteSession(sessionId: string): Promise<void> {
   await deleteDoc(doc(db, "incomplete_sessions", sessionId));
 }
@@ -80,6 +107,13 @@ export async function deleteIncompleteSession(sessionId: string): Promise<void> 
 
 // ── Record Session ──────────────────────────────────
 // Called after TrainingScreen completes (skip-forward or finish)
+/**
+ * Lưu một buổi tập đã hoàn thành vào cơ sở dữ liệu.
+ * Gửi thông báo cho bác sĩ nếu lưu thành công.
+ * 
+ * @param {Omit<Session, "id" | "date">} data Dữ liệu của buổi tập
+ * @return {Promise<string>} ID của buổi tập đã lưu
+ */
 export async function recordSession(
   data: Omit<Session, "id" | "date">,
 ): Promise<string> {
@@ -128,6 +162,13 @@ export async function recordSession(
 
 // ── Get Patient Sessions ────────────────────────────
 // Called by PatientDetailScreen (session history table)
+/**
+ * Lấy danh sách lịch sử buổi tập của bệnh nhân (sắp xếp giảm dần theo ngày).
+ * 
+ * @param {string} patientId ID bệnh nhân
+ * @param {number} [maxResults=10] Số kết quả tối đa
+ * @return {Promise<Session[]>} Mảng các buổi tập
+ */
 export async function getPatientSessions(
   patientId: string,
   maxResults: number = 10,
@@ -147,6 +188,12 @@ export async function getPatientSessions(
 
 // ── Get Session Count This Week ─────────────────────
 // Called by HomeScreen (SESSIONS card: "2 /3 this week")
+/**
+ * Đếm số lượng buổi tập đã thực hiện trong tuần hiện tại.
+ * 
+ * @param {string} patientId ID bệnh nhân
+ * @return {Promise<number>} Số lượng buổi tập trong tuần
+ */
 export async function getWeeklySessionCount(
   patientId: string,
 ): Promise<number> {
@@ -166,6 +213,13 @@ export async function getWeeklySessionCount(
 }
 
 // ── Submit Doctor Feedback for Session ──────────────
+/**
+ * Gửi phản hồi của bác sĩ cho một buổi tập cụ thể.
+ * 
+ * @param {string} sessionId ID buổi tập
+ * @param {string} feedback Nội dung phản hồi
+ * @return {Promise<void>}
+ */
 export async function submitDoctorFeedback(
   sessionId: string,
   feedback: string,
@@ -186,6 +240,12 @@ export async function submitDoctorFeedback(
 
 // ── Get Latest Progress ─────────────────────────────
 // Called by HomeScreen (movementScore, timeActive), ProgressScreen (ROM, strength)
+/**
+ * Lấy dữ liệu tiến độ mới nhất của bệnh nhân.
+ * 
+ * @param {string} patientId ID bệnh nhân
+ * @return {Promise<ProgressSnapshot | null>} Báo cáo tiến độ hoặc null
+ */
 export async function getLatestProgress(
   patientId: string,
 ): Promise<ProgressSnapshot | null> {
@@ -209,6 +269,12 @@ export async function getLatestProgress(
 
 // ── Save Progress Snapshot ──────────────────────────
 // Called after AI analysis processes a completed session
+/**
+ * Lưu lại ảnh chụp (snapshot) tiến độ tập luyện của người dùng sau mỗi buổi.
+ * 
+ * @param {Omit<ProgressSnapshot, "id" | "date">} data Dữ liệu báo cáo tiến độ
+ * @return {Promise<string>} ID của báo cáo vừa tạo
+ */
 export async function saveProgressSnapshot(
   data: Omit<ProgressSnapshot, "id" | "date">,
 ): Promise<string> {
@@ -221,6 +287,13 @@ export async function saveProgressSnapshot(
 
 // ── Get Progress History ────────────────────────────
 // Called by ProgressScreen chart (ROM over weeks)
+/**
+ * Lấy lịch sử tiến độ của bệnh nhân để vẽ biểu đồ.
+ * 
+ * @param {string} patientId ID bệnh nhân
+ * @param {number} [maxResults=12] Số kết quả lớn nhất lấy về
+ * @return {Promise<ProgressSnapshot[]>} Mảng báo cáo tiến độ
+ */
 export async function getProgressHistory(
   patientId: string,
   maxResults: number = 12,
@@ -249,6 +322,12 @@ export async function getProgressHistory(
 
 // ── Submit Feedback ─────────────────────────────────
 // Called by SessionScreen "Give Feedback" → modal submit
+/**
+ * Bệnh nhân gửi phản hồi về bài tập.
+ * 
+ * @param {Omit<ExerciseFeedback, "id" | "createdAt">} data Dữ liệu phản hồi bài tập
+ * @return {Promise<string>} ID của phản hồi
+ */
 export async function submitFeedback(
   data: Omit<ExerciseFeedback, "id" | "createdAt">,
 ): Promise<string> {
@@ -261,6 +340,13 @@ export async function submitFeedback(
 
 // ── Get Feedback for Patient ────────────────────────
 // Called by SessionScreen (exercise feedback list)
+/**
+ * Lấy danh sách các phản hồi về bài tập của bệnh nhân.
+ * 
+ * @param {string} patientId ID bệnh nhân
+ * @param {number} [maxResults=20] Số kết quả tối đa
+ * @return {Promise<ExerciseFeedback[]>} Mảng danh sách phản hồi
+ */
 export async function getPatientFeedback(
   patientId: string,
   maxResults: number = 20,
@@ -285,6 +371,13 @@ export async function getPatientFeedback(
 
 // ── Get Avg Stats for Doctor Dashboard ──────────────
 // Called by DoctorDashboardScreen (Avg Accuracy stat card)
+/**
+ * Lấy độ chính xác trung bình (accuracy) của các bệnh nhân mà bác sĩ quản lý.
+ * Thường dùng cho bảng điều khiển của bác sĩ.
+ * 
+ * @param {string} doctorId ID bác sĩ
+ * @return {Promise<number>} Độ chính xác trung bình (0-100)
+ */
 export async function getAverageAccuracy(doctorId: string): Promise<number> {
   // Get all patient IDs for this doctor
   const plansSnap = await getDocs(
@@ -320,6 +413,13 @@ export async function getAverageAccuracy(doctorId: string): Promise<number> {
 }
 
 // ── Update Session Effort ───────────────────────────
+/**
+ * Cập nhật mức độ cố gắng/khó khăn (perceived effort) cho một buổi tập.
+ * 
+ * @param {string} sessionId ID buổi tập
+ * @param {"easy" | "normal" | "hard"} effort Mức độ cố gắng
+ * @return {Promise<void>}
+ */
 export async function updateSessionEffort(
   sessionId: string,
   effort: "easy" | "normal" | "hard",
@@ -330,6 +430,14 @@ export async function updateSessionEffort(
 }
 
 // ── Delete Session Video ────────────────────────────
+/**
+ * Xóa video của buổi tập khỏi thiết bị lưu trữ cục bộ và cập nhật lại bản ghi.
+ * 
+ * @param {string} sessionId ID buổi tập
+ * @param {string} videoPath Đường dẫn video cục bộ
+ * @param {string} thumbnailPath Đường dẫn ảnh thu nhỏ cục bộ
+ * @return {Promise<void>}
+ */
 export async function deleteSessionVideo(
   sessionId: string,
   videoPath: string,

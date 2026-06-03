@@ -1,8 +1,7 @@
 /**
- * NotificationBell — A bell icon with a live unread-count badge.
- *
- * Uses onNotificationsChange() for real-time badge updates.
- * On press → navigates to the Notifications screen.
+ * @file NotificationBell.tsx
+ * @description Biểu tượng chuông thông báo hiển thị số lượng thông báo chưa đọc.
+ * Tự động cập nhật số lượng thông báo theo thời gian thực.
  */
 
 import React, { useEffect, useState } from "react";
@@ -14,6 +13,12 @@ import { AppText } from "./ui";
 import { useAuth } from "../contexts/AuthContext";
 import { onNotificationsChange } from "../services/firebase/notificationService";
 
+/**
+ * Component hiển thị biểu tượng chuông thông báo.
+ * Khi nhấn vào sẽ chuyển hướng đến màn hình Notifications.
+ * 
+ * @return {React.FC} Component biểu tượng chuông thông báo
+ */
 export const NotificationBell: React.FC = () => {
   const navigation = useNavigation<any>();
   const { uid } = useAuth();

@@ -1,3 +1,8 @@
+/**
+ * @file ExercisePickerSheet.tsx
+ * @description Bottom sheet cho phép người dùng tìm kiếm và chọn bài tập từ danh sách toàn cầu.
+ * Hỗ trợ lọc theo danh mục và tìm kiếm theo tên. Loại trừ các bài tập đã thêm vào template.
+ */
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,8 +12,19 @@ import { colors, spacing } from '../../../theme';
 import { getGlobalExercises } from '../../../services/firebase';
 import type { Exercise } from '../../../services/firebase/types';
 
+/**
+ * Danh sách các danh mục bài tập hỗ trợ lọc.
+ */
 const CATEGORIES = ['All', 'Lower Body', 'Upper Body', 'Core'];
 
+/**
+ * Props của component ExercisePickerSheet.
+ *
+ * @property visible - Trạng thái hiển thị/ẩn của bottom sheet.
+ * @property onClose - Callback được gọi khi đóng sheet.
+ * @property onSelect - Callback được gọi khi người dùng chọn một bài tập.
+ * @property excludeIds - Danh sách ID bài tập cần loại trừ khỏi kết quả hiển thị.
+ */
 interface ExercisePickerSheetProps {
   visible: boolean;
   onClose: () => void;
@@ -16,6 +32,16 @@ interface ExercisePickerSheetProps {
   excludeIds?: string[];
 }
 
+/**
+ * Component bottom sheet chọn bài tập.
+ * Hiển thị danh sách bài tập từ Firebase, hỗ trợ tìm kiếm và lọc theo danh mục.
+ *
+ * @param visible - Hiển thị sheet khi true.
+ * @param onClose - Hàm callback khi đóng sheet.
+ * @param onSelect - Hàm callback khi người dùng chọn một bài tập.
+ * @param excludeIds - Danh sách ID bài tập được loại trừ.
+ * @return Component JSX bottom sheet chọn bài tập.
+ */
 export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
   visible,
   onClose,
@@ -33,6 +59,9 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
     }
   }, [visible]);
 
+  /**
+   * Tải danh sách bài tập toàn cầu từ Firebase và cập nhật state exercises.
+   */
   const loadExercises = async () => {
     setLoading(true);
     try {
@@ -52,6 +81,12 @@ export const ExercisePickerSheet: React.FC<ExercisePickerSheetProps> = ({
     return matchesSearch && matchesCategory && notExcluded;
   });
 
+  /**
+   * Xử lý khi người dùng chọn một bài tập.
+   * Gọi callback onSelect và đóng sheet.
+   *
+   * @param exercise - Bài tập được người dùng chọn.
+   */
   const handleSelect = (exercise: Exercise) => {
     onSelect(exercise);
     onClose();

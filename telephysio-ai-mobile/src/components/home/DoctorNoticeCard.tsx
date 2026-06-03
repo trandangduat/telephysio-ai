@@ -1,5 +1,6 @@
 /**
- * DoctorNoticeCard — Card Level 1 showing doctor notification/feedback.
+ * @file DoctorNoticeCard.tsx
+ * @description Component thẻ (card) mức 1 dùng để hiển thị thông báo, lời khuyên hoặc phản hồi từ bác sĩ.
  */
 
 import React from 'react';
@@ -14,6 +15,15 @@ interface DoctorNoticeCardProps {
   date?: string;
 }
 
+/**
+ * Component thẻ hiển thị thông báo từ bác sĩ.
+ * 
+ * @param {DoctorNoticeCardProps} props Thuộc tính của component
+ * @param {string} [props.doctorName] Tên bác sĩ (Mặc định: 'BS. Nguyễn Thị Hoa')
+ * @param {string} [props.message] Nội dung tin nhắn của bác sĩ
+ * @param {string} [props.date] Ngày gửi thông báo
+ * @return {React.FC<DoctorNoticeCardProps>} Component thẻ thông báo
+ */
 export const DoctorNoticeCard: React.FC<DoctorNoticeCardProps> = ({
   doctorName = 'BS. Nguyễn Thị Hoa',
   message = 'You are making good progress! This week, focus on your elbow range of motion. Remember to keep your movements slow and controlled.',

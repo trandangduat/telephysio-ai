@@ -1,3 +1,16 @@
+/**
+ * @file ExerciseResultScreen.tsx
+ * @description Màn hình hiển thị kết quả sau khi hoàn thành một bài tập đơn lẻ.
+ *
+ * Màn hình này thực hiện các chức năng sau:
+ *   - Tải thông tin bài tập từ Firestore dựa trên assignmentId và exerciseIndex.
+ *   - Hiển thị danh sách các set đã hoàn thành kèm độ chính xác, số lần lặp và thời gian.
+ *   - Cho phép người dùng xem lại video từng set trong chế độ rạp chiếu phim (cinema mode).
+ *   - Lưu tiến trình phiên tập hiện tại vào Firestore (incomplete session).
+ *   - Điều hướng đến bài tập tiếp theo hoặc màn hình tổng kết buổi tập.
+ *
+ * @module screens/Training
+ */
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Modal,Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,12 +28,32 @@ import type { Assignment, Exercise, IncompleteSession, SetRecord, ExerciseRecord
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExerciseResult'>;
 
+/**
+ * Trả về mã màu hex tương ứng với mức độ chính xác của bài tập.
+ *
+ * @param acc - Điểm độ chính xác (0–100).
+ * @return Chuỗi mã màu hex:
+ *   - '#10b981' (xanh lá) nếu acc >= 80,
+ *   - '#f59e0b' (vàng hổ phách) nếu acc >= 60,
+ *   - '#ef4444' (đỏ) nếu acc < 60.
+ */
 function accuracyColor(acc: number): string {
   if (acc >= 80) return '#10b981'; // elegant green
   if (acc >= 60) return '#f59e0b'; // amber
   return '#ef4444'; // red
 }
 
+/**
+ * Component màn hình kết quả bài tập.
+ *
+ * Nhận các tham số điều hướng từ {@link RootStackParamList} bao gồm:
+ * assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets,
+ * recordVideo, setDurations và setsData.
+ *
+ * @param route - Đối tượng route chứa params từ màn hình trước.
+ * @param navigation - Đối tượng navigation để điều hướng giữa các màn hình.
+ * @return Giao diện React Native hiển thị kết quả bài tập và modal phát lại video.
+ */
 export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => {
   const { assignmentId, exerciseIndex, accuracy, durationSeconds, reps, sets, recordVideo, setDurations: routeSetDurations, setsData } = route.params || { recordVideo: false };
   const { uid } = useAuth();
@@ -89,6 +122,17 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     return () => clearInterval(interval);
   }, [assignmentId, recordVideo]);
 
+  /**
+   * Xử lý sự kiện nhấn nút "Bài Tập Tiếp Theo" hoặc "Kết Thúc Buổi Tập".
+   *
+   * Quy trình:
+   *   1. Lấy phiên tập chưa hoàn thành (incomplete session) từ Firestore.
+   *   2. Tạo bản ghi exercise và các set tương ứng.
+   *   3. Cập nhật hoặc tạo mới incomplete session với dữ liệu bài tập vừa hoàn thành.
+   *   4. Điều hướng đến bài tập tiếp theo hoặc màn hình tổng kết (WorkoutSummary).
+   *
+   * @return Promise<void>
+   */
   const handleNext = async () => {
     if (!uid || !assignment) return;
     setSaving(true);
@@ -200,16 +244,35 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
         });
       })();
 
+  /**
+   * Mở modal phát lại video cho một set cụ thể.
+   *
+   * @param set - Đối tượng set chứa thông tin số set, số lần lặp, độ chính xác và thời gian.
+   * @return void
+   */
   const handleOpenVideo = (set: typeof displaySets[0]) => {
     setSelectedSet(set);
     setPlaybackStatus(null);
   };
 
+  /**
+   * Đóng modal phát lại video và xóa trạng thái phát.
+   *
+   * @return void
+   */
   const handleCloseVideo = () => {
     setSelectedSet(null);
     setPlaybackStatus(null);
   };
 
+  /**
+   * Chuyển đổi trạng thái phát/tạm dừng của video đang xem.
+   *
+   * Nếu video đang phát thì tạm dừng, và ngược lại.
+   * Không làm gì nếu videoRef hoặc trạng thái phát chưa sẵn sàng.
+   *
+   * @return Promise<void>
+   */
   const togglePlayPause = async () => {
     if (!videoRef.current || !playbackStatus || !playbackStatus.isLoaded) return;
     try {
@@ -223,6 +286,13 @@ export const ExerciseResultScreen: React.FC<Props> = ({ route, navigation }) => 
     }
   };
 
+  /**
+   * Định dạng thời gian từ mili giây sang chuỗi m:ss.
+   *
+   * @param ms - Thời gian tính bằng mili giây.
+   * @return Chuỗi thời gian theo định dạng 'm:ss', ví dụ '1:05'.
+   *         Trả về '0:00' nếu đầu vào không hợp lệ.
+   */
   const formatTime = (ms: number) => {
     if (!ms || isNaN(ms)) return '0:00';
     const totalSecs = Math.floor(ms / 1000);

@@ -1,5 +1,6 @@
 /**
- * HomeScreen — Redesigned Dashboard (Clinical Vitality)
+ * HomeScreen — Màn hình Bảng điều khiển (Dashboard) chính của ứng dụng dành cho người dùng.
+ * Hiển thị kế hoạch tập luyện hôm nay, tiến độ và các thông báo.
  */
 
 import React, { useEffect, useState } from "react";
@@ -47,6 +48,14 @@ interface Props {
   navigation: HomeNavProp;
 }
 
+/**
+ * Component Màn hình chính (HomeScreen).
+ * Hiển thị tóm tắt thông tin điều trị, bài tập hôm nay và các chỉ số sức khỏe cơ bản.
+ * 
+ * @param props Các thuộc tính truyền vào component
+ * @param props.navigation Đối tượng navigation dùng để chuyển hướng màn hình
+ * @return React.FC Component HomeScreen
+ */
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { userName, uid } = useAuth();
 
@@ -63,6 +72,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     return unsubscribe;
   }, [navigation, uid]);
 
+  /**
+   * Tải dữ liệu ban đầu cho màn hình chính.
+   * Lấy kế hoạch điều trị, tiến độ mới nhất và danh sách bài tập được giao.
+   * 
+   * @return Promise<void>
+   */
   async function loadData() {
     if (!uid) {
       setLoading(false);

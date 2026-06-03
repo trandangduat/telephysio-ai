@@ -1,5 +1,7 @@
 /**
- * WorkoutCounter — hiển thị số lần tập + progress bar bên dưới.
+ * @file WorkoutCounter.tsx
+ * @description Component hiển thị bộ đếm số lần tập và số hiệp hiện tại. 
+ * Kèm theo thanh tiến trình (progress bar) thể hiện quá trình luyện tập của hiệp đó.
  */
 
 import React from 'react';
@@ -14,6 +16,16 @@ interface WorkoutCounterProps {
   totalSets: number;
 }
 
+/**
+ * Component hiển thị giao diện đếm số rep/set trong lúc luyện tập.
+ * 
+ * @param {WorkoutCounterProps} props Thuộc tính của component
+ * @param {number} props.currentRep Số rep hiện tại đã hoàn thành
+ * @param {number} props.totalReps Tổng số rep yêu cầu trong hiệp
+ * @param {number} props.currentSet Số hiệp hiện tại
+ * @param {number} props.totalSets Tổng số hiệp
+ * @return {React.FC<WorkoutCounterProps>} Component bộ đếm luyện tập
+ */
 export const WorkoutCounter: React.FC<WorkoutCounterProps> = ({
   currentRep,
   totalReps,

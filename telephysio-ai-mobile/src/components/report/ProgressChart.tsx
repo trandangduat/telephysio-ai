@@ -1,7 +1,7 @@
 /**
- * ProgressChart — simple bar/line chart visualising weekly scores.
- * Sử dụng View-based bars thay vì victory-native để giảm phụ thuộc.
- * Có thể thay thế bằng victory-native sau.
+ * @file ProgressChart.tsx
+ * @description Biểu đồ cột đơn giản để hiển thị điểm số hàng tuần.
+ * Sử dụng View thay vì thư viện biểu đồ bên thứ ba (victory-native) để giảm sự phụ thuộc, có thể được thay thế sau này.
  */
 
 import React from 'react';
@@ -17,6 +17,15 @@ interface ProgressChartProps {
 
 const DEFAULT_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
+/**
+ * Component hiển thị biểu đồ quá trình tập luyện trong tuần.
+ * 
+ * @param {ProgressChartProps} props Thuộc tính của component
+ * @param {number[]} props.scores Danh sách điểm số (từ 0 đến 100), mặc định cho 7 ngày
+ * @param {string[]} [props.labels] Nhãn hiển thị cho trục ngang (Mặc định: 'T2', 'T3',...)
+ * @param {number} [props.height] Chiều cao của biểu đồ (Mặc định: 220)
+ * @return {React.FC<ProgressChartProps>} Component biểu đồ tiến độ
+ */
 export const ProgressChart: React.FC<ProgressChartProps> = ({
   scores,
   labels = DEFAULT_LABELS,

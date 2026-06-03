@@ -1,5 +1,8 @@
 /**
- * DoctorPatientsScreen — Patient list + progress tracking.
+ * @file DoctorPatientsScreen.tsx
+ * @description Màn hình danh sách bệnh nhân dành cho bác sĩ.
+ * Hiển thị tất cả bệnh nhân cùng trạng thái tiến trình điều trị (On Track / Ahead / At Risk),
+ * hỗ trợ tìm kiếm theo tên hoặc bệnh trạng, và cho phép xem chi tiết từng bệnh nhân.
  */
 
 import React, { useEffect, useState } from "react";
@@ -43,6 +46,13 @@ type PatientsNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DoctorStackParamList>
 >;
 
+/**
+ * @component DoctorPatientsScreen
+ * @description Component màn hình danh sách bệnh nhân.
+ * Tải danh sách bệnh nhân và kế hoạch điều trị từ Firebase, gộp dữ liệu,
+ * hỗ trợ tìm kiếm và hiển thị bảng tóm tắt trạng thái (tổng, on-track, at-risk).
+ * @return {React.ReactElement} Giao diện danh sách bệnh nhân với thanh tìm kiếm và thẻ bệnh nhân.
+ */
 export const DoctorPatientsScreen: React.FC = () => {
   const navigation = useNavigation<PatientsNavProp>();
   const { t } = useTranslation();
@@ -53,6 +63,12 @@ export const DoctorPatientsScreen: React.FC = () => {
   const [patients, setPatients] = useState<MappedPatient[]>([]);
 
   useEffect(() => {
+    /**
+     * @function loadData
+     * @description Tải đồng thời danh sách bệnh nhân và kế hoạch điều trị từ Firebase.
+     * Gộp kế hoạch vào từng bệnh nhân, tính trạng thái và cập nhật state.
+     * @return {Promise<void>}
+     */
     async function loadData() {
       if (!uid) {
         setLoading(false);

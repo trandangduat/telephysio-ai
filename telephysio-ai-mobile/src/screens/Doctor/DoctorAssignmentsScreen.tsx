@@ -1,5 +1,8 @@
 /**
- * DoctorAssignmentsScreen — Create and edit reusable exercise templates.
+ * @file DoctorAssignmentsScreen.tsx
+ * @description Màn hình quản lý mẫu bài tập (exercise templates) dành cho bác sĩ.
+ * Cho phép bác sĩ xem, tạo mới, chỉnh sửa và xóa các nhóm bài tập
+ * được tái sử dụng trong các kế hoạch chăm sóc bệnh nhân.
  */
 
 import React, { useEffect, useState } from "react";
@@ -35,6 +38,13 @@ type AssignmentsNavProp = CompositeNavigationProp<
   NativeStackNavigationProp<DoctorStackParamList>
 >;
 
+/**
+ * @component DoctorAssignmentsScreen
+ * @description Component màn hình quản lý mẫu bài tập của bác sĩ.
+ * Tải danh sách mẫu bài tập từ Firebase và tự động làm mới khi quay lại màn hình.
+ * Cho phép tạo mạu mới, chỉnh sửa mạu hiện có qua TemplateEditor và xóa mạu khỏi danh sách.
+ * @return {React.ReactElement} Giao diện danh sách mẫu bài tập với nút tạo và các thẻ mạu.
+ */
 export const DoctorAssignmentsScreen: React.FC = () => {
   const navigation = useNavigation<AssignmentsNavProp>();
   const { t } = useTranslation();
@@ -43,6 +53,12 @@ export const DoctorAssignmentsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<ExerciseTemplate[]>([]);
 
+  /**
+   * @function loadData
+   * @description Tải danh sách mẫu bài tập của bác sĩ từ Firebase.
+   * Cập nhật state templates và quản lý trạng thái loading.
+   * @return {Promise<void>}
+   */
   const loadData = async () => {
     if (!uid) {
       setLoading(false);
@@ -70,6 +86,14 @@ export const DoctorAssignmentsScreen: React.FC = () => {
     return unsubscribe;
   }, [navigation, uid]);
 
+  /**
+   * @function handleDeleteTemplate
+   * @description Xóa mạu bài tập khỏi danh sách sau khi xác nhận với người dùng.
+   * Sử dụng `window.confirm` trên web và `Alert.alert` trên native để xác nhận.
+   * Nếu xác nhận, gọi Firebase để xóa và cập nhật lại danh sách local.
+   * @param {ExerciseTemplate} tpl - Mẫu bài tập cần xóa.
+   * @return {void}
+   */
   const handleDeleteTemplate = (tpl: ExerciseTemplate) => {
     const doDelete = async () => {
       try {

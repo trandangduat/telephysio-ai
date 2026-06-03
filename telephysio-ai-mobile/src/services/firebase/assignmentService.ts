@@ -1,11 +1,10 @@
 /**
- * assignmentService — Exercise assignments & treatment plans.
+ * assignmentService — Dịch vụ quản lý Bài tập được giao (Assignments) và Kế hoạch điều trị (Treatment Plans).
  *
- * Maps to:
- *   - WorkoutScreen (mockExercises list → assignment.exercises)
- *   - HomeScreen (CURRENT PROTOCOL card → treatmentPlan)
- *   - DoctorAssignmentsScreen (templates, assign to patient)
- *   - DoctorPatientsScreen (condition, week, phase, progress, status)
+ * Nhiệm vụ chính:
+ *   - Quản lý các Kế hoạch điều trị đang hoạt động cho Bệnh nhân.
+ *   - Lấy, tạo, và theo dõi tiến độ các bài tập được Bác sĩ giao.
+ *   - Quản lý các Mẫu bài tập (Exercise Templates) của Bác sĩ.
  */
 
 import {
@@ -23,6 +22,13 @@ import { createNotification } from './notificationService';
 
 // ── Get Active Plan for Patient ─────────────────────
 // Called by HomeScreen (protocol card), ProgressScreen (week/phase header)
+/**
+ * Lấy Kế hoạch điều trị (Treatment Plan) đang hoạt động của một bệnh nhân.
+ * Trả về kế hoạch được tạo gần đây nhất.
+ * 
+ * @param patientId ID của bệnh nhân
+ * @return Promise<TreatmentPlan | null> Kế hoạch điều trị hoặc null
+ */
 export async function getActiveTreatmentPlan(patientId: string): Promise<TreatmentPlan | null> {
   const snap = await getDocs(
     query(
@@ -42,6 +48,12 @@ export async function getActiveTreatmentPlan(patientId: string): Promise<Treatme
 
 // ── Get All Plans for Doctor ────────────────────────
 // Called by DoctorPatientsScreen (patient cards with condition/week/phase/status)
+/**
+ * Lấy toàn bộ các Kế hoạch điều trị do một Bác sĩ quản lý.
+ * 
+ * @param doctorId ID của bác sĩ
+ * @return Promise<TreatmentPlan[]> Danh sách kế hoạch điều trị
+ */
 export async function getDoctorTreatmentPlans(doctorId: string): Promise<TreatmentPlan[]> {
   console.log(`[Service] getDoctorTreatmentPlans called with doctorId: ${doctorId}`);
   const snap = await getDocs(
@@ -61,6 +73,12 @@ export async function getDoctorTreatmentPlans(doctorId: string): Promise<Treatme
 
 // ── Create Treatment Plan ───────────────────────────
 // Called by Doctor when assigning a new program to patient
+/**
+ * Tạo một Kế hoạch điều trị mới cho bệnh nhân.
+ * 
+ * @param data Dữ liệu của kế hoạch điều trị mới
+ * @return Promise<string> ID của kế hoạch vừa tạo
+ */
 export async function createTreatmentPlan(
   data: Omit<TreatmentPlan, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
@@ -90,6 +108,13 @@ export async function updateTreatmentPlan(
 
 // ── Get Assignments for Patient ─────────────────────
 // Called by WorkoutScreen (exercise list for today's routine)
+/**
+ * Lấy danh sách các Bài tập được giao (Assignments) của bệnh nhân.
+ * 
+ * @param patientId ID của bệnh nhân
+ * @param status Trạng thái bài tập ('active' hoặc 'completed')
+ * @return Promise<Assignment[]> Danh sách bài tập
+ */
 export async function getPatientAssignments(
   patientId: string,
   status: 'active' | 'completed' = 'active'
@@ -111,6 +136,12 @@ export async function getPatientAssignments(
 
 // ── Get Assignments by Doctor ───────────────────────
 // Called by DoctorAssignmentsScreen (Assigned tab)
+/**
+ * Lấy danh sách toàn bộ Bài tập (Assignments) đã được Bác sĩ giao.
+ * 
+ * @param doctorId ID của bác sĩ
+ * @return Promise<Assignment[]> Danh sách bài tập
+ */
 export async function getDoctorAssignments(doctorId: string): Promise<Assignment[]> {
   const snap = await getDocs(
     query(
@@ -128,6 +159,13 @@ export async function getDoctorAssignments(doctorId: string): Promise<Assignment
 
 // ── Create Assignment ───────────────────────────────
 // Called by DoctorAssignmentsScreen "Assign" button
+/**
+ * Bác sĩ tạo và giao Bài tập mới cho bệnh nhân.
+ * Sẽ gửi thông báo (Notification) đến bệnh nhân nếu có thể.
+ * 
+ * @param data Thông tin bài tập được giao
+ * @return Promise<string> ID của bài tập vừa tạo
+ */
 export async function createAssignment(
   data: Omit<Assignment, 'id' | 'assignedAt'>
 ): Promise<string> {
@@ -176,6 +214,12 @@ export async function completeAssignment(assignmentId: string): Promise<void> {
 
 // ── Get Templates ───────────────────────────────────
 // Called by DoctorAssignmentsScreen (Templates tab)
+/**
+ * Lấy danh sách các Mẫu bài tập (Templates) được lưu của Bác sĩ.
+ * 
+ * @param doctorId ID của bác sĩ
+ * @return Promise<ExerciseTemplate[]> Danh sách mẫu bài tập
+ */
 export async function getExerciseTemplates(doctorId: string): Promise<ExerciseTemplate[]> {
   const snap = await getDocs(
     query(
@@ -192,6 +236,12 @@ export async function getExerciseTemplates(doctorId: string): Promise<ExerciseTe
 }
 
 // ── Create Template ─────────────────────────────────
+/**
+ * Tạo một Mẫu bài tập (Template) mới vào thư viện của Bác sĩ.
+ * 
+ * @param data Thông tin mẫu bài tập mới
+ * @return Promise<string> ID của mẫu bài tập vừa tạo
+ */
 export async function createExerciseTemplate(data: {
   doctorId: string;
   name: string;
@@ -225,6 +275,12 @@ export async function deleteExerciseTemplate(templateId: string): Promise<void> 
 }
 
 // ── Get Global Exercises (for picker) ───────────────
+/**
+ * Lấy toàn bộ danh sách bài tập chung (Global Exercises) từ Firestore.
+ * (Thường dùng cho tính năng tìm kiếm bài tập khi bác sĩ tạo mẫu)
+ * 
+ * @return Promise<Exercise[]> Danh sách bài tập chung
+ */
 export async function getGlobalExercises(): Promise<Exercise[]> {
   const snap = await getDocs(collection(db, 'exercises'));
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Exercise));

@@ -1,3 +1,8 @@
+/**
+ * @file ExerciseCard.tsx
+ * @description Component thẻ hiển thị thông tin một bài tập trong template.
+ * Hiển thị tên, số sets/reps, danh mục, độ khó và cho phép xóa bài tập khỏi danh sách.
+ */
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,12 +11,23 @@ import { AppText } from '../../../components/ui';
 import { colors, spacing, typography } from '../../../theme';
 import type { Exercise, ExerciseDifficulty } from '../../../services/firebase/types';
 
+/**
+ * Cấu hình hiển thị nhãn, màu chữ và màu nền theo mức độ khó của bài tập.
+ */
 const DIFFICULTY_CONFIG: Record<ExerciseDifficulty, { label: string; color: string; bg: string }> = {
   easy: { label: 'Easy', color: '#166534', bg: '#dcfce7' },
   medium: { label: 'Medium', color: '#b45309', bg: '#fef3c7' },
   hard: { label: 'Hard', color: '#991b1b', bg: '#fef2f2' },
 };
 
+/**
+ * Props của component ExerciseCard.
+ *
+ * @property exercise - Đối tượng bài tập cần hiển thị.
+ * @property onPress - Callback được gọi khi người dùng nhấn vào thẻ (tùy chọn).
+ * @property onRemove - Callback được gọi khi người dùng nhấn nút xóa (tùy chọn).
+ * @property showRemove - Cờ bật/tắt hiển thị nút xóa, mặc định là true.
+ */
 interface ExerciseCardProps {
   exercise: Exercise;
   onPress?: () => void;
@@ -19,6 +35,17 @@ interface ExerciseCardProps {
   showRemove?: boolean;
 }
 
+/**
+ * Component thẻ hiển thị thông tin một bài tập.
+ * Hiển thị icon, tên, số sets x reps, thời gian, danh mục và độ khó của bài tập.
+ * Hỗ trợ xóa bài tập khỏi danh sách thông qua prop onRemove.
+ *
+ * @param exercise - Dữ liệu bài tập cần hiển thị.
+ * @param onPress - Hàm callback khi nhấn vào thẻ (tùy chọn).
+ * @param onRemove - Hàm callback khi nhấn nút xóa (tùy chọn).
+ * @param showRemove - Hiển thị nút xóa hay không, mặc định là true.
+ * @return Component JSX hiển thị thẻ bài tập.
+ */
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   exercise,
   onPress,

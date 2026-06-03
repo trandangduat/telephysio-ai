@@ -1,3 +1,20 @@
+/**
+ * @file ProgressScreen.tsx
+ * @description Màn hình theo dõi tiến trình phục hồi của bệnh nhân.
+ *
+ * Màn hình này hiển thị các thông tin sau:
+ *   - Thông tin kế hoạch điều trị đang hoạt động (active treatment plan).
+ *   - Mức độ kiên định tập luyện trong tuần (weekly consistency).
+ *   - Biểu đồ phạm vi chuyển động khớp gối (ROM Flexion/Extension).
+ *   - Chỉ số cải thiện sức mạnh (Quadriceps Strength và Hamstring Stability).
+ *   - Nhận xét AI về quá trình phục hồi.
+ *   - Các mốc quan trọng đã đạt được (milestones).
+ *
+ * Dữ liệu được tải từ Firestore thông qua {@link getActiveTreatmentPlan}
+ * và {@link getLatestProgress}.
+ *
+ * @module screens/Progress
+ */
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +31,14 @@ import { getActiveTreatmentPlan, getLatestProgress } from '../../services/fireba
 import type { TreatmentPlan, ProgressSnapshot } from '../../services/firebase/types';
 import { NotificationBell } from '../../components/NotificationBell';
 
+/**
+ * Component màn hình tiến trình phục hồi.
+ *
+ * Tải và hiển thị dữ liệu kế hoạch điều trị và tiến trình mới nhất của bệnh nhân.
+ * Hỗ trợ chuyển đổi giữa biểu đồ Flexion và Extension.
+ *
+ * @return Giao diện React Native hiển thị toàn bộ tiến trình phục hồi.
+ */
 export const ProgressScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
@@ -25,6 +50,15 @@ export const ProgressScreen: React.FC = () => {
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
 
   useEffect(() => {
+    /**
+     * Tải dữ liệu kế hoạch điều trị và tiến trình mới nhất của người dùng.
+     *
+     * Thực hiện song song hai truy vấn Firestore:
+     *   - {@link getActiveTreatmentPlan}: lấy kế hoạch điều trị đang hoạt động.
+     *   - {@link getLatestProgress}: lấy bản ghi tiến trình gần nhất.
+     *
+     * @return Promise<void>
+     */
     async function loadData() {
       if (!uid) {
         setLoading(false);

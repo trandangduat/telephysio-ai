@@ -1,7 +1,16 @@
 /**
- * SignUpScreen — Register new patient or doctor account.
+ * SignUpScreen.tsx — Màn hình đăng ký tài khoản mới (bệnh nhân hoặc bác sĩ).
  *
- * Connected to: authService.registerUser → Firebase Auth + Firestore users
+ * <p>Cho phép người dùng tạo tài khoản TelePhysioAI với hai vai trò:
+ * <ul>
+ *   <li>Bệnh nhân (patient) — theo dõi quá trình phục hồi và tập luyện</li>
+ *   <li>Bác sĩ (doctor) — quản lý bệnh nhân và giao phác đồ bài tập</li>
+ * </ul>
+ * Sau khi đăng ký thành công, hồ sơ được lưu vào {@code AuthContext}
+ * và {@code AppNavigator} tự động điều hướng theo vai trò.
+ * </p>
+ *
+ * <p>Kết nối tới: {@code authService.registerUser} → Firebase Auth + Firestore users</p>
  */
 
 import React, { useState } from 'react';
@@ -38,6 +47,21 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /**
+   * Kiểm tra hợp lệ các trường nhập liệu trong form đăng ký.
+   *
+   * <p>Kiểm tra các điều kiện:
+   * <ul>
+   *   <li>Họ tên không được để trống</li>
+   *   <li>Email không được để trống và phải đúng định dạng email</li>
+   *   <li>Mật khẩu không được để trống và phải có tối thiểu 6 ký tự</li>
+   *   <li>Mật khẩu xác nhận phải trùng khớp với mật khẩu đã nhập</li>
+   * </ul>
+   * Nếu có lỗi, cập nhật state {@code errors} để hiển thị thông báo lỗi.
+   * </p>
+   *
+   * @return {@code true} nếu tất cả các trường hợp lệ; {@code false} nếu có lỗi
+   */
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!displayName.trim()) e.displayName = 'Full name is required';
@@ -50,6 +74,21 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     return Object.keys(e).length === 0;
   };
 
+  /**
+   * Xử lý sự kiện đăng ký tài khoản mới.
+   *
+   * <p>Thực hiện tuần tự:
+   * <ol>
+   *   <li>Kiểm tra hợp lệ form nhập liệu</li>
+   *   <li>Gọi {@code registerUser} từ authService để tạo tài khoản trên Firebase</li>
+   *   <li>Cập nhật {@code AuthContext} với hồ sơ người dùng vừa được tạo</li>
+   *   <li>Nếu thất bại, hiển thị thông báo lỗi phù hợp với mã lỗi Firebase</li>
+   * </ol>
+   * Việc điều hướng sau đăng ký do {@code AppNavigator} điều khiển tự động.
+   * </p>
+   *
+   * @return Promise<void> — hàm bất đồng bộ, không trả về giá trị
+   */
   const handleSignUp = async () => {
     if (!validate()) return;
     setLoading(true);

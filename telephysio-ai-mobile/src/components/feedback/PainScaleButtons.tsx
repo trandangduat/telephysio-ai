@@ -1,10 +1,10 @@
 /**
- * PainScaleButtons — grid 2×5 for pain scale 1–10.
- *
- * 1–3: green (tertiaryFixedDim)
- * 4–6: neutral (secondaryContainer)
- * 7–10: red (errorContainer)
- * Selected: primary bg
+ * @file PainScaleButtons.tsx
+ * @description Component hiển thị dạng lưới các nút chọn mức độ đau từ 1 đến 10.
+ * Mức 1–3: màu xanh (nhẹ).
+ * Mức 4–6: màu xám/trung tính (vừa).
+ * Mức 7–10: màu đỏ (nặng).
+ * Khi được chọn sẽ có nền màu chính (primary).
  */
 
 import React from 'react';
@@ -29,6 +29,12 @@ const getBorderColor = (n: number): string => {
   return colors.error;
 };
 
+/**
+ * Component lưới nút bấm để người dùng đánh giá mức độ đau.
+ * 
+ * @param {PainScaleButtonsProps} props Thuộc tính của component bao gồm giá trị hiện tại và hàm xử lý khi chọn
+ * @return {React.FC<PainScaleButtonsProps>} Component lưới nút chọn mức độ đau
+ */
 export const PainScaleButtons: React.FC<PainScaleButtonsProps> = ({ value, onSelect }) => {
   return (
     <View style={styles.grid}>

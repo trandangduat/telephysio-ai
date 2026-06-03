@@ -1,5 +1,21 @@
 /**
- * Vietnamese translations — TelePhysioAI
+ * @file vi.ts
+ * @description Bản dịch Tiếng Việt cho ứng dụng TelePhysioAI.
+ *
+ * File này chứa toàn bộ chuỗi văn bản (string) được dùng trong ứng dụng,
+ * được nhóm theo từng màn hình và chức năng. Được sử dụng bởi i18next
+ * như là resource ngôn ngữ phụ ('vi').
+ *
+ * Cấu trúc nhóm chính:
+ *   - common:    Nhãn dùng chung (OK, Huỷ, Quay lại, v.v.)
+ *   - tabs:      Tiêu đề tab điều hướng
+ *   - home:      Màn hình Trang chủ
+ *   - library:   Màn hình Thư viện bài tập
+ *   - progress:  Màn hình Tiến độ hồi phục
+ *   - workout:   Màn hình Bài tập hôm nay
+ *   - training:  Màn hình Luyện tập AI
+ *   - feedback:  Màn hình Phản hồi
+ *   - profile:   Màn hình Hồ sơ & Cài đặt
  */
 
 export default {

@@ -1,20 +1,23 @@
 /**
- * WorkoutSummaryScreen — Final session results.
- * 
- * Strict Completion Sequence (Section 3.3):
- *   1. Stop video recording -> stopRecording()
- *   2. Write final session -> recordSession()
- *   3. Complete assignment -> completeAssignment()
- *   4. Save progress snapshot -> saveProgressSnapshot()
- *   5. Clean up incomplete session -> deleteIncompleteSession()
- *   6. Show summary UI
- * 
- * Features:
- *   - MET-based Calories Burned calculation
- *   - Average Accuracy calculations (rounded integer)
- *   - Video local path storage display & size
- *   - Dynamic local video file deletion
- *   - Perceived Effort picker (easy, normal, hard) -> Firestore sync
+ * @file WorkoutSummaryScreen.tsx
+ * @description Màn hình tổng kết buổi tập — hiển thị kết quả cuối cùng của phiên tập.
+ *
+ * Tuần tự hoàn thành nghiêm ngặt (Section 3.3):
+ *   1. Dừng quay video -> stopRecording()
+ *   2. Ghi phiên tập cuối cùng -> recordSession()
+ *   3. Hoàn thành bài tập được giao -> completeAssignment()
+ *   4. Lưu ảnh chụp tiến trình -> saveProgressSnapshot()
+ *   5. Dọn dẹp phiên tập chưa hoàn thành -> deleteIncompleteSession()
+ *   6. Hiển thị giao diện tổng kết
+ *
+ * Tính năng:
+ *   - Tính lượng calo tiêu thụ dựa trên chỉ số MET (Metabolic Equivalent of Task)
+ *   - Tính độ chính xác trung bình (làm tròn thành số nguyên)
+ *   - Hiển thị đường dẫn video cục bộ và kích thước tệp
+ *   - Xóa tệp video cục bộ linh hoạt
+ *   - Bộ chọn mức độ nỗ lực cảm nhận (dễ, vừa, khó) -> đồng bộ Firestore
+ *
+ * @module screens/Training
  */
 
 import React, { useEffect, useState } from 'react';
@@ -44,7 +47,21 @@ import type { Assignment, ExerciseRecord, SetRecord } from '../../services/fireb
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkoutSummary'>;
 
-// MET Calculation Helper (Workout Flow Spec section 10.3)
+/**
+ * Trả về hệ số MET (Metabolic Equivalent of Task) tương ứng với tên bài tập.
+ *
+ * Hệ số MET được dùng để ước tính lượng calo tiêu thụ theo công thức:
+ *   Calo = MET * cân_nặng_kg * thời_gian_giờ
+ *
+ * Quy tắc phân loại (Workout Flow Spec, mục 10.3):
+ *   - Plank/Core/Bụng  → 3.5 (cường độ thấp)
+ *   - HIIT/Burpee/Cardio → 8.0 (cường độ cao)
+ *   - Kéo giãn/Cooldown/Yoga → 2.5 (rất nhẹ)
+ *   - Mặc định (bài tập cơ thể) → 5.0
+ *
+ * @param exerciseName - Tên bài tập cần tra cứu hệ số MET.
+ * @return Hệ số MET dạng số thực.
+ */
 function getMETValue(exerciseName: string): number {
   const name = exerciseName.toLowerCase();
   if (name.includes("plank") || name.includes("core") || name.includes("abdominal")) return 3.5;
@@ -53,6 +70,17 @@ function getMETValue(exerciseName: string): number {
   return 5.0; // default Bodyweight exercise
 }
 
+/**
+ * Component màn hình tổng kết buổi tập.
+ *
+ * Thực hiện toàn bộ chuỗi xử lý hoàn thành phiên tập bao gồm:
+ * lưu session, hoàn thành assignment, lưu snapshot tiến trình
+ * và dọn dẹp trạng thái incomplete session.
+ *
+ * @param route      - Đối tượng route chứa assignmentId và recordVideo.
+ * @param navigation - Đối tượng navigation để điều hướng về màn hình chính.
+ * @return Giao diện React Native hiển thị tổng kết thống kê buổi tập.
+ */
 export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => {
   const { assignmentId, recordVideo } = route.params || { assignmentId: '', recordVideo: false };
   const { uid } = useAuth();
@@ -284,6 +312,14 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
     processSummary();
   }, [uid, assignmentId]);
 
+  /**
+   * Xử lý sự kiện người dùng chọn mức độ nỗ lực cảm nhận (perceived effort).
+   *
+   * Cập nhật state cục bộ và đồng bộ lên Firestore thông qua {@link updateSessionEffort}.
+   *
+   * @param choice - Lựa chọn mức độ nỗ lực: 'easy' (dễ), 'normal' (vừa), hoặc 'hard' (khó).
+   * @return Promise<void>
+   */
   const handleSelectEffort = async (choice: "easy" | "normal" | "hard") => {
     if (!sessionId) return;
     try {
@@ -298,6 +334,13 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
  
 
 
+  /**
+   * Xử lý sự kiện nhấn nút "Về Trang Chủ".
+   *
+   * Điều hướng người dùng về tab chính (MainTabs) sau khi hoàn thành buổi tập.
+   *
+   * @return void
+   */
   const handleDone = () => {
     navigation.replace('MainTabs');
   };
