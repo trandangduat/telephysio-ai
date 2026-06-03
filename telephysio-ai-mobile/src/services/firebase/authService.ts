@@ -8,12 +8,12 @@
  */
 
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
-  type User,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    updateProfile,
+    type User,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -32,25 +32,25 @@ import type { UserProfile, UserRole } from './types';
  * @return Promise<UserProfile> Thông tin hồ sơ của người dùng vừa được tạo
  */
 export async function registerUser(
-  email: string,
-  password: string,
-  displayName: string,
-  role: UserRole
+    email: string,
+    password: string,
+    displayName: string,
+    role: UserRole
 ): Promise<UserProfile> {
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(cred.user, { displayName });
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName });
 
-  const profile: Omit<UserProfile, 'uid'> & { uid: string } = {
-    uid: cred.user.uid,
-    email,
-    displayName,
-    role,
-    createdAt: serverTimestamp() as any,
-    updatedAt: serverTimestamp() as any,
-  };
+    const profile: Omit<UserProfile, 'uid'> & { uid: string } = {
+        uid: cred.user.uid,
+        email,
+        displayName,
+        role,
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any,
+    };
 
-  await setDoc(doc(db, 'users', cred.user.uid), profile);
-  return profile;
+    await setDoc(doc(db, 'users', cred.user.uid), profile);
+    return profile;
 }
 
 // ── Login ───────────────────────────────────────────
@@ -63,10 +63,10 @@ export async function registerUser(
  * @return Promise<UserProfile> Thông tin hồ sơ của người dùng
  */
 export async function loginUser(email: string, password: string): Promise<UserProfile> {
-  const cred = await signInWithEmailAndPassword(auth, email, password);
-  const profile = await getUserProfile(cred.user.uid);
-  if (!profile) throw new Error('User profile not found in Firestore');
-  return profile;
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const profile = await getUserProfile(cred.user.uid);
+    if (!profile) throw new Error('User profile not found in Firestore');
+    return profile;
 }
 
 // ── Logout ──────────────────────────────────────────
@@ -76,7 +76,7 @@ export async function loginUser(email: string, password: string): Promise<UserPr
  * @return Promise<void>
  */
 export async function logoutUser(): Promise<void> {
-  await signOut(auth);
+    await signOut(auth);
 }
 
 // ── Get Current User Profile ────────────────────────
@@ -87,8 +87,8 @@ export async function logoutUser(): Promise<void> {
  * @return Promise<UserProfile | null> Hồ sơ người dùng hoặc null nếu không tìm thấy
  */
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
-  const snap = await getDoc(doc(db, 'users', uid));
-  return snap.exists() ? (snap.data() as UserProfile) : null;
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
 // ── Auth State Listener ─────────────────────────────
@@ -99,7 +99,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
  * @return Hàm hủy lắng nghe sự kiện (unsubscribe)
  */
 export function onAuthChange(callback: (user: User | null) => void) {
-  return onAuthStateChanged(auth, callback);
+    return onAuthStateChanged(auth, callback);
 }
 
 // ── Get Current Firebase User ───────────────────────
@@ -109,5 +109,5 @@ export function onAuthChange(callback: (user: User | null) => void) {
  * @return User | null Đối tượng người dùng Firebase hoặc null
  */
 export function getCurrentUser(): User | null {
-  return auth.currentUser;
+    return auth.currentUser;
 }

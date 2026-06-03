@@ -23,9 +23,9 @@ type TypographyVariant = keyof typeof typography;
  * @param children  Nội dung văn bản hoặc phần tử con cần hiển thị.
  */
 interface AppTextProps extends TextProps {
-  variant?: TypographyVariant;
-  color?: ColorValue | string;
-  children: React.ReactNode;
+    variant?: TypographyVariant;
+    color?: ColorValue | string;
+    children: React.ReactNode;
 }
 
 /**
@@ -38,23 +38,23 @@ interface AppTextProps extends TextProps {
  * @return          Phần tử Text với style typography đã xử lý.
  */
 export const AppText: React.FC<AppTextProps> = ({
-  variant = 'bodyMd',
-  color,
-  style,
-  children,
-  ...rest
+    variant = 'bodyMd',
+    color,
+    style,
+    children,
+    ...rest
 }) => {
-  const variantStyle = typography[variant] as TextStyle;
-  return (
-    <Text
-      style={[
-        { color: color ?? colors.onSurface },
-        variantStyle,
-        style,
-      ]}
-      {...rest}
-    >
-      {children}
-    </Text>
-  );
+    const variantStyle = typography[variant] as TextStyle;
+    return (
+        <Text
+            style={[
+                { color: color ?? colors.onSurface },
+                variantStyle,
+                style,
+            ]}
+            {...rest}
+        >
+            {children}
+        </Text>
+    );
 };

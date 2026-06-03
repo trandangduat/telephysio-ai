@@ -11,18 +11,18 @@
  */
 
 import {
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  serverTimestamp,
-  Timestamp,
+    collection,
+    doc,
+    addDoc,
+    getDoc,
+    getDocs,
+    updateDoc,
+    query,
+    where,
+    orderBy,
+    limit,
+    serverTimestamp,
+    Timestamp,
 } from "firebase/firestore";
 
 import { db } from "./config";
@@ -41,19 +41,19 @@ import { createNotification } from "./notificationService";
  * @return {Promise<IncompleteSession | null>} Buổi tập dang dở hoặc null
  */
 export async function getIncompleteSession(
-  patientId: string,
-  assignmentId: string,
+    patientId: string,
+    assignmentId: string,
 ): Promise<IncompleteSession | null> {
-  const snap = await getDocs(
-    query(
-      collection(db, "incomplete_sessions"),
-      where("patientId", "==", patientId),
-      where("assignmentId", "==", assignmentId),
-    ),
-  );
-  if (snap.empty) return null;
-  // There should only be one incomplete session per assignment per patient
-  return { id: snap.docs[0].id, ...snap.docs[0].data() } as IncompleteSession;
+    const snap = await getDocs(
+        query(
+            collection(db, "incomplete_sessions"),
+            where("patientId", "==", patientId),
+            where("assignmentId", "==", assignmentId),
+        ),
+    );
+    if (snap.empty) return null;
+    // There should only be one incomplete session per assignment per patient
+    return { id: snap.docs[0].id, ...snap.docs[0].data() } as IncompleteSession;
 }
 
 /**
@@ -63,13 +63,13 @@ export async function getIncompleteSession(
  * @return {Promise<string>} ID của buổi tập dang dở
  */
 export async function saveIncompleteSession(
-  data: Omit<IncompleteSession, "id" | "lastUpdated">,
+    data: Omit<IncompleteSession, "id" | "lastUpdated">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "incomplete_sessions"), {
-    ...data,
-    lastUpdated: serverTimestamp(),
-  });
-  return ref.id;
+    const ref = await addDoc(collection(db, "incomplete_sessions"), {
+        ...data,
+        lastUpdated: serverTimestamp(),
+    });
+    return ref.id;
 }
 
 /**
@@ -80,13 +80,13 @@ export async function saveIncompleteSession(
  * @return {Promise<void>}
  */
 export async function updateIncompleteSession(
-  sessionId: string,
-  data: Partial<Omit<IncompleteSession, "id" | "lastUpdated">>,
+    sessionId: string,
+    data: Partial<Omit<IncompleteSession, "id" | "lastUpdated">>,
 ): Promise<void> {
-  await updateDoc(doc(db, "incomplete_sessions", sessionId), {
-    ...data,
-    lastUpdated: serverTimestamp(),
-  });
+    await updateDoc(doc(db, "incomplete_sessions", sessionId), {
+        ...data,
+        lastUpdated: serverTimestamp(),
+    });
 }
 
 import { deleteDoc } from "firebase/firestore";
@@ -98,7 +98,7 @@ import { deleteDoc } from "firebase/firestore";
  * @return {Promise<void>}
  */
 export async function deleteIncompleteSession(sessionId: string): Promise<void> {
-  await deleteDoc(doc(db, "incomplete_sessions", sessionId));
+    await deleteDoc(doc(db, "incomplete_sessions", sessionId));
 }
 
 // ═══════════════════════════════════════════════════
@@ -115,49 +115,49 @@ export async function deleteIncompleteSession(sessionId: string): Promise<void> 
  * @return {Promise<string>} ID của buổi tập đã lưu
  */
 export async function recordSession(
-  data: Omit<Session, "id" | "date">,
+    data: Omit<Session, "id" | "date">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "sessions"), {
-    ...data,
-    date: serverTimestamp(),
-  });
+    const ref = await addDoc(collection(db, "sessions"), {
+        ...data,
+        date: serverTimestamp(),
+    });
 
-  // Best-effort: notify the doctor that the patient finished this session
-  try {
+    // Best-effort: notify the doctor that the patient finished this session
+    try {
     // Fetch assignment to get doctorId and templateName
-    const assignSnap = await getDoc(doc(db, "assignments", data.assignmentId));
-    if (assignSnap.exists()) {
-      const assignment = assignSnap.data();
-      // Fetch patient name
-      const patientSnap = await getDoc(doc(db, "users", data.patientId));
-      const patientName = patientSnap.exists()
-        ? patientSnap.data().displayName || "A patient"
-        : "A patient";
-      const templateName = assignment.templateName || "a session";
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+        const assignSnap = await getDoc(doc(db, "assignments", data.assignmentId));
+        if (assignSnap.exists()) {
+            const assignment = assignSnap.data();
+            // Fetch patient name
+            const patientSnap = await getDoc(doc(db, "users", data.patientId));
+            const patientName = patientSnap.exists()
+                ? patientSnap.data().displayName || "A patient"
+                : "A patient";
+            const templateName = assignment.templateName || "a session";
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
 
-      await createNotification({
-        userId: assignment.doctorId,
-        title: "Session Completed",
-        body: `${patientName} finished "${templateName}" at ${timeStr}`,
-        type: "session_completed",
-        data: {
-          sessionId: ref.id,
-          patientId: data.patientId,
-          patientName,
-          templateName,
-        },
-      });
+            await createNotification({
+                userId: assignment.doctorId,
+                title: "Session Completed",
+                body: `${patientName} finished "${templateName}" at ${timeStr}`,
+                type: "session_completed",
+                data: {
+                    sessionId: ref.id,
+                    patientId: data.patientId,
+                    patientName,
+                    templateName,
+                },
+            });
+        }
+    } catch (err) {
+        console.warn("Failed to send session-completed notification:", err);
     }
-  } catch (err) {
-    console.warn("Failed to send session-completed notification:", err);
-  }
 
-  return ref.id;
+    return ref.id;
 }
 
 // ── Get Patient Sessions ────────────────────────────
@@ -170,20 +170,20 @@ export async function recordSession(
  * @return {Promise<Session[]>} Mảng các buổi tập
  */
 export async function getPatientSessions(
-  patientId: string,
-  maxResults: number = 10,
+    patientId: string,
+    maxResults: number = 10,
 ): Promise<Session[]> {
-  const snap = await getDocs(
-    query(collection(db, "sessions"), where("patientId", "==", patientId)),
-  );
-  const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Session);
-  return sessions
-    .sort((a, b) => {
-      const aTime = (a.date as any)?.toMillis?.() || 0;
-      const bTime = (b.date as any)?.toMillis?.() || 0;
-      return bTime - aTime;
-    })
-    .slice(0, maxResults);
+    const snap = await getDocs(
+        query(collection(db, "sessions"), where("patientId", "==", patientId)),
+    );
+    const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Session);
+    return sessions
+        .sort((a, b) => {
+            const aTime = (a.date as any)?.toMillis?.() || 0;
+            const bTime = (b.date as any)?.toMillis?.() || 0;
+            return bTime - aTime;
+        })
+        .slice(0, maxResults);
 }
 
 // ── Get Session Count This Week ─────────────────────
@@ -195,21 +195,21 @@ export async function getPatientSessions(
  * @return {Promise<number>} Số lượng buổi tập trong tuần
  */
 export async function getWeeklySessionCount(
-  patientId: string,
+    patientId: string,
 ): Promise<number> {
-  const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
-  startOfWeek.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    startOfWeek.setHours(0, 0, 0, 0);
 
-  const snap = await getDocs(
-    query(
-      collection(db, "sessions"),
-      where("patientId", "==", patientId),
-      where("date", ">=", Timestamp.fromDate(startOfWeek)),
-    ),
-  );
-  return snap.size;
+    const snap = await getDocs(
+        query(
+            collection(db, "sessions"),
+            where("patientId", "==", patientId),
+            where("date", ">=", Timestamp.fromDate(startOfWeek)),
+        ),
+    );
+    return snap.size;
 }
 
 // ── Submit Doctor Feedback for Session ──────────────
@@ -221,17 +221,17 @@ export async function getWeeklySessionCount(
  * @return {Promise<void>}
  */
 export async function submitDoctorFeedback(
-  sessionId: string,
-  feedback: string,
+    sessionId: string,
+    feedback: string,
 ): Promise<void> {
-  console.log('[submitDoctorFeedback] Updating session:', sessionId, 'with feedback:', feedback);
-  if (!sessionId) {
-    throw new Error('Session ID is required to submit feedback');
-  }
-  await updateDoc(doc(db, "sessions", sessionId), {
-    doctorFeedback: feedback,
-    feedbackUpdatedAt: serverTimestamp(),
-  });
+    console.log('[submitDoctorFeedback] Updating session:', sessionId, 'with feedback:', feedback);
+    if (!sessionId) {
+        throw new Error('Session ID is required to submit feedback');
+    }
+    await updateDoc(doc(db, "sessions", sessionId), {
+        doctorFeedback: feedback,
+        feedbackUpdatedAt: serverTimestamp(),
+    });
 }
 
 // ═══════════════════════════════════════════════════
@@ -247,24 +247,24 @@ export async function submitDoctorFeedback(
  * @return {Promise<ProgressSnapshot | null>} Báo cáo tiến độ hoặc null
  */
 export async function getLatestProgress(
-  patientId: string,
+    patientId: string,
 ): Promise<ProgressSnapshot | null> {
-  const snap = await getDocs(
-    query(
-      collection(db, "progress_snapshots"),
-      where("patientId", "==", patientId),
-    ),
-  );
-  if (snap.empty) return null;
-  const snapshots = snap.docs.map(
-    (d) => ({ id: d.id, ...d.data() }) as ProgressSnapshot,
-  );
-  snapshots.sort((a, b) => {
-    const aTime = (a.date as any)?.toMillis?.() || 0;
-    const bTime = (b.date as any)?.toMillis?.() || 0;
-    return bTime - aTime;
-  });
-  return snapshots[0] || null;
+    const snap = await getDocs(
+        query(
+            collection(db, "progress_snapshots"),
+            where("patientId", "==", patientId),
+        ),
+    );
+    if (snap.empty) return null;
+    const snapshots = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as ProgressSnapshot,
+    );
+    snapshots.sort((a, b) => {
+        const aTime = (a.date as any)?.toMillis?.() || 0;
+        const bTime = (b.date as any)?.toMillis?.() || 0;
+        return bTime - aTime;
+    });
+    return snapshots[0] || null;
 }
 
 // ── Save Progress Snapshot ──────────────────────────
@@ -276,13 +276,13 @@ export async function getLatestProgress(
  * @return {Promise<string>} ID của báo cáo vừa tạo
  */
 export async function saveProgressSnapshot(
-  data: Omit<ProgressSnapshot, "id" | "date">,
+    data: Omit<ProgressSnapshot, "id" | "date">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "progress_snapshots"), {
-    ...data,
-    date: serverTimestamp(),
-  });
-  return ref.id;
+    const ref = await addDoc(collection(db, "progress_snapshots"), {
+        ...data,
+        date: serverTimestamp(),
+    });
+    return ref.id;
 }
 
 // ── Get Progress History ────────────────────────────
@@ -295,25 +295,25 @@ export async function saveProgressSnapshot(
  * @return {Promise<ProgressSnapshot[]>} Mảng báo cáo tiến độ
  */
 export async function getProgressHistory(
-  patientId: string,
-  maxResults: number = 12,
+    patientId: string,
+    maxResults: number = 12,
 ): Promise<ProgressSnapshot[]> {
-  const snap = await getDocs(
-    query(
-      collection(db, "progress_snapshots"),
-      where("patientId", "==", patientId),
-    ),
-  );
-  const snapshots = snap.docs.map(
-    (d) => ({ id: d.id, ...d.data() }) as ProgressSnapshot,
-  );
-  return snapshots
-    .sort((a, b) => {
-      const aTime = (a.date as any)?.toMillis?.() || 0;
-      const bTime = (b.date as any)?.toMillis?.() || 0;
-      return bTime - aTime;
-    })
-    .slice(0, maxResults);
+    const snap = await getDocs(
+        query(
+            collection(db, "progress_snapshots"),
+            where("patientId", "==", patientId),
+        ),
+    );
+    const snapshots = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as ProgressSnapshot,
+    );
+    return snapshots
+        .sort((a, b) => {
+            const aTime = (a.date as any)?.toMillis?.() || 0;
+            const bTime = (b.date as any)?.toMillis?.() || 0;
+            return bTime - aTime;
+        })
+        .slice(0, maxResults);
 }
 
 // ═══════════════════════════════════════════════════
@@ -329,13 +329,13 @@ export async function getProgressHistory(
  * @return {Promise<string>} ID của phản hồi
  */
 export async function submitFeedback(
-  data: Omit<ExerciseFeedback, "id" | "createdAt">,
+    data: Omit<ExerciseFeedback, "id" | "createdAt">,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "exercise_feedback"), {
-    ...data,
-    createdAt: serverTimestamp(),
-  });
-  return ref.id;
+    const ref = await addDoc(collection(db, "exercise_feedback"), {
+        ...data,
+        createdAt: serverTimestamp(),
+    });
+    return ref.id;
 }
 
 // ── Get Feedback for Patient ────────────────────────
@@ -348,25 +348,25 @@ export async function submitFeedback(
  * @return {Promise<ExerciseFeedback[]>} Mảng danh sách phản hồi
  */
 export async function getPatientFeedback(
-  patientId: string,
-  maxResults: number = 20,
+    patientId: string,
+    maxResults: number = 20,
 ): Promise<ExerciseFeedback[]> {
-  const snap = await getDocs(
-    query(
-      collection(db, "exercise_feedback"),
-      where("patientId", "==", patientId),
-    ),
-  );
-  const feedbacks = snap.docs.map(
-    (d) => ({ id: d.id, ...d.data() }) as ExerciseFeedback,
-  );
-  return feedbacks
-    .sort((a, b) => {
-      const aTime = (a.createdAt as any)?.toMillis?.() || 0;
-      const bTime = (b.createdAt as any)?.toMillis?.() || 0;
-      return bTime - aTime;
-    })
-    .slice(0, maxResults);
+    const snap = await getDocs(
+        query(
+            collection(db, "exercise_feedback"),
+            where("patientId", "==", patientId),
+        ),
+    );
+    const feedbacks = snap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as ExerciseFeedback,
+    );
+    return feedbacks
+        .sort((a, b) => {
+            const aTime = (a.createdAt as any)?.toMillis?.() || 0;
+            const bTime = (b.createdAt as any)?.toMillis?.() || 0;
+            return bTime - aTime;
+        })
+        .slice(0, maxResults);
 }
 
 // ── Get Avg Stats for Doctor Dashboard ──────────────
@@ -379,37 +379,37 @@ export async function getPatientFeedback(
  * @return {Promise<number>} Độ chính xác trung bình (0-100)
  */
 export async function getAverageAccuracy(doctorId: string): Promise<number> {
-  // Get all patient IDs for this doctor
-  const plansSnap = await getDocs(
-    query(collection(db, "treatment_plans"), where("doctorId", "==", doctorId)),
-  );
-  const patientIds = [
-    ...new Set(plansSnap.docs.map((d) => d.data().patientId)),
-  ];
-
-  if (patientIds.length === 0) return 0;
-
-  let totalAccuracy = 0;
-  let count = 0;
-
-  for (const pid of patientIds) {
-    const sessSnap = await getDocs(
-      query(collection(db, "sessions"), where("patientId", "==", pid)),
+    // Get all patient IDs for this doctor
+    const plansSnap = await getDocs(
+        query(collection(db, "treatment_plans"), where("doctorId", "==", doctorId)),
     );
-    const sessions = sessSnap.docs.map((d) => d.data() as Session);
-    sessions.sort((a, b) => {
-      const aTime = (a.date as any)?.toMillis?.() || 0;
-      const bTime = (b.date as any)?.toMillis?.() || 0;
-      return bTime - aTime;
-    });
+    const patientIds = [
+        ...new Set(plansSnap.docs.map((d) => d.data().patientId)),
+    ];
 
-    sessions.slice(0, 5).forEach((d) => {
-      totalAccuracy += d.accuracy;
-      count++;
-    });
-  }
+    if (patientIds.length === 0) return 0;
 
-  return count > 0 ? Math.round(totalAccuracy / count) : 0;
+    let totalAccuracy = 0;
+    let count = 0;
+
+    for (const pid of patientIds) {
+        const sessSnap = await getDocs(
+            query(collection(db, "sessions"), where("patientId", "==", pid)),
+        );
+        const sessions = sessSnap.docs.map((d) => d.data() as Session);
+        sessions.sort((a, b) => {
+            const aTime = (a.date as any)?.toMillis?.() || 0;
+            const bTime = (b.date as any)?.toMillis?.() || 0;
+            return bTime - aTime;
+        });
+
+        sessions.slice(0, 5).forEach((d) => {
+            totalAccuracy += d.accuracy;
+            count++;
+        });
+    }
+
+    return count > 0 ? Math.round(totalAccuracy / count) : 0;
 }
 
 // ── Update Session Effort ───────────────────────────
@@ -421,12 +421,12 @@ export async function getAverageAccuracy(doctorId: string): Promise<number> {
  * @return {Promise<void>}
  */
 export async function updateSessionEffort(
-  sessionId: string,
-  effort: "easy" | "normal" | "hard",
+    sessionId: string,
+    effort: "easy" | "normal" | "hard",
 ): Promise<void> {
-  await updateDoc(doc(db, "sessions", sessionId), {
-    perceivedEffort: effort,
-  });
+    await updateDoc(doc(db, "sessions", sessionId), {
+        perceivedEffort: effort,
+    });
 }
 
 // ── Delete Session Video ────────────────────────────
@@ -439,21 +439,21 @@ export async function updateSessionEffort(
  * @return {Promise<void>}
  */
 export async function deleteSessionVideo(
-  sessionId: string,
-  videoPath: string,
-  thumbnailPath: string,
+    sessionId: string,
+    videoPath: string,
+    thumbnailPath: string,
 ): Promise<void> {
-  // 1. Delete local files using our videoService
-  try {
-    const { deleteLocalVideo } = require("./videoService");
-    await deleteLocalVideo(videoPath, thumbnailPath);
-  } catch (err) {
-    console.warn("Failed to delete local files in service:", err);
-  }
+    // 1. Delete local files using our videoService
+    try {
+        const { deleteLocalVideo } = require("./videoService");
+        await deleteLocalVideo(videoPath, thumbnailPath);
+    } catch (err) {
+        console.warn("Failed to delete local files in service:", err);
+    }
 
-  // 2. Clear paths in Firestore doc
-  await updateDoc(doc(db, "sessions", sessionId), {
-    videoLocalPath: null,
-    thumbnailPath: null,
-  });
+    // 2. Clear paths in Firestore doc
+    await updateDoc(doc(db, "sessions", sessionId), {
+        videoLocalPath: null,
+        thumbnailPath: null,
+    });
 }

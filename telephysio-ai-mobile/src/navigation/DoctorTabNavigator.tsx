@@ -33,12 +33,12 @@ const Tab = createBottomTabNavigator<DoctorTabParamList>();
  * </p>
  */
 const TAB_ICONS: Record<
-  keyof DoctorTabParamList,
-  { active: string; inactive: string }
+keyof DoctorTabParamList,
+{ active: string; inactive: string }
 > = {
-  Dashboard: { active: "grid", inactive: "grid-outline" },
-  Assignments: { active: "clipboard", inactive: "clipboard-outline" },
-  Patients: { active: "people", inactive: "people-outline" },
+    Dashboard: { active: "grid", inactive: "grid-outline" },
+    Assignments: { active: "clipboard", inactive: "clipboard-outline" },
+    Patients: { active: "people", inactive: "people-outline" },
 };
 
 /**
@@ -56,40 +56,40 @@ const TAB_ICONS: Record<
  * @return JSX element chứa {@code Tab.Navigator} với các màn hình bác sĩ
  */
 export const DoctorTabNavigator: React.FC = () => {
-  const { t } = useTranslation();
+    const { t } = useTranslation();
 
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#0f766e",
-        tabBarInactiveTintColor: colors.onSurfaceVariant,
-        tabBarStyle: {
-          backgroundColor: colors.surfaceContainerLowest,
-          borderTopColor: colors.outlineVariant,
-          borderTopWidth: 1,
-        },
-        tabBarLabelStyle: {
-          fontFamily: typography.labelSm.fontFamily,
-          fontSize: typography.labelSm.fontSize,
-          fontWeight: typography.labelSm.fontWeight,
-        },
-        tabBarIcon: ({ focused, color, size }) => {
-          const icons = TAB_ICONS[route.name];
-          const iconName = focused ? icons.active : icons.inactive;
-          return <Ionicons name={iconName as any} size={size} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen
-        name="Dashboard"
-        component={DoctorDashboardScreen}
-        options={{ title: "Dashboard", headerShown: false }}
-      />
-      <Tab.Screen
-        name="Assignments"
-        component={DoctorAssignmentsScreen}
-        options={{ title: "Assignments", headerShown: false }}
-      />
-    </Tab.Navigator>
-  );
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarActiveTintColor: "#0f766e",
+                tabBarInactiveTintColor: colors.onSurfaceVariant,
+                tabBarStyle: {
+                    backgroundColor: colors.surfaceContainerLowest,
+                    borderTopColor: colors.outlineVariant,
+                    borderTopWidth: 1,
+                },
+                tabBarLabelStyle: {
+                    fontFamily: typography.labelSm.fontFamily,
+                    fontSize: typography.labelSm.fontSize,
+                    fontWeight: typography.labelSm.fontWeight,
+                },
+                tabBarIcon: ({ focused, color, size }) => {
+                    const icons = TAB_ICONS[route.name];
+                    const iconName = focused ? icons.active : icons.inactive;
+                    return <Ionicons name={iconName as any} size={size} color={color} />;
+                },
+            })}
+        >
+            <Tab.Screen
+                name="Dashboard"
+                component={DoctorDashboardScreen}
+                options={{ title: "Dashboard", headerShown: false }}
+            />
+            <Tab.Screen
+                name="Assignments"
+                component={DoctorAssignmentsScreen}
+                options={{ title: "Assignments", headerShown: false }}
+            />
+        </Tab.Navigator>
+    );
 };

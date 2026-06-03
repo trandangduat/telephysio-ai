@@ -22,15 +22,15 @@ type BadgeVariant = 'success' | 'primary' | 'neutral' | 'error';
  * @param label     Văn bản hiển thị bên trong nhãn.
  */
 interface BadgeProps {
-  variant?: BadgeVariant;
-  label: string;
+    variant?: BadgeVariant;
+    label: string;
 }
 
 const variantMap: Record<BadgeVariant, { bg: string; text: string }> = {
-  success: { bg: colors.tertiaryContainer,    text: colors.onTertiaryContainer },
-  primary: { bg: colors.primaryContainer,     text: colors.onPrimaryContainer },
-  neutral: { bg: colors.surfaceContainerHigh, text: colors.onSurfaceVariant },
-  error:   { bg: colors.errorContainer,       text: colors.onErrorContainer },
+    success: { bg: colors.tertiaryContainer,    text: colors.onTertiaryContainer },
+    primary: { bg: colors.primaryContainer,     text: colors.onPrimaryContainer },
+    neutral: { bg: colors.surfaceContainerHigh, text: colors.onSurfaceVariant },
+    error:   { bg: colors.errorContainer,       text: colors.onErrorContainer },
 };
 
 /**
@@ -41,21 +41,21 @@ const variantMap: Record<BadgeVariant, { bg: string; text: string }> = {
  * @return          Phần tử View dạng pill với màu nền và màu chữ tương ứng biến thể.
  */
 export const Badge: React.FC<BadgeProps> = ({ variant = 'neutral', label }) => {
-  const { bg, text } = variantMap[variant];
-  return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
-      <AppText variant="labelMd" color={text}>
-        {label}
-      </AppText>
-    </View>
-  );
+    const { bg, text } = variantMap[variant];
+    return (
+        <View style={[styles.container, { backgroundColor: bg }]}>
+            <AppText variant="labelMd" color={text}>
+                {label}
+            </AppText>
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'flex-start',
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  } as ViewStyle,
+    container: {
+        alignSelf: 'flex-start',
+        borderRadius: radius.full,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 2,
+    } as ViewStyle,
 });

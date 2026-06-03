@@ -12,11 +12,11 @@
 
 import React from 'react';
 import {
-  View,
-  ViewProps,
-  TouchableOpacity,
-  StyleSheet,
-  ViewStyle,
+    View,
+    ViewProps,
+    TouchableOpacity,
+    StyleSheet,
+    ViewStyle,
 } from 'react-native';
 import { colors, radius, spacing, shadows } from '../../theme';
 
@@ -28,10 +28,10 @@ import { colors, radius, spacing, shadows } from '../../theme';
  * @param children  Các phần tử con bên trong thẻ.
  */
 interface CardProps extends ViewProps {
-  level?: 1 | 2;
-  onPress?: () => void;
-  style?: ViewStyle;
-  children: React.ReactNode;
+    level?: 1 | 2;
+    onPress?: () => void;
+    style?: ViewStyle;
+    children: React.ReactNode;
 }
 
 /**
@@ -44,49 +44,49 @@ interface CardProps extends ViewProps {
  * @return          View hoặc TouchableOpacity tùy thuộc vào prop onPress.
  */
 export const Card: React.FC<CardProps> = ({
-  level = 1,
-  onPress,
-  style,
-  children,
-  ...rest
-}) => {
-  const cardStyle: ViewStyle[] = [
-    styles.base,
-    level === 1 ? styles.level1 : styles.level2,
+    level = 1,
+    onPress,
     style,
-  ];
+    children,
+    ...rest
+}) => {
+    const cardStyle: ViewStyle[] = [
+        styles.base,
+        level === 1 ? styles.level1 : styles.level2,
+        style,
+    ];
 
-  if (onPress) {
+    if (onPress) {
+        return (
+            <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onPress}
+                style={cardStyle}
+                {...rest}
+            >
+                {children}
+            </TouchableOpacity>
+        );
+    }
+
     return (
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={onPress}
-        style={cardStyle}
-        {...rest}
-      >
-        {children}
-      </TouchableOpacity>
+        <View style={cardStyle} {...rest}>
+            {children}
+        </View>
     );
-  }
-
-  return (
-    <View style={cardStyle} {...rest}>
-      {children}
-    </View>
-  );
 };
 
 const styles = StyleSheet.create({
-  base: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radius.xxl,
-    padding: spacing.lg,
-    borderCurve: 'continuous',
-  } as ViewStyle,
-  level1: {
-    ...shadows.card,
-  } as ViewStyle,
-  level2: {
-    ...shadows.floating,
-  } as ViewStyle,
+    base: {
+        backgroundColor: colors.surfaceContainerLowest,
+        borderRadius: radius.xxl,
+        padding: spacing.lg,
+        borderCurve: 'continuous',
+    } as ViewStyle,
+    level1: {
+        ...shadows.card,
+    } as ViewStyle,
+    level2: {
+        ...shadows.floating,
+    } as ViewStyle,
 });

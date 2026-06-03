@@ -14,7 +14,7 @@ import { colors, radius, spacing } from '../../theme';
 type PoseSeverity = 'ok' | 'warn' | 'stop';
 
 interface PoseWarningOverlayProps {
-  severity: PoseSeverity;
+    severity: PoseSeverity;
 }
 
 /**
@@ -26,52 +26,52 @@ interface PoseWarningOverlayProps {
  * @return {React.FC<PoseWarningOverlayProps> | null} Component lớp phủ cảnh báo hoặc null
  */
 export const PoseWarningOverlay: React.FC<PoseWarningOverlayProps> = ({ severity }) => {
-  const { t } = useTranslation();
+    const { t } = useTranslation();
 
-  if (severity === 'ok') return null;
+    if (severity === 'ok') return null;
 
-  // Vibrate when severity = stop
-  React.useEffect(() => {
-    if (severity === 'stop') {
-      Vibration.vibrate([0, 400, 100, 400]);
-    }
-  }, [severity]);
+    // Vibrate when severity = stop
+    React.useEffect(() => {
+        if (severity === 'stop') {
+            Vibration.vibrate([0, 400, 100, 400]);
+        }
+    }, [severity]);
 
-  const isStop = severity === 'stop';
+    const isStop = severity === 'stop';
 
-  return (
-    <View
-      style={[
-        styles.base,
-        isStop ? styles.stop : styles.warn,
-      ]}
-    >
-      <AppText
-        variant={isStop ? 'headlineMd' : 'bodyMd'}
-        color={isStop ? colors.onError : colors.onErrorContainer}
-      >
-        {isStop ? t('training.poseStop') : t('training.poseWarn')}
-      </AppText>
-    </View>
-  );
+    return (
+        <View
+            style={[
+                styles.base,
+                isStop ? styles.stop : styles.warn,
+            ]}
+        >
+            <AppText
+                variant={isStop ? 'headlineMd' : 'bodyMd'}
+                color={isStop ? colors.onError : colors.onErrorContainer}
+            >
+                {isStop ? t('training.poseStop') : t('training.poseWarn')}
+            </AppText>
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  base: {
-    position: 'absolute',
-    alignSelf: 'center',
-    top: '40%',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    zIndex: 10,
-  } as ViewStyle,
-  warn: {
-    backgroundColor: colors.errorContainer,
-    borderColor: colors.error,
-    borderWidth: 1,
-  },
-  stop: {
-    backgroundColor: colors.error,
-  },
+    base: {
+        position: 'absolute',
+        alignSelf: 'center',
+        top: '40%',
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderRadius: radius.md,
+        zIndex: 10,
+    } as ViewStyle,
+    warn: {
+        backgroundColor: colors.errorContainer,
+        borderColor: colors.error,
+        borderWidth: 1,
+    },
+    stop: {
+        backgroundColor: colors.error,
+    },
 });

@@ -53,30 +53,30 @@ export type AuthStackParamList = {
  * </p>
  */
 export type RootStackParamList = {
-  MainTabs: undefined;
-  Calibration: { assignmentId: string; exerciseIndex: number; recordVideo?: boolean };
-  Training: { assignmentId: string; exerciseIndex: number; recordVideo?: boolean };
-  ExerciseResult: {
-    assignmentId: string;
-    exerciseIndex: number;
-    accuracy: number;
-    durationSeconds: number;
-    reps: number;
-    sets: number;
-    recordVideo?: boolean;
-    setDurations?: number[];
-    setsData?: {
-      setNumber: number;
-      repsCompleted: number;
-      durationSec: number;
-      accuracy: number;
-    }[];
-  };
-  WorkoutSummary: { assignmentId: string; recordVideo?: boolean };
-  Profile: undefined;
-  MyAssignments: undefined;
-  WorkoutDetail: { assignmentId: string };
-  Notifications: undefined;
+    MainTabs: undefined;
+    Calibration: { assignmentId: string; exerciseIndex: number; recordVideo?: boolean };
+    Training: { assignmentId: string; exerciseIndex: number; recordVideo?: boolean };
+    ExerciseResult: {
+        assignmentId: string;
+        exerciseIndex: number;
+        accuracy: number;
+        durationSeconds: number;
+        reps: number;
+        sets: number;
+        recordVideo?: boolean;
+        setDurations?: number[];
+        setsData?: {
+            setNumber: number;
+            repsCompleted: number;
+            durationSec: number;
+            accuracy: number;
+        }[];
+    };
+    WorkoutSummary: { assignmentId: string; recordVideo?: boolean };
+    Profile: undefined;
+    MyAssignments: undefined;
+    WorkoutDetail: { assignmentId: string };
+    Notifications: undefined;
 };
 
 /**
@@ -141,9 +141,9 @@ export type DoctorStackParamList = {
  * </p>
  */
 export type DoctorTabParamList = {
-  Dashboard: undefined;
-  Assignments: undefined;
-  Patients: undefined;
+    Dashboard: undefined;
+    Assignments: undefined;
+    Patients: undefined;
 };
 
 /**

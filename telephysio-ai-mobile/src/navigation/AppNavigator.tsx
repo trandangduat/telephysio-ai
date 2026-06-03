@@ -40,19 +40,19 @@ import { PatientSessionsScreen } from "../screens/Doctor/PatientSessionsScreen";
 
 import { colors, typography } from "../theme";
 import type {
-  AuthStackParamList,
-  RootStackParamList,
-  DoctorStackParamList,
+    AuthStackParamList,
+    RootStackParamList,
+    DoctorStackParamList,
 } from "./types";
 
 // ── Auth Stack ──────────────────────────────────────
 const Auth = createNativeStackNavigator<AuthStackParamList>();
 
 const AuthNavigator: React.FC = () => (
-  <Auth.Navigator screenOptions={{ headerShown: false }}>
-    <Auth.Screen name="Login" component={LoginScreen} />
-    <Auth.Screen name="SignUp" component={SignUpScreen} />
-  </Auth.Navigator>
+    <Auth.Navigator screenOptions={{ headerShown: false }}>
+        <Auth.Screen name="Login" component={LoginScreen} />
+        <Auth.Screen name="SignUp" component={SignUpScreen} />
+    </Auth.Navigator>
 );
 
 // ── Patient Stack ───────────────────────────────────
@@ -65,68 +65,68 @@ const PatientStack = createNativeStackNavigator<RootStackParamList>();
  * @return React.FC Component chứa Stack Navigator của Bệnh nhân
  */
 const PatientNavigator: React.FC = () => {
-  const { t } = useTranslation();
-  return (
-    <PatientStack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTitleStyle: {
-          fontFamily: typography.headlineMd.fontFamily,
-          fontSize: typography.headlineMd.fontSize,
-          fontWeight: typography.headlineMd.fontWeight,
-          color: colors.onSurface,
-        },
-        headerShadowVisible: false,
-        headerTintColor: colors.primary,
-      }}
-    >
-      <PatientStack.Screen
-        name="MainTabs"
-        component={BottomTabNavigator}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Calibration"
-        component={CalibrationScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Training"
-        component={TrainingScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="ExerciseResult"
-        component={ExerciseResultScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="WorkoutSummary"
-        component={WorkoutSummaryScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="MyAssignments"
-        component={MyAssignmentsScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="WorkoutDetail"
-        component={WorkoutDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <PatientStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ headerShown: false }}
-      />
-    </PatientStack.Navigator>
-  );
+    const { t } = useTranslation();
+    return (
+        <PatientStack.Navigator
+            screenOptions={{
+                headerStyle: { backgroundColor: colors.background },
+                headerTitleStyle: {
+                    fontFamily: typography.headlineMd.fontFamily,
+                    fontSize: typography.headlineMd.fontSize,
+                    fontWeight: typography.headlineMd.fontWeight,
+                    color: colors.onSurface,
+                },
+                headerShadowVisible: false,
+                headerTintColor: colors.primary,
+            }}
+        >
+            <PatientStack.Screen
+                name="MainTabs"
+                component={BottomTabNavigator}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Calibration"
+                component={CalibrationScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Training"
+                component={TrainingScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="ExerciseResult"
+                component={ExerciseResultScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="WorkoutSummary"
+                component={WorkoutSummaryScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="MyAssignments"
+                component={MyAssignmentsScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="WorkoutDetail"
+                component={WorkoutDetailScreen}
+                options={{ headerShown: false }}
+            />
+            <PatientStack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+                options={{ headerShown: false }}
+            />
+        </PatientStack.Navigator>
+    );
 };
 
 // ── Doctor Stack ────────────────────────────────────
@@ -139,63 +139,63 @@ const DoctorStack = createNativeStackNavigator<DoctorStackParamList>();
  * @return React.FC Component chứa Stack Navigator của Bác sĩ
  */
 const DoctorNavigator: React.FC = () => {
-  const { t } = useTranslation();
-  return (
-    <DoctorStack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTitleStyle: {
-          fontFamily: typography.headlineMd.fontFamily,
-          fontSize: typography.headlineMd.fontSize,
-          fontWeight: typography.headlineMd.fontWeight,
-          color: colors.onSurface,
-        },
-        headerShadowVisible: false,
-        headerTintColor: "#0f766e",
-      }}
-    >
-      <DoctorStack.Screen
-        name="DoctorTabs"
-        component={DoctorTabNavigator}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="PatientDetail"
-        component={PatientDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="DoctorProfile"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="TemplateEditor"
-        component={TemplateEditorScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="AssignTemplate"
-        component={AssignTemplateScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="PatientSessions"
-        component={PatientSessionsScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="DoctorSessionDetail"
-        component={DoctorSessionDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <DoctorStack.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ headerShown: false }}
-      />
-    </DoctorStack.Navigator>
-  );
+    const { t } = useTranslation();
+    return (
+        <DoctorStack.Navigator
+            screenOptions={{
+                headerStyle: { backgroundColor: colors.background },
+                headerTitleStyle: {
+                    fontFamily: typography.headlineMd.fontFamily,
+                    fontSize: typography.headlineMd.fontSize,
+                    fontWeight: typography.headlineMd.fontWeight,
+                    color: colors.onSurface,
+                },
+                headerShadowVisible: false,
+                headerTintColor: "#0f766e",
+            }}
+        >
+            <DoctorStack.Screen
+                name="DoctorTabs"
+                component={DoctorTabNavigator}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="PatientDetail"
+                component={PatientDetailScreen}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="DoctorProfile"
+                component={ProfileScreen}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="TemplateEditor"
+                component={TemplateEditorScreen}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="AssignTemplate"
+                component={AssignTemplateScreen}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="PatientSessions"
+                component={PatientSessionsScreen}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="DoctorSessionDetail"
+                component={DoctorSessionDetailScreen}
+                options={{ headerShown: false }}
+            />
+            <DoctorStack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+                options={{ headerShown: false }}
+            />
+        </DoctorStack.Navigator>
+    );
 };
 
 // ── Root: Auth → Role-based ─────────────────────────
@@ -206,31 +206,31 @@ const DoctorNavigator: React.FC = () => {
  * @return React.FC Component AppNavigator
  */
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, role, uid } = useAuth();
+    const { isAuthenticated, isLoading, role, uid } = useAuth();
 
-  // Show splash while checking Firebase Auth state
-  if (isLoading) {
-    return (
-      <View style={styles.splash}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+    // Show splash while checking Firebase Auth state
+    if (isLoading) {
+        return (
+            <View style={styles.splash}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
+    }
 
-  // Not logged in → show Login/SignUp
-  if (!isAuthenticated) {
-    return <AuthNavigator />;
-  }
+    // Not logged in → show Login/SignUp
+    if (!isAuthenticated) {
+        return <AuthNavigator />;
+    }
 
-  // Logged in → show role-based navigator
-  return role === "doctor" ? <DoctorNavigator /> : <PatientNavigator />;
+    // Logged in → show role-based navigator
+    return role === "doctor" ? <DoctorNavigator /> : <PatientNavigator />;
 };
 
 const styles = StyleSheet.create({
-  splash: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
-  },
+    splash: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: colors.background,
+    },
 });

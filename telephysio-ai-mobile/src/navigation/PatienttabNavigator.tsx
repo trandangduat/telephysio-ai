@@ -41,17 +41,17 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
  * </p>
  */
 const TAB_ICONS: Record<
-  keyof BottomTabParamList,
-  { active: string; inactive: string }
+keyof BottomTabParamList,
+{ active: string; inactive: string }
 > = {
-  Home: { active: "home", inactive: "home-outline" },
-  Workout: { active: "barbell", inactive: "barbell-outline" },
-  Sessions: {
-    active: "checkmark-circle",
-    inactive: "checkmark-circle-outline",
-  },
-  Library: { active: "library", inactive: "library-outline" },
-  Progress: { active: "trending-up", inactive: "trending-up-outline" },
+    Home: { active: "home", inactive: "home-outline" },
+    Workout: { active: "barbell", inactive: "barbell-outline" },
+    Sessions: {
+        active: "checkmark-circle",
+        inactive: "checkmark-circle-outline",
+    },
+    Library: { active: "library", inactive: "library-outline" },
+    Progress: { active: "trending-up", inactive: "trending-up-outline" },
 };
 
 /**
@@ -67,67 +67,67 @@ const TAB_ICONS: Record<
  * @return JSX element chứa {@code Tab.Navigator} với các màn hình bệnh nhân
  */
 export const BottomTabNavigator: React.FC = () => {
-  const { t } = useTranslation();
+    const { t } = useTranslation();
 
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.onSurfaceVariant,
-        tabBarStyle: {
-          backgroundColor: colors.surfaceContainerLowest,
-          borderTopColor: colors.outlineVariant,
-          borderTopWidth: 1,
-        },
-        tabBarLabelStyle: {
-          fontFamily: typography.labelSm.fontFamily,
-          fontSize: typography.labelSm.fontSize,
-          fontWeight: typography.labelSm.fontWeight,
-        },
-        headerStyle: {
-          backgroundColor: colors.background,
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0,
-        },
-        headerTitleStyle: {
-          fontFamily: typography.headlineMd.fontFamily,
-          fontSize: typography.headlineMd.fontSize,
-          fontWeight: typography.headlineMd.fontWeight,
-          color: colors.onSurface,
-        },
-        tabBarIcon: ({ focused, color, size }) => {
-          const icons = TAB_ICONS[route.name];
-          const iconName = focused ? icons.active : icons.inactive;
-          return <Ionicons name={iconName as any} size={size} color={color} />;
-        },
-      })}
-    >
-      {/* <Tab.Screen
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: colors.onSurfaceVariant,
+                tabBarStyle: {
+                    backgroundColor: colors.surfaceContainerLowest,
+                    borderTopColor: colors.outlineVariant,
+                    borderTopWidth: 1,
+                },
+                tabBarLabelStyle: {
+                    fontFamily: typography.labelSm.fontFamily,
+                    fontSize: typography.labelSm.fontSize,
+                    fontWeight: typography.labelSm.fontWeight,
+                },
+                headerStyle: {
+                    backgroundColor: colors.background,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                    borderBottomWidth: 0,
+                },
+                headerTitleStyle: {
+                    fontFamily: typography.headlineMd.fontFamily,
+                    fontSize: typography.headlineMd.fontSize,
+                    fontWeight: typography.headlineMd.fontWeight,
+                    color: colors.onSurface,
+                },
+                tabBarIcon: ({ focused, color, size }) => {
+                    const icons = TAB_ICONS[route.name];
+                    const iconName = focused ? icons.active : icons.inactive;
+                    return <Ionicons name={iconName as any} size={size} color={color} />;
+                },
+            })}
+        >
+            {/* <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{ title: t("tabs.home", "Home"), headerShown: false }}
       /> */}
-      <Tab.Screen
-        name="Home"
-        component={WorkoutScreen}
-        options={{ title: t("tabs.workout", "Workout"), headerShown: false }}
-      />
-      <Tab.Screen
-        name="Sessions"
-        component={SessionScreen}
-        options={{ title: t("tabs.sessions", "Sessions"), headerShown: false }}
-      />
-      {/* <Tab.Screen
+            <Tab.Screen
+                name="Home"
+                component={WorkoutScreen}
+                options={{ title: t("tabs.workout", "Workout"), headerShown: false }}
+            />
+            <Tab.Screen
+                name="Sessions"
+                component={SessionScreen}
+                options={{ title: t("tabs.sessions", "Sessions"), headerShown: false }}
+            />
+            {/* <Tab.Screen
         name="Library"
         component={LibraryScreen}
         options={{ title: t('tabs.library', 'Library'), headerShown: false }}
       /> */}
-      {/* <Tab.Screen
+            {/* <Tab.Screen
         name="Progress"
         component={ProgressScreen}
         options={{ title: t("tabs.progress", "Progress"), headerShown: false }}
       /> */}
-    </Tab.Navigator>
-  );
+        </Tab.Navigator>
+    );
 };

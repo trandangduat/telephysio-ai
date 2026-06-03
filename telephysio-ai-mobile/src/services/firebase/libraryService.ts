@@ -15,18 +15,18 @@ import { LibraryItem } from "./types";
  * @return {Promise<LibraryItem[]>} Mảng chứa dữ liệu các mục thư viện
  */
 export const getLibraryItems = async (
-  maxItems = 50,
+    maxItems = 50,
 ): Promise<LibraryItem[]> => {
-  try {
-    const q = query(
-      collection(db, "library_items"),
-      orderBy("createdAt", "desc"),
-      limit(maxItems),
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => doc.data() as LibraryItem);
-  } catch (error) {
-    console.error("Error fetching library items:", error);
-    throw error;
-  }
+    try {
+        const q = query(
+            collection(db, "library_items"),
+            orderBy("createdAt", "desc"),
+            limit(maxItems),
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map((doc) => doc.data() as LibraryItem);
+    } catch (error) {
+        console.error("Error fetching library items:", error);
+        throw error;
+    }
 };

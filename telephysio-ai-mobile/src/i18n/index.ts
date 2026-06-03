@@ -18,8 +18,8 @@ import en from './locales/en';
 import vi from './locales/vi';
 
 const resources = {
-  en: { translation: en },
-  vi: { translation: vi },
+    en: { translation: en },
+    vi: { translation: vi },
 };
 
 /**
@@ -30,28 +30,28 @@ const resources = {
  * @returns {string} Mã ngôn ngữ (ví dụ: 'en', 'vi')
  */
 function getDeviceLanguage(): string {
-  try {
-    const locales = getLocales();
-    if (locales.length > 0) {
-      const lang = locales[0].languageCode;
-      if (lang && lang in resources) {
-        return lang;
-      }
-    }
-  } catch {
+    try {
+        const locales = getLocales();
+        if (locales.length > 0) {
+            const lang = locales[0].languageCode;
+            if (lang && lang in resources) {
+                return lang;
+            }
+        }
+    } catch {
     // expo-localization may throw on web during SSR
-  }
-  return 'en';
+    }
+    return 'en';
 }
 
 i18n.use(initReactI18next).init({
-  resources,
-  lng: 'en', // Default to English as requested
-  fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false, // React already escapes
-  },
-  compatibilityJSON: 'v4',
+    resources,
+    lng: 'en', // Default to English as requested
+    fallbackLng: 'en',
+    interpolation: {
+        escapeValue: false, // React already escapes
+    },
+    compatibilityJSON: 'v4',
 });
 
 export default i18n;

@@ -10,10 +10,10 @@ import { AppText, ProgressBar } from '../ui';
 import { colors, spacing } from '../../theme';
 
 interface WorkoutCounterProps {
-  currentRep: number;
-  totalReps: number;
-  currentSet: number;
-  totalSets: number;
+    currentRep: number;
+    totalReps: number;
+    currentSet: number;
+    totalSets: number;
 }
 
 /**
@@ -27,39 +27,39 @@ interface WorkoutCounterProps {
  * @return {React.FC<WorkoutCounterProps>} Component bộ đếm luyện tập
  */
 export const WorkoutCounter: React.FC<WorkoutCounterProps> = ({
-  currentRep,
-  totalReps,
-  currentSet,
-  totalSets,
+    currentRep,
+    totalReps,
+    currentSet,
+    totalSets,
 }) => {
-  return (
-    <View style={styles.container}>
-      <AppText variant="labelMd" color={colors.onSurfaceVariant}>
+    return (
+        <View style={styles.container}>
+            <AppText variant="labelMd" color={colors.onSurfaceVariant}>
         HIỆP {currentSet}/{totalSets}
-      </AppText>
-      <View style={styles.repRow}>
-        <AppText
-          variant="headlineXl"
-          style={{ fontVariant: ['tabular-nums'] }}
-        >
-          {currentRep}
-        </AppText>
-        <AppText variant="headlineMd" color={colors.onSurfaceVariant}>
+            </AppText>
+            <View style={styles.repRow}>
+                <AppText
+                    variant="headlineXl"
+                    style={{ fontVariant: ['tabular-nums'] }}
+                >
+                    {currentRep}
+                </AppText>
+                <AppText variant="headlineMd" color={colors.onSurfaceVariant}>
           /{totalReps}
-        </AppText>
-      </View>
-      <ProgressBar progress={currentRep / totalReps} variant="standard" />
-    </View>
-  );
+                </AppText>
+            </View>
+            <ProgressBar progress={currentRep / totalReps} variant="standard" />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.sm,
-  },
-  repRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.xs,
-  },
+    container: {
+        gap: spacing.sm,
+    },
+    repRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: spacing.xs,
+    },
 });
