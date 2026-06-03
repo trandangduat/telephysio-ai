@@ -1,3 +1,7 @@
+/**
+ * @file seed-custom-assignment.ts
+ * @description Description of seed-custom-assignment.ts
+ */
 import * as dotenv from 'dotenv';
 import path from 'path';
 
@@ -7,6 +11,10 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../src/services/firebase/config';
 
+/**
+ * Description of seedAssignment
+ * @returns Description of return value
+ */
 async function seedAssignment() {
   console.log("🚀 Starting to seed custom assignment...");
   

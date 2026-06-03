@@ -1,12 +1,8 @@
 /**
- * AuthContext — Context quản lý xác thực Firebase và phân quyền người dùng thông qua Firestore.
- *
- * Nhiệm vụ chính:
- *   - Lắng nghe trạng thái đăng nhập Firebase Auth (tự động đăng nhập khi mở lại app).
- *   - Lấy thông tin hồ sơ (profile) của người dùng từ Firestore (vai trò, tên hiển thị).
- *   - Cung cấp trạng thái đang tải (loading) trong khi kiểm tra xác thực.
- *   - Cung cấp hàm switchRole để chuyển đổi vai trò (dành cho chế độ phát triển - dev mode).
+ * @file AuthContext.tsx
+ * @description Context quản lý xác thực Firebase và phân quyền người dùng thông qua Firestore.
  */
+
 
 import React, {
     createContext,
@@ -101,10 +97,19 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     const uid = user?.uid || authUser?.uid || null;
     const isAuthenticated = !!user;
 
+    /**
+     * Chuyển đổi vai trò của người dùng (dành cho mục đích phát triển và thử nghiệm).
+     * @param newRole Vai trò mới cần chuyển sang.
+     * @returns Không trả về giá trị.
+     */
     const switchRole = (newRole: UserRole) => {
         setRoleOverride(newRole);
     };
 
+    /**
+     * Đăng xuất người dùng khỏi hệ thống.
+     * @returns Promise hoàn thành khi quá trình đăng xuất kết thúc.
+     */
     const logout = async () => {
         try {
             // Xóa trạng thái ngay lập tức để trải nghiệm người dùng tốt hơn

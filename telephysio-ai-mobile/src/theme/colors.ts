@@ -7,7 +7,9 @@
  *   - Không hardcode giá trị hex trực tiếp trong component.
  *   - Chỉ import `colors` hoặc `palette` từ file này.
  */
-
+/**
+ * @description Đối tượng chứa tất cả các màu cơ bản (token) của hệ thống thiết kế.
+ */
 export const colors = {
     // Bề mặt
     surface:                '#f5faff',

@@ -1,4 +1,9 @@
 /**
+ * @file ExerciseResultScreen.tsx
+ * @description Màn hình kết quả bài tập hiển thị điểm số, thời gian và độ chính xác của từng hiệp tập.
+ */
+
+/**
  * ExerciseResultScreen - Màn hình kết quả bài tập.
  * Hiển thị điểm số, thời gian, và độ chính xác của từng hiệp tập (set) sau khi người dùng hoàn thành một bài tập.
  */
@@ -39,6 +44,11 @@ import { useTranslation } from "react-i18next";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ExerciseResult">;
 
+/**
+ * Trả về màu sắc tương ứng với độ chính xác.
+ * @param acc - Độ chính xác (0-100)
+ * @returns Mã màu hex tương ứng
+ */
 function accuracyColor(acc: number): string {
     if (acc >= 80) return "#10b981"; // màu xanh thanh lịch
     if (acc >= 60) return "#f59e0b"; // màu hổ phách
@@ -87,6 +97,10 @@ export const ExerciseResultScreen: React.FC<Props> = ({
     const videoRef = useRef<Video>(null);
 
     useEffect(() => {
+        /**
+         * Tải dữ liệu bài tập và cấu hình từ Firestore.
+         * @returns Một Promise hoàn thành khi dữ liệu được tải xong.
+         */
         async function loadData() {
             if (!uid) return;
             try {
@@ -107,6 +121,10 @@ export const ExerciseResultScreen: React.FC<Props> = ({
 
     // Video URI sẽ được thiết lập cho từng hiệp tập được chọn trong handleOpenVideo
 
+    /**
+     * Xử lý chuyển sang bài tập tiếp theo hoặc kết thúc buổi tập.
+     * @returns Một Promise hoàn thành khi quá trình lưu và chuyển màn hình hoàn tất.
+     */
     const handleNext = async () => {
         if (!uid || !assignment) return;
         setSaving(true);
@@ -266,6 +284,11 @@ export const ExerciseResultScreen: React.FC<Props> = ({
                   });
               })();
 
+    /**
+     * Mở video phát lại cho một hiệp tập cụ thể.
+     * @param set - Thông tin hiệp tập cần xem lại video
+     * @returns Không có giá trị trả về
+     */
     const handleOpenVideo = (set: (typeof displaySets)[0]) => {
         setSelectedSet(set);
         setSelectedRep(null);
@@ -277,11 +300,19 @@ export const ExerciseResultScreen: React.FC<Props> = ({
         }
     };
 
+    /**
+     * Đóng trình phát video.
+     * @returns Không có giá trị trả về
+     */
     const handleCloseVideo = () => {
         setSelectedSet(null);
         setPlaybackStatus(null);
     };
 
+    /**
+     * Chuyển đổi trạng thái phát/tạm dừng của video.
+     * @returns Một Promise hoàn thành khi trạng thái video thay đổi.
+     */
     const togglePlayPause = async () => {
         if (!videoRef.current || !playbackStatus || !playbackStatus.isLoaded)
             return;
@@ -296,6 +327,11 @@ export const ExerciseResultScreen: React.FC<Props> = ({
         }
     };
 
+    /**
+     * Định dạng thời gian từ mili-giây sang chuỗi phút:giây.
+     * @param ms - Thời gian tính bằng mili-giây
+     * @returns Chuỗi định dạng thời gian (VD: "1:30")
+     */
     const formatTime = (ms: number) => {
         if (!ms || isNaN(ms)) return "0:00";
         const totalSecs = Math.floor(ms / 1000);
@@ -344,6 +380,11 @@ export const ExerciseResultScreen: React.FC<Props> = ({
         }
     }, [playbackSegment]);
 
+    /**
+     * Xử lý cập nhật trạng thái phát lại của video.
+     * @param s - Trạng thái phát lại AV hiện tại
+     * @returns Không có giá trị trả về
+     */
     const handlePlaybackUpdate = (s: AVPlaybackStatus) => {
         setPlaybackStatus(s);
         if (s.isLoaded && playbackSegment) {

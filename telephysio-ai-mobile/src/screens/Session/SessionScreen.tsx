@@ -1,4 +1,9 @@
 /**
+ * @file SessionScreen.tsx
+ * @description Màn hình chi tiết buổi tập, hiển thị video ghi hình và phản hồi từ bác sĩ.
+ */
+
+/**
  * SessionScreen - Màn hình chi tiết buổi tập.
  * Hiển thị thông tin chi tiết về buổi tập, video ghi hình bài tập và phản hồi từ bác sĩ.
  */
@@ -37,6 +42,11 @@ import { getVideoThumbnailUri } from "../../utils/videoUtils";
 
 // ─── Hàm Hỗ Trợ ─────────────────────────────────────────────────────────────
 
+/**
+ * Định dạng đối tượng thời gian thành chuỗi hiển thị
+ * @param raw - Giá trị thời gian gốc (đối tượng Date hoặc chuỗi/số)
+ * @returns Chuỗi thời gian đã được định dạng
+ */
 function formatDate(raw: any): string {
     try {
         const d: Date =
@@ -54,12 +64,22 @@ function formatDate(raw: any): string {
     }
 }
 
+/**
+ * Lấy mã màu dựa trên mức độ chính xác của bài tập
+ * @param acc - Phần trăm độ chính xác
+ * @returns Mã màu HEX
+ */
 function accuracyColor(acc: number): string {
     if (acc >= 80) return "#059669";
     if (acc >= 60) return "#d97706";
     return "#dc2626";
 }
 
+/**
+ * Định dạng thời lượng từ giây sang chuỗi "phút:giây"
+ * @param totalSeconds - Tổng số giây
+ * @returns Chuỗi thời gian đã định dạng
+ */
 function formatDurationSeconds(totalSeconds?: number): string {
     if (totalSeconds === undefined || totalSeconds === null) return "—";
     const safeSeconds = Number.isFinite(totalSeconds)
@@ -78,6 +98,14 @@ interface SessionDetailModalProps {
     onClose: () => void;
 }
 
+/**
+ * Modal hiển thị chi tiết của một buổi tập, bao gồm video và phản hồi
+ * @param props - Các thuộc tính truyền vào component
+ * @param props.session - Thông tin buổi tập
+ * @param props.visible - Trạng thái hiển thị modal
+ * @param props.onClose - Hàm gọi khi đóng modal
+ * @returns Component React hiển thị modal chi tiết
+ */
 const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     session,
     visible,
@@ -95,6 +123,10 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     // Hỗ trợ tương thích ngược, sử dụng video của set cuối cùng làm mặc định
     const videoUrl = (session as any)?.videoUrl || null;
 
+    /**
+     * Chuyển đổi trạng thái phát/tạm dừng video
+     * @returns Không có giá trị trả về
+     */
     const togglePlay = async () => {
         if (!videoRef.current) return;
         try {
@@ -871,6 +903,15 @@ const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
     );
 };
 
+/**
+ * Thẻ hiển thị một chỉ số thống kê cơ bản
+ * @param props - Thông tin thuộc tính
+ * @param props.icon - Tên icon (Ionicons)
+ * @param props.label - Nhãn mô tả
+ * @param props.value - Giá trị thống kê
+ * @param props.valueColor - Màu sắc của giá trị hiển thị
+ * @returns Component giao diện thẻ thống kê
+ */
 const StatCard = ({
     icon,
     label,
@@ -901,9 +942,8 @@ const StatCard = ({
 // ─── Màn Hình Chính ───────────────────────────────────────────────────────────
 
 /**
- * Thành phần (Component) đại diện cho màn hình lịch sử buổi tập.
- *
- * @returns {JSX.Element} Giao diện người dùng của màn hình buổi tập.
+ * Component màn hình danh sách và lịch sử các buổi tập
+ * @returns Component React hiển thị giao diện màn hình
  */
 export const SessionScreen: React.FC = () => {
     const navigation =
@@ -922,6 +962,10 @@ export const SessionScreen: React.FC = () => {
     const [detailVisible, setDetailVisible] = useState(false);
 
     useEffect(() => {
+        /**
+         * Hàm tải dữ liệu buổi tập và kế hoạch điều trị từ Firebase
+         * @returns Không có giá trị trả về
+         */
         async function loadData() {
             if (!uid) {
                 setLoading(false);
@@ -943,6 +987,11 @@ export const SessionScreen: React.FC = () => {
         loadData();
     }, [uid]);
 
+    /**
+     * Mở modal chi tiết của một buổi tập được chọn
+     * @param session - Đối tượng buổi tập cần xem chi tiết
+     * @returns Không có giá trị trả về
+     */
     const openDetail = (session: Session) => {
         setSelectedSession(session);
         setDetailVisible(true);
@@ -1322,6 +1371,13 @@ export const SessionScreen: React.FC = () => {
 
 // ─── Component Hỗ Trợ Nhỏ ────────────────────────────────────────────────────
 
+/**
+ * Component hiển thị nhãn nhỏ đi kèm với icon (Pill)
+ * @param props - Thuộc tính truyền vào
+ * @param props.icon - Tên icon cần hiển thị
+ * @param props.text - Nội dung nhãn
+ * @returns Component giao diện nhãn nhỏ
+ */
 const MetaPill = ({ icon, text }: { icon: string; text: string }) => (
     <View style={styles.metaPill}>
         <Ionicons name={icon as any} size={12} color="#64748b" />

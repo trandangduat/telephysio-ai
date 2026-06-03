@@ -81,7 +81,7 @@ const sizeStyles: Record<ButtonSize, { container: ViewStyle; typo: keyof typeof 
  * @param size          Kích thước nút: 'lg' | 'md' | 'sm' (mặc định: 'md').
  * @param disabled      Trạng thái vô hiệu hóa nút (mặc định: false).
  * @param style         Style ViewStyle bổ sung ghi đè lên style mặc định.
- * @return              Phần tử TouchableOpacity hiển thị nút với kiểu dáng tương ứng.
+ * @returns             Phần tử TouchableOpacity hiển thị nút với kiểu dáng tương ứng.
  */
 export const AppButton: React.FC<AppButtonProps> = ({
     label,

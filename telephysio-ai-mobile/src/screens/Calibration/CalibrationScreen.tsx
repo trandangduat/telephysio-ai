@@ -1,14 +1,6 @@
 /**
- * CalibrationScreen.tsx — Màn hình hiệu chỉnh tư thế trước khi tập luyện.
- *
- * <p>Triển khai Use Case UC1: xầy dựng luồng xin quyền camera và định vị tư thế người dùng
- * trước khi bắt đầu phương àn tập.
- * </p>
- *
- * <p>Giao diện toàn màn hình với camera trước, lớp phủ silhouette mô phỏng tư thế
- * và bảng trạng thái nhận diện. Nút bắt đầu chỉ được kích hoạt khi tư thế
- * đã sẵn sàng (trạng thái green/ready).
- * </p>
+ * @file CalibrationScreen.tsx
+ * @description Màn hình hiệu chỉnh tư thế trước khi tập luyện.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -42,10 +34,8 @@ type CalibrationStatus = 'not-ready' | 'partial' | 'ready';
  * chuyển sang màn hình Training.
  * </p>
  *
- * @param route - Tham số route chứa {@code assignmentId}, {@code exerciseIndex}
- *                và {@code recordVideo} tùy chọn
- * @param navigation - Đối tượng điều hướng để chuyển sang màn hình Training
- * @return JSX element hiển thị giao diện hiệu chỉnh toàn màn hình
+ * @param props - Thuộc tính route và navigation của màn hình.
+ * @returns JSX element hiển thị giao diện hiệu chỉnh toàn màn hình.
  */
 export const CalibrationScreen: React.FC<CalibrationProps> = ({ route, navigation }) => {
     const { assignmentId, exerciseIndex, recordVideo } = route.params || { assignmentId: '', exerciseIndex: 0, recordVideo: false };

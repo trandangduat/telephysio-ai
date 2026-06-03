@@ -1,16 +1,6 @@
 /**
- * SignUpScreen.tsx — Màn hình đăng ký tài khoản mới (bệnh nhân hoặc bác sĩ).
- *
- * <p>Cho phép người dùng tạo tài khoản TelePhysioAI với hai vai trò:
- * <ul>
- *   <li>Bệnh nhân (patient) — theo dõi quá trình phục hồi và tập luyện</li>
- *   <li>Bác sĩ (doctor) — quản lý bệnh nhân và giao phác đồ bài tập</li>
- * </ul>
- * Sau khi đăng ký thành công, hồ sơ được lưu vào {@code AuthContext}
- * và {@code AppNavigator} tự động điều hướng theo vai trò.
- * </p>
- *
- * <p>Kết nối tới: {@code authService.registerUser} → Firebase Auth + Firestore users</p>
+ * @file SignUpScreen.tsx
+ * @description Màn hình đăng ký tài khoản mới (bệnh nhân hoặc bác sĩ).
  */
 
 import React, { useState } from 'react';
@@ -34,6 +24,11 @@ type Props = {
     navigation: NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
 };
 
+/**
+ * Component màn hình đăng ký tài khoản mới.
+ * @param props Thuộc tính của màn hình đăng ký.
+ * @returns Giao diện React Native của màn hình đăng ký.
+ */
 export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     const { t } = useTranslation();
     const { setUser } = useAuth();
@@ -60,7 +55,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
    * Nếu có lỗi, cập nhật state {@code errors} để hiển thị thông báo lỗi.
    * </p>
    *
-   * @return {@code true} nếu tất cả các trường hợp lệ; {@code false} nếu có lỗi
+   * @returns {@code true} nếu tất cả các trường hợp lệ; {@code false} nếu có lỗi
    */
     const validate = (): boolean => {
         const e: Record<string, string> = {};
@@ -87,7 +82,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
    * Việc điều hướng sau đăng ký do {@code AppNavigator} điều khiển tự động.
    * </p>
    *
-   * @return Promise<void> — hàm bất đồng bộ, không trả về giá trị
+   * @returns Promise hoàn thành khi xử lý đăng ký xong.
    */
     const handleSignUp = async () => {
         if (!validate()) return;

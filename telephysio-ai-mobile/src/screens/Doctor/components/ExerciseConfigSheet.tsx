@@ -1,4 +1,9 @@
 /**
+ * @file ExerciseConfigSheet.tsx
+ * @description Màn hình bottom sheet cho phép bác sĩ thiết lập thông số chi tiết (số hiệp, số lần lặp, độ khó) cho bài tập trước khi thêm vào mẫu.
+ */
+
+/**
  * Component ExerciseConfigSheet
  * 
  * Mục đích: Hiển thị một bottom sheet để cấu hình chi tiết cho một bài tập
@@ -32,6 +37,16 @@ interface ExerciseConfigSheetProps {
     onSave: (configured: Exercise) => void;
 }
 
+/**
+ * Component Bottom Sheet cấu hình chi tiết bài tập.
+ * Cho phép bác sĩ tùy chỉnh số hiệp (sets), số lần lặp (reps), mức độ khó, thời gian nghỉ và ghi chú bổ sung.
+ * @param props Các thuộc tính truyền vào component.
+ * @param props.visible Trạng thái hiển thị của bottom sheet.
+ * @param props.exercise Đối tượng bài tập cần cấu hình.
+ * @param props.onClose Hàm callback đóng bottom sheet.
+ * @param props.onSave Hàm callback khi nhấn lưu cấu hình.
+ * @returns Giao diện cấu hình bài tập, hoặc null nếu không có bài tập được chọn.
+ */
 export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
     visible,
     exercise,
@@ -72,6 +87,11 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
 
     if (!exercise) return null;
 
+    /**
+     * Cập nhật thông số bài tập và gọi callback lưu.
+     * Tính toán tự động thời gian dựa trên số hiệp.
+     * @returns Không có giá trị trả về.
+     */
     const handleSave = () => {
         onSave({
             ...exercise,
@@ -85,11 +105,21 @@ export const ExerciseConfigSheet: React.FC<ExerciseConfigSheetProps> = ({
         onClose();
     };
 
+    /**
+     * Điều chỉnh số hiệp tập tăng/giảm.
+     * @param delta Giá trị thay đổi (thường là +1 hoặc -1).
+     * @returns Không có giá trị trả về.
+     */
     const adjustSets = (delta: number) => {
         const newVal = sets + delta;
         if (newVal >= 1 && newVal <= 10) setSets(newVal);
     };
 
+    /**
+     * Điều chỉnh số lần lặp trong một hiệp tăng/giảm.
+     * @param delta Giá trị thay đổi (thường là +1 hoặc -1).
+     * @returns Không có giá trị trả về.
+     */
     const adjustReps = (delta: number) => {
         const newVal = reps + delta;
         if (newVal >= 1 && newVal <= 50) setReps(newVal);

@@ -1,4 +1,9 @@
 /**
+ * @file videoService.ts
+ * @description Dịch vụ quay video và xử lý tải lên Cloudinary.
+ */
+
+/**
  * videoService - Dịch vụ Quay Video Cục bộ.
  *
  * Quản lý trạng thái ghi hình cục bộ, quy ước đặt tên đường dẫn tuyệt đối,
@@ -41,7 +46,9 @@ interface StopRecordingResult {
 let lastStopResult: StopRecordingResult | null = null;
 
 /**
- * Format current date to yyyyMMdd (e.g. 20260518)
+ * Lấy ngày hiện tại theo định dạng yyyyMMdd (vd: 20260518).
+ * 
+ * @returns Chuỗi ngày tháng định dạng yyyyMMdd
  */
 function getFormattedDate(): string {
     const date = new Date();
@@ -52,7 +59,9 @@ function getFormattedDate(): string {
 }
 
 /**
- * Construct absolute internal storage directory path depending on platform.
+ * Xây dựng đường dẫn thư mục lưu trữ cục bộ tuyệt đối dựa trên nền tảng (Platform).
+ * 
+ * @returns Đường dẫn tới thư mục lưu trữ cục bộ
  */
 export function getLocalVideoDirectory(): string {
     if (Platform.OS === "web") {
@@ -72,7 +81,10 @@ export function getLocalVideoDirectory(): string {
 }
 
 /**
- * Retrieve the active temporary recording path for an assignment.
+ * Lấy đường dẫn tệp video tạm thời cho một bài tập được giao.
+ * 
+ * @param assignmentId ID của bài tập được giao
+ * @returns Đường dẫn tệp video tạm thời
  */
 export function getTemporaryVideoPath(assignmentId: string): string {
     const dateStr = getFormattedDate();
@@ -81,7 +93,10 @@ export function getTemporaryVideoPath(assignmentId: string): string {
 }
 
 /**
- * Ensure the directory exists
+ * Đảm bảo rằng thư mục lưu trữ đã tồn tại, nếu chưa sẽ tạo mới.
+ * 
+ * @param dir Đường dẫn thư mục cần kiểm tra
+ * @returns Promise
  */
 async function ensureDirectoryExists(dir: string) {
     try {
@@ -99,7 +114,8 @@ async function ensureDirectoryExists(dir: string) {
  * Trả về absolute path tạm thời để lưu vào IncompleteSession.videoPath.
  *
  * @param assignmentId ID của bài tập được giao
- * @param setNumber Optional set number for the recording (defaults to 1)
+ * @param setNumber Số thứ tự set tập luyện (mặc định là 1)
+ * @returns Đường dẫn tạm thời của file video
  */
 export async function startRecording(
     assignmentId: string,
@@ -153,6 +169,8 @@ export async function startRecording(
 
 /**
  * Tạm dừng quay video — Gọi khi buổi tập bị Pause.
+ * 
+ * @returns void
  */
 export function pauseRecording(): void {
     if (!isRecordingActive || isRecordingPaused) return;
@@ -187,6 +205,8 @@ export function pauseRecording(): void {
 
 /**
  * Tiếp tục quay video — Gọi khi buổi tập được Resume.
+ * 
+ * @returns void
  */
 export function resumeRecording(): void {
     if (!isRecordingActive || !isRecordingPaused) return;
@@ -217,8 +237,9 @@ export function resumeRecording(): void {
 }
 
 /**
- * Kết thúc quay video, flush buffer ra .mp4 và tạo thumbnail.
- * Trả về các absolute path của video, thumbnail và dung lượng file (MB).
+ * Kết thúc quay video, ghi dữ liệu ra file .mp4 và tạo thumbnail.
+ * 
+ * @returns Thông tin kết quả kết thúc ghi hình bao gồm đường dẫn và dung lượng
  */
 export async function stopRecording(): Promise<StopRecordingResult> {
     console.log("[VideoService] stopRecording called");
@@ -404,10 +425,11 @@ export async function stopRecording(): Promise<StopRecordingResult> {
 }
 
 /**
- * Xoá file video và thumbnail khỏi local disk.
+ * Xoá file video và thumbnail khỏi bộ nhớ cục bộ.
  *
- * @param videoPath Đường dẫn absolute tới video mp4
- * @param thumbnailPath Đường dẫn absolute tới thumbnail jpg
+ * @param videoPath Đường dẫn tuyệt đối tới video mp4
+ * @param thumbnailPath Đường dẫn tuyệt đối tới thumbnail jpg
+ * @returns Promise
  */
 export async function deleteLocalVideo(
     videoPath: string,
@@ -435,8 +457,11 @@ export async function deleteLocalVideo(
 }
 
 /**
- * Uploads a local video file from absolute URI to Cloudinary
- * and returns the public download URL.
+ * Tải file video cục bộ từ đường dẫn URI tuyệt đối lên Cloudinary và trả về URL tải xuống công khai.
+ * 
+ * @param localFileUri Đường dẫn URI của file video cục bộ
+ * @param sessionId ID của phiên tập luyện
+ * @returns URL tải xuống công khai của video
  */
 export async function uploadVideoToCloudinary(
     localFileUri: string,
@@ -507,8 +532,11 @@ export async function uploadVideoToCloudinary(
 }
 
 /**
- * Uploads a local thumbnail image from absolute URI to Cloudinary
- * and returns the public download URL.
+ * Tải file ảnh thu nhỏ (thumbnail) cục bộ từ đường dẫn URI tuyệt đối lên Cloudinary và trả về URL tải xuống công khai.
+ * 
+ * @param localFileUri Đường dẫn URI của file ảnh cục bộ
+ * @param sessionId ID của phiên tập luyện
+ * @returns URL tải xuống công khai của ảnh thu nhỏ
  */
 export async function uploadThumbnailToCloudinary(
     localFileUri: string,
@@ -590,6 +618,16 @@ import {
     updateDoc,
 } from "firebase/firestore";
 
+/**
+ * Tải video của các set tập luyện lên Cloudinary dưới nền và cập nhật Firestore.
+ * 
+ * @param uid ID của người dùng
+ * @param assignmentId ID của bài tập được giao
+ * @param exerciseIndex Chỉ số của bài tập trong danh sách
+ * @param setsRecords Mảng bản ghi các set tập luyện
+ * @param recordVideo Cờ xác định xem có đang bật tính năng ghi hình không
+ * @returns Promise
+ */
 export async function uploadSetsVideosInBackground(
     uid: string,
     assignmentId: string,

@@ -1,14 +1,6 @@
 /**
- * LoginScreen.tsx — Màn hình đăng nhập bằng Email và Mật khẩu.
- *
- * <p>Cho phép người dùng đăng nhập vào hệ thống TelePhysioAI thông qua
- * xác thực Firebase. Sau khi đăng nhập thành công, hồ sơ người dùng được
- * lưu vào {@code AuthContext} và ứng dụng tự động điều hướng dựa trên vai trò.
- * </p>
- *
- * <p>Thiết kế: Clinical Vitality style với gradient hero, floating card và smooth inputs.</p>
- *
- * <p>Kết nối tới: {@code authService.loginUser} → Firestore users collection</p>
+ * @file LoginScreen.tsx
+ * @description Màn hình đăng nhập bằng Email và Mật khẩu.
  */
 
 import React, { useState } from 'react';
@@ -31,6 +23,11 @@ type Props = {
     navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 };
 
+/**
+ * Component màn hình đăng nhập.
+ * @param props Thuộc tính của màn hình đăng nhập.
+ * @returns Giao diện React Native của màn hình đăng nhập.
+ */
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     const { t } = useTranslation();
     const { setUser } = useAuth();
@@ -52,7 +49,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
    * Nếu có lỗi, cập nhật state {@code errors} để hiển thị thông báo lỗi.
    * </p>
    *
-   * @return {@code true} nếu tất cả các trường hợp lệ; {@code false} nếu có lỗi
+   * @returns {@code true} nếu tất cả các trường hợp lệ; {@code false} nếu có lỗi
    */
     const validate = (): boolean => {
         const e: typeof errors = {};
@@ -78,7 +75,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
    * khi {@code isAuthenticated} chuyển thành {@code true}.
    * </p>
    *
-   * @return Promise<void> — hàm bất đồng bộ, không trả về giá trị
+   * @returns Promise hoàn thành khi xử lý đăng nhập xong.
    */
     const handleLogin = async () => {
         if (!validate()) return;

@@ -35,7 +35,7 @@ interface AppTextProps extends TextProps {
  * @param color     Màu chữ; nếu không truyền thì dùng colors.onSurface.
  * @param style     Style Text bổ sung.
  * @param children  Nội dung văn bản.
- * @return          Phần tử Text với style typography đã xử lý.
+ * @returns         Phần tử Text với style typography đã xử lý.
  */
 export const AppText: React.FC<AppTextProps> = ({
     variant = 'bodyMd',

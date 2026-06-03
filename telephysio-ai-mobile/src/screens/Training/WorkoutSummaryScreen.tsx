@@ -112,6 +112,10 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
     const [relativeVideoPathState, setRelativeVideoPathState] = useState<string | null>(null);
 
     useEffect(() => {
+        /**
+         * Xử lý luồng hoàn thành buổi tập: tính toán chỉ số, lưu lịch sử, hoàn thành bài tập, và dọn dẹp.
+         * @returns Một Promise hoàn thành khi quá trình xử lý kết thúc.
+         */
         async function processSummary() {
             if (!uid || !assignmentId) return;
             try {
@@ -243,6 +247,11 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
         processSummary();
     }, [uid, assignmentId]);
 
+    /**
+     * Xử lý việc chọn mức độ nỗ lực cảm nhận (RPE) và lưu vào Firestore.
+     * @param choice - Mức độ nỗ lực được chọn ("easy", "normal", hoặc "hard").
+     * @returns Một Promise hoàn thành khi dữ liệu được cập nhật.
+     */
     const handleSelectEffort = async (choice: "easy" | "normal" | "hard") => {
         if (!sessionId) return;
         try {
@@ -254,6 +263,10 @@ export const WorkoutSummaryScreen: React.FC<Props> = ({ route, navigation }) => 
         }
     };
 
+    /**
+     * Xử lý sự kiện hoàn tất và điều hướng về trang chủ.
+     * @returns Không có giá trị trả về.
+     */
     const handleDone = () => {
         navigation.replace('MainTabs');
     };

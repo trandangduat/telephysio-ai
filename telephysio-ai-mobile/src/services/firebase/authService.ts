@@ -1,4 +1,9 @@
 /**
+ * @file authService.ts
+ * @description Dịch vụ Xác thực Firebase (Authentication) và Quản lý người dùng trên Firestore.
+ */
+
+/**
  * authService — Dịch vụ Xác thực Firebase (Authentication) và Quản lý người dùng trên Firestore.
  *
  * Nhiệm vụ chính:

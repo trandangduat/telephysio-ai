@@ -18,7 +18,7 @@ import type { Notification } from '../services/firebase/types';
  * Component hiển thị danh sách các thông báo toàn cục (toast) cho người dùng.
  * Các thông báo sẽ tự động biến mất sau 5 giây.
  * 
- * @return {React.FC} Component hiển thị danh sách toast thông báo
+ * @returns {React.FC} Component hiển thị danh sách toast thông báo
  */
 export const GlobalNotificationToast: React.FC = () => {
     const { uid } = useAuth();

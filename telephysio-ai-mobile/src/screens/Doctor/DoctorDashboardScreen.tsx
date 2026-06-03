@@ -1,6 +1,6 @@
 /**
- * DoctorDashboardScreen — Màn hình Bảng điều khiển dành cho Bác sĩ.
- * Hiển thị danh sách bệnh nhân cùng với trạng thái hoàn thành bài tập trong ngày.
+ * @file DoctorDashboardScreen.tsx
+ * @description Màn hình Bảng điều khiển dành cho Bác sĩ, hiển thị danh sách bệnh nhân và tiến độ tập luyện trong ngày.
  */
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -124,6 +124,11 @@ export const DoctorDashboardScreen: React.FC = () => {
         }, [loadData]),
     );
 
+    /**
+     * Điều hướng đến màn hình chi tiết bệnh nhân.
+     * @param card - Dữ liệu bệnh nhân được chọn.
+     * @returns Không có giá trị trả về.
+     */
     const openPatientDetail = (card: PatientCard) => {
         navigation.navigate("PatientDetail", {
             patientId: card.profile.uid,
@@ -156,6 +161,10 @@ export const DoctorDashboardScreen: React.FC = () => {
         });
     })();
 
+    /**
+     * Trả về câu chào hỏi phù hợp với thời gian trong ngày.
+     * @returns Chuỗi câu chào.
+     */
     const getGreeting = () => {
         const h = new Date().getHours();
         if (h < 12) return t("doctor.dashboard.goodMorning");
@@ -163,6 +172,11 @@ export const DoctorDashboardScreen: React.FC = () => {
         return t("doctor.dashboard.goodEvening");
     };
 
+    /**
+     * Xác định màu sắc biểu thị trạng thái luyện tập của bệnh nhân.
+     * @param card - Dữ liệu bệnh nhân.
+     * @returns Chuỗi mã màu HEX.
+     */
     const getStatusColor = (card: PatientCard) => {
         if (card.todayTotal === 0) return "#94a3b8";
         if (card.todayCompleted === card.todayTotal) return "#10b981";
@@ -170,6 +184,11 @@ export const DoctorDashboardScreen: React.FC = () => {
         return "#ef4444";
     };
 
+    /**
+     * Lấy nhãn hiển thị trạng thái luyện tập trong ngày của bệnh nhân.
+     * @param card - Dữ liệu bệnh nhân.
+     * @returns Chuỗi mô tả trạng thái.
+     */
     const getStatusLabel = (card: PatientCard) => {
         if (card.todayTotal === 0) return t("doctor.dashboard.noTasksToday");
         if (card.todayCompleted === card.todayTotal)

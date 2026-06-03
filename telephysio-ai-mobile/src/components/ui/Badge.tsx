@@ -38,7 +38,7 @@ const variantMap: Record<BadgeVariant, { bg: string; text: string }> = {
  *
  * @param variant   Biến thể màu: 'success' | 'primary' | 'neutral' | 'error' (mặc định: 'neutral').
  * @param label     Văn bản hiển thị bên trong nhãn.
- * @return          Phần tử View dạng pill với màu nền và màu chữ tương ứng biến thể.
+ * @returns         Phần tử View dạng pill với màu nền và màu chữ tương ứng biến thể.
  */
 export const Badge: React.FC<BadgeProps> = ({ variant = 'neutral', label }) => {
     const { bg, text } = variantMap[variant];

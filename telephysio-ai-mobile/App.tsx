@@ -1,4 +1,8 @@
 /**
+ * @file App.tsx
+ * @description Description of App.tsx
+ */
+/**
  * Điểm bắt đầu (Entry point) của ứng dụng — TelePhysioAI.
  *
  * Hàm này chịu trách nhiệm tải các phông chữ Manrope + Inter, 

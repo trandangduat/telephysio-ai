@@ -47,7 +47,7 @@ export class PoseAnalyzer {
     /**
    * Khởi tạo lại trạng thái của quá trình phân tích (đặt lại số reps, điểm số, v.v. về 0).
    * 
-   * @return {void}
+   * @returns {void}
    */
     public reset() {
         this.reps = 0;
@@ -67,7 +67,7 @@ export class PoseAnalyzer {
    * 
    * @param landmarks Mảng các điểm nhận diện tư thế từ MediaPipe
    * @param totalReps Tổng số lần lặp mục tiêu của hiệp tập
-   * @return PoseAnalysisResult Kết quả phân tích (số reps, độ chính xác, nhận xét)
+   * @returns PoseAnalysisResult Kết quả phân tích (số reps, độ chính xác, nhận xét)
    */
     public analyze(landmarks: PoseLandmark[], totalReps: number = 999): PoseAnalysisResult {
         let isRepCounted = false;
@@ -407,7 +407,7 @@ export class PoseAnalyzer {
    * 
    * @param feedbackMsg Tin nhắn phản hồi (có chứa {rep} để thay thế bằng số rep hiện tại)
    * @param totalReps Tổng số lần lặp mục tiêu
-   * @return {Object} Đối tượng chứa trạng thái đếm rep và tin nhắn phản hồi
+   * @returns {Object} Đối tượng chứa trạng thái đếm rep và tin nhắn phản hồi
    */
     private incrementRep(feedbackMsg: string, totalReps: number): { isRepCounted: boolean; feedback: string } {
         if (this.reps < totalReps) {
@@ -423,7 +423,7 @@ export class PoseAnalyzer {
    * Lưu trữ và cộng dồn điểm số độ chính xác của tư thế.
    * 
    * @param score Điểm số độ chính xác của lần lặp (0-100)
-   * @return {void}
+   * @returns {void}
    */
     private addAccuracy(score: number) {
         this.formAccuracySum += score;
@@ -434,7 +434,7 @@ export class PoseAnalyzer {
    * Lấy giá trị trung bình độ chính xác của tất cả các lần tập đã hoàn thành.
    * Nếu chưa hoàn thành lần nào, trả về độ chính xác tại thời điểm hiện tại.
    * 
-   * @return {number} Giá trị trung bình độ chính xác (0-100)
+   * @returns {number} Giá trị trung bình độ chính xác (0-100)
    */
     private getAverageAccuracy(): number {
         if (this.completedRepsCount === 0) return this.liveAccuracy;
@@ -447,7 +447,7 @@ export class PoseAnalyzer {
    * @param a Điểm thứ nhất (Ví dụ: Vai)
    * @param b Điểm đỉnh góc (Ví dụ: Khuỷu tay)
    * @param c Điểm thứ ba (Ví dụ: Cổ tay)
-   * @return number Góc tính bằng độ (từ 0 đến 180)
+   * @returns number Góc tính bằng độ (từ 0 đến 180)
    */
     private calculateAngle(a: PoseLandmark, b: PoseLandmark, c: PoseLandmark): number {
         const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);

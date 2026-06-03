@@ -37,7 +37,7 @@ interface ProgressBarProps {
  * @param variant   Biến thể hiển thị: 'standard' hoặc 'ai' (mặc định: 'standard').
  * @param label     Nhãn hiển thị phía trên thanh (tùy chọn).
  * @param height    Chiều cao thanh (mặc định: 8px).
- * @return          View chứa nhãn (nếu có) và thanh track + fill animation.
+ * @returns         View chứa nhãn (nếu có) và thanh track + fill animation.
  */
 export const ProgressBar: React.FC<ProgressBarProps> = ({
     progress,

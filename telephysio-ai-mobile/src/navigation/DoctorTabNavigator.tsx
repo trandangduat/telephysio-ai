@@ -1,14 +1,8 @@
 /**
- * DoctorTabNavigator — Điều hướng thanh tab phía dưới dành cho vai trò Bác sĩ.
- *
- * <p>Cung cấp giao diện điều hướng bottom-tab cho bác sĩ với các tab chính:
- * <ul>
- *   <li>Dashboard — Tổng quan danh sách bệnh nhân</li>
- *   <li>Assignments — Quản lý các phác đồ bài tập được giao</li>
- * </ul>
- * Tuân theo hệ thống thiết kế Clinical Vitality với màu sắc teal (#0f766e) cho tab đang active.
- * </p>
+ * @file DoctorTabNavigator.tsx
+ * @description Điều hướng thanh tab phía dưới dành cho vai trò Bác sĩ.
  */
+
 
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";

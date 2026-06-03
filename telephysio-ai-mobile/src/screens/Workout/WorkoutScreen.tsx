@@ -1,4 +1,9 @@
 /**
+ * @file WorkoutScreen.tsx
+ * @description Màn hình lịch trình tập luyện hiển thị danh sách các kế hoạch theo ngày.
+ */
+
+/**
  * WorkoutScreen - Màn hình lịch trình tập luyện.
  * Hiển thị danh sách các kế hoạch tập luyện theo ngày, tiến độ hàng ngày và lịch sử các buổi tập đã hoàn thành.
  */
@@ -102,6 +107,10 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
     const [selectedDayIndex, setSelectedDayIndex] = useState(todayIndex);
 
     useEffect(() => {
+        /**
+         * Tải dữ liệu lịch trình tập luyện từ Firebase
+         * @returns Không có giá trị trả về
+         */
         async function loadData() {
             if (!uid) {
                 setLoading(false);
@@ -153,6 +162,12 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
         );
     }
 
+    /**
+     * Kiểm tra hai ngày có cùng ngày, tháng, năm hay không
+     * @param d1 - Ngày thứ nhất
+     * @param d2 - Ngày thứ hai
+     * @returns True nếu cùng ngày, ngược lại false
+     */
     const isSameDate = (d1: Date, d2: Date) =>
         d1.getDate() === d2.getDate() &&
         d1.getMonth() === d2.getMonth() &&
@@ -169,6 +184,11 @@ export const WorkoutScreen: React.FC<Props> = ({ navigation }) => {
         return isSameDate(sDate, selectedDate);
     });
 
+    /**
+     * Chuyển hướng tới màn hình chi tiết buổi tập
+     * @param assignmentId - ID của buổi tập
+     * @returns Không có giá trị trả về
+     */
     const handleNavigateToDetail = (assignmentId: string) => {
         navigation.navigate("WorkoutDetail", {
             assignmentId,

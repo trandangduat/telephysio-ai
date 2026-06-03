@@ -37,7 +37,7 @@ const NOTIFICATIONS_COLLECTION = "notifications";
  * @param {string} data.body Nội dung thông báo
  * @param {NotificationType} data.type Loại thông báo
  * @param {Notification["data"]} [data.data] Dữ liệu đính kèm thêm
- * @return {Promise<string>} ID của thông báo vừa được tạo
+ * @returns {Promise<string>} ID của thông báo vừa được tạo
  */
 export async function createNotification(data: {
     userId: string;
@@ -59,7 +59,7 @@ export async function createNotification(data: {
  * Lấy danh sách tất cả thông báo của một người dùng, sắp xếp từ mới nhất đến cũ nhất.
  * 
  * @param {string} userId ID của người dùng
- * @return {Promise<Notification[]>} Mảng danh sách các thông báo
+ * @returns {Promise<Notification[]>} Mảng danh sách các thông báo
  */
 export async function getUserNotifications(
     userId: string,
@@ -84,7 +84,7 @@ export async function getUserNotifications(
  * Đánh dấu một thông báo cụ thể là đã đọc.
  * 
  * @param {string} notificationId ID của thông báo cần đánh dấu
- * @return {Promise<void>}
+ * @returns {Promise<void>}
  */
 export async function markNotificationRead(
     notificationId: string,
@@ -99,7 +99,7 @@ export async function markNotificationRead(
  * Đánh dấu tất cả thông báo của người dùng là đã đọc.
  * 
  * @param {string} userId ID của người dùng
- * @return {Promise<void>}
+ * @returns {Promise<void>}
  */
 export async function markAllRead(userId: string): Promise<void> {
     const snap = await getDocs(
@@ -123,7 +123,7 @@ export async function markAllRead(userId: string): Promise<void> {
  * Lấy số lượng thông báo chưa đọc của người dùng.
  * 
  * @param {string} userId ID của người dùng
- * @return {Promise<number>} Số lượng thông báo chưa đọc
+ * @returns {Promise<number>} Số lượng thông báo chưa đọc
  */
 export async function getUnreadCount(userId: string): Promise<number> {
     const snap = await getDocs(
@@ -144,7 +144,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
  * 
  * @param {string} userId ID của người dùng
  * @param {Function} callback Hàm gọi lại nhận mảng thông báo mới nhất
- * @return {Function} Hàm unsubscribe từ Firestore
+ * @returns {Function} Hàm unsubscribe từ Firestore
  */
 export function onNotificationsChange(
     userId: string,

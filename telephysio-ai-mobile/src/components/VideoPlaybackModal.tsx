@@ -1,3 +1,8 @@
+/**
+ * @file VideoPlaybackModal.tsx
+ * @description Component modal để phát video bài tập.
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +17,15 @@ interface VideoPlaybackModalProps {
   title?: string;
 }
 
+/**
+ * Component hiển thị cửa sổ (modal) phát video
+ * @param props - Các thuộc tính truyền vào component
+ * @param props.visible - Cờ quyết định modal hiển thị hay ẩn
+ * @param props.videoUri - Đường dẫn URI của video cần phát
+ * @param props.onClose - Hàm callback khi đóng modal
+ * @param props.title - Tiêu đề của video (tuỳ chọn)
+ * @returns Component React Modal chứa trình phát video
+ */
 export const VideoPlaybackModal: React.FC<VideoPlaybackModalProps> = ({ visible, videoUri, onClose, title }) => {
   return (
     <Modal

@@ -30,7 +30,7 @@ interface SkeletonLoaderProps {
  * @param height       Chiều cao tính bằng px (mặc định: 16).
  * @param borderRadius Bán kính góc bo (mặc định: radius.md).
  * @param style        Style bổ sung.
- * @return             Animated.View với hiệu ứng opacity nấp nhô liên tục.
+ * @returns             Animated.View với hiệu ứng opacity nấp nhô liên tục.
  */
 export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     width = '100%',

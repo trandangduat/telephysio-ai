@@ -1,3 +1,7 @@
+/**
+ * @file seed-test-users.ts
+ * @description Description of seed-test-users.ts
+ */
 import * as dotenv from 'dotenv';
 import path from 'path';
 
@@ -22,6 +26,10 @@ import { db } from '../src/services/firebase/config';
 const DOCTOR_UID = "7TENJnJy1gTIZQ9QJySrpEJe3kl2";
 const PATIENT_UID = "FN285ox2PYgBoCOfoObBGZTpNZh1";
 
+/**
+ * Description of seed
+ * @returns Description of return value
+ */
 async function seed() {
   console.log("🚀 Starting custom seed script for test users...");
   

@@ -4,7 +4,9 @@
  * Truy cập camera thiết bị thông qua getUserMedia, vẽ khung xương lên canvas và gửi dữ liệu tư thế
  * định dạng JSON đến ứng dụng qua window.ReactNativeWebView.postMessage.
  */
-
+/**
+ * @description Chuỗi HTML chứa giao diện và logic nhận diện tư thế bằng MediaPipe BlazePose.
+ */
 export const POSE_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>

@@ -1,4 +1,9 @@
 /**
+ * @file TrainingScreen.tsx
+ * @description Màn hình phiên tập luyện trực tiếp, hỗ trợ nhận diện tư thế người dùng thực tế và đếm số hiệp tập.
+ */
+
+/**
  * TrainingScreen — Màn hình phiên tập luyện trực tiếp.
  *
  * Hỗ trợ chuyển đổi giữa chế độ Toàn màn hình (Gọn gàng) và Bình thường (Chi tiết).
@@ -167,6 +172,10 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
 
     useEffect(() => {
         let isMounted = true;
+        /**
+         * Bắt đầu ghi hình cho hiệp tập hiện tại.
+         * @returns Một Promise hoàn thành khi việc ghi hình bắt đầu.
+         */
         async function startSetRecording() {
             if (recordVideo && assignmentId && !isResting && !isFinishing) {
                 try {
@@ -330,6 +339,11 @@ export const TrainingScreen: React.FC<TrainingProps> = ({ route, navigation }) =
         }
     }, [currentRep, totalReps, isResting, isFinishing, paused, exercise]);
 
+    /**
+     * Định dạng thời gian từ giây sang chuỗi phút:giây.
+     * @param s - Thời gian tính bằng giây
+     * @returns Chuỗi định dạng thời gian (VD: "01:30")
+     */
     const formatTime = (s: number) => {
         const m = Math.floor(s / 60);
         const sec = s % 60;

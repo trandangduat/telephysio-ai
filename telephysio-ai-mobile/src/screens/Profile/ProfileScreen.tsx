@@ -264,6 +264,10 @@ export const ProfileScreen: React.FC = () => {
                 <TouchableOpacity
                     style={styles.logoutBtn}
                     onPress={() => {
+                        /**
+                         * Thực hiện đăng xuất tài khoản
+                         * @returns Không có giá trị trả về
+                         */
                         const doLogout = () => logout();
                         if (Platform.OS === "web") {
                             if (window.confirm("Are you sure you want to log out?")) doLogout();

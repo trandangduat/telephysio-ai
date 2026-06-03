@@ -1,4 +1,9 @@
 /**
+ * @file assignmentService.ts
+ * @description Dịch vụ quản lý Bài tập được giao (Assignments) và Kế hoạch điều trị (Treatment Plans).
+ */
+
+/**
  * assignmentService — Dịch vụ quản lý Bài tập được giao (Assignments) và Kế hoạch điều trị (Treatment Plans).
  *
  * Maps to:
@@ -49,6 +54,12 @@ export async function getActiveTreatmentPlan(patientId: string): Promise<Treatme
 
 // ── Lấy Tất cả Kế hoạch cho Bác sĩ ──────────────────
 // Được gọi bởi DoctorDashboardScreen (thẻ bệnh nhân với tình trạng/tuần/giai đoạn/trạng thái)
+/**
+ * Lấy tất cả Kế hoạch điều trị do bác sĩ quản lý.
+ * 
+ * @param doctorId ID của bác sĩ
+ * @returns Danh sách các kế hoạch điều trị
+ */
 export async function getDoctorTreatmentPlans(doctorId: string): Promise<TreatmentPlan[]> {
     console.log(`[Service] getDoctorTreatmentPlans called with doctorId: ${doctorId}`);
     const snap = await getDocs(
@@ -87,6 +98,13 @@ export async function createTreatmentPlan(
 
 // ── Cập nhật Kế hoạch Điều trị ──────────────────────
 // Được gọi khi tiến độ thay đổi, chuyển giai đoạn hoặc cập nhật trạng thái
+/**
+ * Cập nhật thông tin Kế hoạch điều trị.
+ * 
+ * @param planId ID của kế hoạch điều trị
+ * @param data Các trường dữ liệu cần cập nhật
+ * @returns Promise
+ */
 export async function updateTreatmentPlan(
     planId: string,
     data: Partial<Pick<TreatmentPlan, 'currentPhase' | 'currentWeek' | 'status' | 'progress'>>
@@ -196,6 +214,12 @@ export async function createAssignment(
 }
 
 // ── Hoàn thành Bài tập được giao ────────────────────
+/**
+ * Đánh dấu bài tập được giao đã hoàn thành.
+ * 
+ * @param assignmentId ID của bài tập được giao
+ * @returns Promise
+ */
 export async function completeAssignment(assignmentId: string): Promise<void> {
     await updateDoc(doc(db, 'assignments', assignmentId), {
         status: 'completed',
@@ -254,6 +278,13 @@ export async function createExerciseTemplate(data: {
 }
 
 // ── Cập nhật Mẫu bài tập ────────────────────────────
+/**
+ * Cập nhật thông tin của Mẫu bài tập.
+ * 
+ * @param templateId ID của mẫu bài tập
+ * @param data Các thông tin cần cập nhật
+ * @returns Promise
+ */
 export async function updateExerciseTemplate(
     templateId: string,
     data: Partial<Pick<ExerciseTemplate, 'name' | 'description' | 'exercises' | 'totalDuration'>>
@@ -265,6 +296,12 @@ export async function updateExerciseTemplate(
 }
 
 // ── Xóa Mẫu bài tập ─────────────────────────────────
+/**
+ * Xóa một Mẫu bài tập khỏi thư viện.
+ * 
+ * @param templateId ID của mẫu bài tập cần xóa
+ * @returns Promise
+ */
 export async function deleteExerciseTemplate(templateId: string): Promise<void> {
     await deleteDoc(doc(db, 'exercise_templates', templateId));
 }

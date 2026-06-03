@@ -17,7 +17,7 @@ import { onNotificationsChange } from "../services/firebase/notificationService"
  * Component hiển thị biểu tượng chuông thông báo.
  * Khi nhấn vào sẽ chuyển hướng đến màn hình Notifications.
  * 
- * @return {React.FC} Component biểu tượng chuông thông báo
+ * @returns {React.FC} Component biểu tượng chuông thông báo
  */
 export const NotificationBell: React.FC = () => {
     const navigation = useNavigation<any>();

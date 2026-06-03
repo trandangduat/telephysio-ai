@@ -1,4 +1,9 @@
 /**
+ * @file types.ts
+ * @description Định nghĩa các kiểu dữ liệu tham số cho hệ thống điều hướng.
+ */
+
+/**
  * types.ts — Định nghĩa kiểu dữ liệu trung tâm cho hệ thống điều hướng.
  *
  * <p>File này chứa tất cả các {@code ParamList} của React Navigation dành cho:

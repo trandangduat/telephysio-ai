@@ -41,6 +41,10 @@ export const MyAssignmentsScreen: React.FC = () => {
     const [assignments, setAssignments] = useState<(Assignment & { doctorName?: string; dateString?: string })[]>([]);
 
     useEffect(() => {
+        /**
+         * Tải danh sách buổi tập từ Firebase
+         * @returns Không có giá trị trả về
+         */
         async function loadData() {
             if (!uid) {
                 setLoading(false);

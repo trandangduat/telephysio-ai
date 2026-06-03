@@ -31,7 +31,7 @@ interface InputProps extends TextInputProps {
  *
  * @param label   Nhãn hiển thị phía trên (tùy chọn).
  * @param style   Style bổ sung cho TextInput.
- * @return        View bao gồm nhãn (nếu có) và TextInput có viền focus.
+ * @returns       View bao gồm nhãn (nếu có) và TextInput có viền focus.
  */
 export const Input: React.FC<InputProps> = ({ label, style, ...rest }) => {
     const [focused, setFocused] = useState(false);

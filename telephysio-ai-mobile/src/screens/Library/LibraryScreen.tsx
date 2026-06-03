@@ -30,7 +30,7 @@ import { NotificationBell } from '../../components/NotificationBell';
  * Tải danh sách mục thư viện từ Firestore, cho phép lọc theo danh mục
  * và hiển thị các tài liệu giáo dục có liên quan đến vật lý trị liệu.
  *
- * @return Giao diện React Native hiển thị thư viện tài nguyên phục hồi.
+ * @returns Giao diện React Native hiển thị thư viện tài nguyên phục hồi.
  */
 export const LibraryScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -54,7 +54,7 @@ export const LibraryScreen: React.FC = () => {
      * Gọi {@link getLibraryItems} để lấy toàn bộ mục thư viện và cài đặt
      * vào state `items`. Xử lý lỗi và dùng flag loading để quản lý trạng thái tải.
      *
-     * @return Promise<void>
+     * @returns Promise<void>
      */
         async function loadData() {
             try {
@@ -72,7 +72,7 @@ export const LibraryScreen: React.FC = () => {
     /**
    * Lọc danh sách tài nguyên theo bộ lọc danh mục hiện tại.
    *
-   * @return Mảng {@link LibraryItem} phù hợp với bộ lọc đang chọn.
+   * @returns Mảng {@link LibraryItem} phù hợp với bộ lọc đang chọn.
    *         Trả về toàn bộ mảng nếu bộ lọc là 'filterAll'.
    */
     const filteredItems = items.filter(item => {

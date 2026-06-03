@@ -1,5 +1,6 @@
 /**
- * seedService - Dịch vụ khởi tạo dữ liệu mẫu.
+ * @file seedService.ts
+ * @description Dịch vụ khởi tạo dữ liệu mẫu (seed data) cho ứng dụng.
  * Cung cấp chức năng giả lập dữ liệu cho Firestore bao gồm bác sĩ, bệnh nhân, bài tập, kế hoạch và buổi tập.
  */
 import {
@@ -22,18 +23,31 @@ import {
     LibraryItem,
 } from "./types";
 
+/**
+ * @description Tạo một ngày ngẫu nhiên trong khoảng thời gian cho trước.
+ * @param {Date} start - Ngày bắt đầu.
+ * @param {Date} end - Ngày kết thúc.
+ * @returns {Date} Ngày ngẫu nhiên được tạo ra.
+ */
 const getRandomDate = (start: Date, end: Date) => {
     return new Date(
         start.getTime() + Math.random() * (end.getTime() - start.getTime()),
     );
 };
 
+/**
+ * @description Lấy ngẫu nhiên một phần tử từ mảng.
+ * @param {T[]} arr - Mảng cần lấy phần tử.
+ * @returns {T} Phần tử ngẫu nhiên được chọn từ mảng.
+ */
 const getRandomItem = <T>(arr: T[]): T => {
     return arr[Math.floor(Math.random() * arr.length)];
 };
 
 /**
- * Khởi tạo dữ liệu mẫu xoay quanh các tài khoản Bác sĩ và Bệnh nhân đã cho.
+ * @description Khởi tạo dữ liệu mẫu xoay quanh các tài khoản Bác sĩ và Bệnh nhân đã cho,
+ * sau đó lưu vào Firestore.
+ * @returns {Promise<boolean>} Trả về true nếu thành công, ngược lại trả về false.
  */
 export const seedMockData = async () => {
     console.log("Starting data seeding for specific accounts...");
@@ -76,6 +90,10 @@ export const seedMockData = async () => {
         let batch = writeBatch(db);
         let opCount = 0;
 
+        /**
+         * @description Ghi dữ liệu vào Firestore nếu số lượng thao tác vượt quá giới hạn (400).
+         * @returns {Promise<void>}
+         */
         const commitBatchIfNeeded = async () => {
             if (opCount >= 400) {
                 await batch.commit();

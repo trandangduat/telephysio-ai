@@ -59,6 +59,10 @@ export const DoctorAssignmentsScreen: React.FC = () => {
     const [templates, setTemplates] = useState<ExerciseTemplate[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
 
+    /**
+     * Tải danh sách các mẫu bài tập của bác sĩ từ cơ sở dữ liệu.
+     * @returns Một Promise hoàn thành khi dữ liệu được tải thành công.
+     */
     const loadData = async () => {
         if (!uid) {
             setLoading(false);
@@ -86,7 +90,16 @@ export const DoctorAssignmentsScreen: React.FC = () => {
         return unsubscribe;
     }, [navigation, uid]);
 
+    /**
+     * Xác nhận và xóa một mẫu bài tập khỏi hệ thống.
+     * @param tpl - Mẫu bài tập cần xóa.
+     * @returns Không có giá trị trả về.
+     */
     const handleDeleteTemplate = (tpl: ExerciseTemplate) => {
+        /**
+         * Thực thi lệnh xóa mẫu bài tập và cập nhật giao diện.
+         * @returns Một Promise hoàn thành sau khi xóa xong.
+         */
         const doDelete = async () => {
             try {
                 await deleteExerciseTemplate(tpl.id);

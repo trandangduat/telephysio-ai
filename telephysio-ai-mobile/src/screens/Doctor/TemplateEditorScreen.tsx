@@ -1,9 +1,8 @@
 /**
- * Màn hình TemplateEditorScreen
- * 
- * Mục đích: Giao diện để bác sĩ tạo mới hoặc chỉnh sửa các mẫu bài tập (templates).
- * Cho phép thêm, cấu hình chi tiết và xóa các bài tập trong mẫu.
+ * @file TemplateEditorScreen.tsx
+ * @description Giao diện cho phép bác sĩ tạo mới hoặc chỉnh sửa các mẫu bài tập, quản lý danh sách bài tập và cấu hình chi tiết cho từng bài.
  */
+
 import React, { useState, useEffect } from "react";
 import {
     View,
@@ -44,6 +43,11 @@ type TemplateEditorRouteProp = RouteProp<
     "TemplateEditor"
 >;
 
+/**
+ * Màn hình chỉnh sửa mẫu bài tập.
+ * Hỗ trợ tạo mới hoặc cập nhật mẫu có sẵn, thêm/bớt bài tập, và cấu hình thông số cho mỗi bài.
+ * @returns Giao diện React Native của màn hình TemplateEditor.
+ */
 export const TemplateEditorScreen: React.FC = () => {
     const navigation = useNavigation<TemplateEditorNavProp>();
     const route = useRoute<TemplateEditorRouteProp>();
@@ -70,6 +74,10 @@ export const TemplateEditorScreen: React.FC = () => {
         }
     }, [templateId]);
 
+    /**
+     * Tải dữ liệu của mẫu bài tập đang được chỉnh sửa từ Firestore.
+     * @returns Một Promise hoàn thành khi dữ liệu được tải xong.
+     */
     const loadTemplate = async () => {
         if (!uid || !templateId) return;
         setLoading(true);
@@ -92,11 +100,21 @@ export const TemplateEditorScreen: React.FC = () => {
         }
     };
 
+    /**
+     * Bắt đầu tiến trình thêm một bài tập mới vào mẫu, mở màn hình cấu hình.
+     * @param exercise - Thông tin bài tập được chọn từ thư viện.
+     * @returns Không có giá trị trả về.
+     */
     const handleAddExercise = (exercise: Exercise) => {
         setConfigExercise(exercise);
         setConfigVisible(true);
     };
 
+    /**
+     * Lưu bài tập đã được cấu hình vào danh sách của mẫu hiện tại.
+     * @param configured - Thông tin bài tập đã qua chỉnh sửa thông số.
+     * @returns Không có giá trị trả về.
+     */
     const handleConfigSave = (configured: Exercise) => {
         setExercises((prev) => [
             ...prev,
@@ -105,10 +123,19 @@ export const TemplateEditorScreen: React.FC = () => {
         setConfigExercise(null);
     };
 
+    /**
+     * Xóa một bài tập khỏi danh sách của mẫu hiện tại dựa trên chỉ số.
+     * @param index - Vị trí của bài tập trong danh sách.
+     * @returns Không có giá trị trả về.
+     */
     const handleRemoveExercise = (index: number) => {
         setExercises((prev) => prev.filter((_, i) => i !== index));
     };
 
+    /**
+     * Tính toán tổng thời lượng ước tính cho toàn bộ mẫu bài tập.
+     * @returns Chuỗi định dạng tổng thời gian (VD: "15 min").
+     */
     const calculateTotalDuration = (): string => {
         const totalMins = exercises.reduce((sum, ex) => {
             const mins = parseInt(ex.duration) || 2;
@@ -117,6 +144,10 @@ export const TemplateEditorScreen: React.FC = () => {
         return `${totalMins} min`;
     };
 
+    /**
+     * Lưu lại toàn bộ mẫu bài tập lên Firestore (tạo mới hoặc cập nhật).
+     * @returns Một Promise hoàn thành khi dữ liệu đã được lưu và màn hình đóng lại.
+     */
     const handleSave = async () => {
         if (!uid) return;
         if (!name.trim()) {

@@ -1,19 +1,8 @@
 /**
- * PatienttabNavigator — Điều hướng thanh tab phía dưới dành cho vai trò Bệnh nhân.
- *
- * <p>Cung cấp giao diện điều hướng bottom-tab cho bệnh nhân với các tab chính:
- * <ul>
- *   <li>Home (Workout) — Màn hình bài tập chính</li>
- *   <li>Sessions — Lịch sử các phiên tập luyện</li>
- * </ul>
- * Tuân theo hệ thống thiết kế Clinical Vitality:
- * <ul>
- *   <li>Active: màu primary (Medical Blue), icon dạng stroke</li>
- *   <li>Inactive: {@code onSurfaceVariant}</li>
- *   <li>Nhãn tab: {@code typography.labelSm} (Inter 11px/500)</li>
- * </ul>
- * </p>
+ * @file PatienttabNavigator.tsx
+ * @description Điều hướng thanh tab phía dưới dành cho vai trò Bệnh nhân.
  */
+
 
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";

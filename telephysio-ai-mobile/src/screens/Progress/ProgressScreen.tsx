@@ -37,7 +37,7 @@ import { NotificationBell } from '../../components/NotificationBell';
  * Tải và hiển thị dữ liệu kế hoạch điều trị và tiến trình mới nhất của bệnh nhân.
  * Hỗ trợ chuyển đổi giữa biểu đồ Flexion và Extension.
  *
- * @return Giao diện React Native hiển thị toàn bộ tiến trình phục hồi.
+ * @returns Giao diện React Native hiển thị toàn bộ tiến trình phục hồi.
  */
 export const ProgressScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -57,7 +57,7 @@ export const ProgressScreen: React.FC = () => {
      *   - {@link getActiveTreatmentPlan}: lấy kế hoạch điều trị đang hoạt động.
      *   - {@link getLatestProgress}: lấy bản ghi tiến trình gần nhất.
      *
-     * @return Promise<void>
+     * @returns Promise hoàn thành khi tải dữ liệu xong.
      */
         async function loadData() {
             if (!uid) {

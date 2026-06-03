@@ -1,4 +1,9 @@
 /**
+ * @file userService.ts
+ * @description Dịch vụ quản lý Hồ sơ người dùng (User Profile) trên Firestore (CRUD).
+ */
+
+/**
  * userService — Dịch vụ quản lý Hồ sơ người dùng (User Profile) trên Firestore (CRUD).
  *
  * Maps to:
@@ -72,6 +77,12 @@ export async function uploadAvatar(uid: string, fileUri: string): Promise<string
 
 // ── Lấy Tất cả Bệnh nhân (Dành cho Bác sĩ) ──────────
 // Được gọi bởi DoctorDashboardScreen
+/**
+ * Lấy danh sách hồ sơ của tất cả các bệnh nhân đang được điều trị bởi bác sĩ.
+ * 
+ * @param doctorId ID của bác sĩ
+ * @returns Danh sách hồ sơ các bệnh nhân
+ */
 export async function getPatients(doctorId: string): Promise<UserProfile[]> {
     console.log(`[Service] getPatients called with doctorId: ${doctorId}`);
     // Truy vấn người dùng có role=patient VÀ có phác đồ điều trị đang hoạt động với bác sĩ này

@@ -1,8 +1,6 @@
 /**
- * Màn hình PatientDetailScreen
- * 
- * Mục đích: Hiển thị thông tin chi tiết của một bệnh nhân, bao gồm kế hoạch điều trị
- * hiện tại, biểu đồ tiến triển phục hồi và lịch sử các buổi tập.
+ * @file PatientDetailScreen.tsx
+ * @description Màn hình chi tiết bệnh nhân, bao gồm kế hoạch điều trị, biểu đồ phục hồi và lịch sử buổi tập.
  */
 import React, { useState, useCallback } from "react";
 import {
@@ -65,24 +63,53 @@ const CHART_PADDING = {
     left: 34,
 };
 
+/**
+ * Lấy giá trị thời gian dạng mili giây từ đối tượng thời gian
+ * @param timestamp - Đối tượng thời gian (của ProgressSnapshot hoặc Session)
+ * @returns Thời gian dưới dạng mili giây
+ */
 const getTimestampMs = (
     timestamp: ProgressSnapshot["date"] | Session["date"],
 ) => {
     return (timestamp as any)?.toMillis?.() ?? 0;
 };
 
+/**
+ * Kiểm tra xem một giá trị có phải là số hữu hạn hay không
+ * @param value - Giá trị cần kiểm tra
+ * @returns True nếu là số hữu hạn, ngược lại là false
+ */
 const isFiniteNumber = (value: unknown): value is number => {
     return typeof value === "number" && Number.isFinite(value);
 };
 
+/**
+ * Giới hạn một giá trị trong khoảng giữa giá trị nhỏ nhất và lớn nhất
+ * @param value - Giá trị cần giới hạn
+ * @param min - Giá trị nhỏ nhất
+ * @param max - Giá trị lớn nhất
+ * @returns Giá trị đã được giới hạn
+ */
 const clamp = (value: number, min: number, max: number) => {
     return Math.min(max, Math.max(min, value));
 };
 
+/**
+ * Làm tròn giá trị của một số đo dựa trên loại số đo đó
+ * @param metric - Loại số đo (ROM, Pain, Accuracy)
+ * @param value - Giá trị cần làm tròn
+ * @returns Giá trị sau khi làm tròn
+ */
 const roundMetricValue = (metric: ChartMetric, value: number) => {
     return metric === "Pain" ? Math.round(value * 10) / 10 : Math.round(value);
 };
 
+/**
+ * Kiểm tra xem xu hướng của các điểm dữ liệu có đang bằng phẳng không
+ * @param metric - Loại số đo
+ * @param points - Danh sách các điểm dữ liệu
+ * @returns True nếu xu hướng bằng phẳng, ngược lại là false
+ */
 const isFlatTrend = (metric: ChartMetric, points: ChartPoint[]) => {
     if (points.length < 2) return true;
 
@@ -91,6 +118,13 @@ const isFlatTrend = (metric: ChartMetric, points: ChartPoint[]) => {
     return range < (metric === "Pain" ? 0.5 : 4);
 };
 
+/**
+ * Tạo các điểm dữ liệu mẫu cho biểu đồ khi không có đủ dữ liệu
+ * @param metric - Loại số đo
+ * @param existingPoints - Các điểm dữ liệu hiện có
+ * @param currentWeek - Tuần hiện tại của kế hoạch điều trị (tuỳ chọn)
+ * @returns Danh sách các điểm dữ liệu mẫu
+ */
 const buildDemoPoints = (
     metric: ChartMetric,
     existingPoints: ChartPoint[],
@@ -146,6 +180,13 @@ const buildDemoPoints = (
     });
 };
 
+/**
+ * Cung cấp dữ liệu dự phòng mẫu nếu biểu đồ không đủ điểm dữ liệu hoặc xu hướng bằng phẳng
+ * @param metric - Loại số đo
+ * @param points - Danh sách các điểm dữ liệu thực tế
+ * @param currentWeek - Tuần hiện tại (tuỳ chọn)
+ * @returns Danh sách điểm dữ liệu để hiển thị
+ */
 const withDemoFallback = (
     metric: ChartMetric,
     points: ChartPoint[],
@@ -158,6 +199,12 @@ const withDemoFallback = (
     return buildDemoPoints(metric, points, currentWeek);
 };
 
+/**
+ * Giới hạn số lượng điểm hiển thị trên biểu đồ và gắn nhãn cho chúng
+ * @param points - Danh sách điểm dữ liệu
+ * @param currentWeek - Tuần hiện tại (tuỳ chọn)
+ * @returns Danh sách điểm dữ liệu đã được giới hạn và gắn nhãn
+ */
 const limitAndLabelPoints = (
     points: ChartPoint[],
     currentWeek?: number,
@@ -174,6 +221,14 @@ const limitAndLabelPoints = (
     }));
 };
 
+/**
+ * Xây dựng các điểm dữ liệu cho số đo lấy từ ảnh chụp tiến trình (ROM hoặc Độ chính xác)
+ * @param metric - Loại số đo (ngoại trừ Pain)
+ * @param history - Lịch sử ảnh chụp tiến trình
+ * @param latest - Ảnh chụp tiến trình mới nhất
+ * @param currentWeek - Tuần hiện tại (tuỳ chọn)
+ * @returns Danh sách điểm dữ liệu cho biểu đồ
+ */
 const buildSnapshotPoints = (
     metric: Exclude<ChartMetric, "Pain">,
     history: ProgressSnapshot[],
@@ -201,6 +256,12 @@ const buildSnapshotPoints = (
     return limitAndLabelPoints(points, currentWeek);
 };
 
+/**
+ * Xây dựng các điểm dữ liệu cho mức độ đau từ các buổi tập
+ * @param sessions - Danh sách các buổi tập
+ * @param currentWeek - Tuần hiện tại (tuỳ chọn)
+ * @returns Danh sách điểm dữ liệu mức độ đau cho biểu đồ
+ */
 const buildPainPoints = (
     sessions: Session[],
     currentWeek?: number,
@@ -243,6 +304,15 @@ const buildPainPoints = (
     return limitAndLabelPoints(points, currentWeek);
 };
 
+/**
+ * Xây dựng các điểm dữ liệu tổng hợp cho biểu đồ phục hồi
+ * @param metric - Loại số đo biểu đồ
+ * @param history - Lịch sử ảnh chụp tiến trình
+ * @param latest - Ảnh chụp tiến trình mới nhất
+ * @param sessions - Danh sách buổi tập
+ * @param currentWeek - Tuần hiện tại (tuỳ chọn)
+ * @returns Danh sách điểm dữ liệu cuối cùng để vẽ biểu đồ
+ */
 const buildRecoveryPoints = (
     metric: ChartMetric,
     history: ProgressSnapshot[],
@@ -258,6 +328,11 @@ const buildRecoveryPoints = (
     return withDemoFallback(metric, points, currentWeek);
 };
 
+/**
+ * Lấy khóa bản dịch cho trục Y của biểu đồ dựa trên loại số đo
+ * @param metric - Loại số đo
+ * @returns Khóa chuỗi bản dịch
+ */
 const getMetricAxisKey = (metric: ChartMetric) => {
     if (metric === "Pain") {
         return "doctor.patientDetail.chartYAxisPain";
@@ -270,16 +345,35 @@ const getMetricAxisKey = (metric: ChartMetric) => {
     return "doctor.patientDetail.chartYAxisRom";
 };
 
+/**
+ * Định dạng một giá trị để hiển thị trên biểu đồ
+ * @param value - Giá trị cần định dạng
+ * @returns Chuỗi giá trị đã được định dạng
+ */
 const formatChartValue = (value: number) => {
     return Number.isInteger(value) ? `${value}` : value.toFixed(1);
 };
 
+/**
+ * Định dạng giá trị của một điểm trên biểu đồ bao gồm cả đơn vị
+ * @param metric - Loại số đo
+ * @param value - Giá trị của điểm
+ * @returns Chuỗi định dạng hiển thị cho điểm dữ liệu
+ */
 const formatPointValue = (metric: ChartMetric, value: number) => {
     if (metric === "ROM") return `${formatChartValue(value)}°`;
     if (metric === "Accuracy") return `${formatChartValue(value)}%`;
     return `${formatChartValue(value)}/10`;
 };
 
+/**
+ * Component biểu đồ đường thể hiện tiến trình phục hồi
+ * @param props - Các thuộc tính của biểu đồ
+ * @param props.data - Danh sách dữ liệu vẽ biểu đồ
+ * @param props.width - Chiều rộng của biểu đồ
+ * @param props.metric - Loại số đo biểu đồ
+ * @returns Component giao diện biểu đồ SVG
+ */
 const RecoveryLineChart = ({
     data,
     width,
@@ -312,10 +406,20 @@ const RecoveryLineChart = ({
 
     const plotWidth = width - CHART_PADDING.left - CHART_PADDING.right;
     const plotHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+    /**
+     * Tính toán tọa độ X cho điểm dữ liệu
+     * @param index - Chỉ số của điểm dữ liệu
+     * @returns Tọa độ X
+     */
     const getX = (index: number) => {
         if (data.length === 1) return CHART_PADDING.left + plotWidth / 2;
         return CHART_PADDING.left + (plotWidth * index) / (data.length - 1);
     };
+    /**
+     * Tính toán tọa độ Y cho điểm dữ liệu
+     * @param value - Giá trị của điểm dữ liệu
+     * @returns Tọa độ Y
+     */
     const getY = (value: number) => {
         const percent = (value - yMin) / (yMax - yMin);
         return CHART_PADDING.top + plotHeight - percent * plotHeight;
@@ -466,6 +570,10 @@ const RecoveryLineChart = ({
     );
 };
 
+/**
+ * Màn hình hiển thị thông tin chi tiết của một bệnh nhân
+ * @returns Component React giao diện màn hình chi tiết bệnh nhân
+ */
 export const PatientDetailScreen: React.FC = () => {
     const navigation =
         useNavigation<NativeStackNavigationProp<DoctorStackParamList>>();
@@ -517,6 +625,10 @@ export const PatientDetailScreen: React.FC = () => {
         }, [loadData]),
     );
 
+    /**
+     * Chuyển hướng sang màn hình gán bài tập cho bệnh nhân
+     * @returns Không có giá trị trả về
+     */
     const handleAssign = () => {
         navigation.navigate("AssignTemplate", { patientId, patientName });
     };

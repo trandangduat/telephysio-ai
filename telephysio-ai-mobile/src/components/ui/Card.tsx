@@ -41,7 +41,7 @@ interface CardProps extends ViewProps {
  * @param onPress   Hàm xử lý khi nhấn; nếu có sẽ render TouchableOpacity thay vì View.
  * @param style     Style ViewStyle bổ sung.
  * @param children  Phần tử con hiển thị bên trong thẻ.
- * @return          View hoặc TouchableOpacity tùy thuộc vào prop onPress.
+ * @returns          View hoặc TouchableOpacity tùy thuộc vào prop onPress.
  */
 export const Card: React.FC<CardProps> = ({
     level = 1,

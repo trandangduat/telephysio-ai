@@ -88,6 +88,11 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
         }
 
         // ── Lắng nghe tin nhắn gửi từ bên trong iframe ─────────────────────
+        /**
+         * Xử lý tin nhắn gửi từ bên trong iframe (BlazePose).
+         * @param event Sự kiện chứa dữ liệu tin nhắn
+         * @returns Không có giá trị trả về
+         */
         const handleMessage = (event: MessageEvent) => {
             // Chỉ xử lý tin nhắn từ iframe của chúng ta
             if (event.source !== iframe.contentWindow) return;

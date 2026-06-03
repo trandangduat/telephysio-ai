@@ -48,7 +48,7 @@ import type { Notification } from "../../services/firebase/types";
  * Ví dụ kết quả trả về: 'Just now', '5m ago', '2h ago', 'Yesterday', '3d ago'.
  *
  * @param date - Đối tượng Date cần chuyển đổi. Nếu không có sẽ trả về chuỗi rỗng.
- * @return Chuỗi thời gian tương đối dạng chất lượng con người (đọc được).
+ * @returns Chuỗi thời gian tương đối dạng chất lượng con người (đọc được).
  */
 const formatTimeAgo = (date?: Date) => {
     if (!date) return "";
@@ -67,7 +67,7 @@ const formatTimeAgo = (date?: Date) => {
  * Trả về cấu hình biểu tượng (icon name, màu sắc, màu nền) tương ứng với loại thông báo.
  *
  * @param type - Loại thông báo, ví dụ 'session_completed', 'session_assigned'.
- * @return Đối tượng chứa: name (tên icon Ionicons), color (màu icon), bg (màu nền).
+ * @returns Đối tượng chứa: name (tên icon Ionicons), color (màu icon), bg (màu nền).
  */
 const getNotificationIcon = (
     type: string,
@@ -102,7 +102,7 @@ const getNotificationIcon = (
  * Tải và hiển thị danh sách thông báo của người dùng, hỗ trợ
  * tương tác đánh dấu đã đọc và điều hướng đến màn hình phù hợp.
  *
- * @return Giao diện React Native hiển thị danh sách thông báo.
+ * @returns Giao diện React Native hiển thị danh sách thông báo.
  */
 export const NotificationsScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<any>>();
@@ -118,7 +118,7 @@ export const NotificationsScreen: React.FC = () => {
    * Gọi {@link getUserNotifications} và cập nhật state `notifications`.
    * Quản lý cả trạng thái `loading` và `refreshing`.
    *
-   * @return Promise<void>
+   * @returns Promise<void>
    */
     const loadNotifications = async () => {
         if (!uid) return;
@@ -142,7 +142,7 @@ export const NotificationsScreen: React.FC = () => {
    *
    * Thiết lập `refreshing` thành true và gọi lại {@link loadNotifications}.
    *
-   * @return void
+   * @returns void
    */
     const handleRefresh = () => {
         setRefreshing(true);
@@ -155,7 +155,7 @@ export const NotificationsScreen: React.FC = () => {
    * Gọi {@link markAllRead} và cập nhật toàn bộ mảng `notifications`
    * để đặt thuộc tính `read` thành true cho tất cả mục.
    *
-   * @return Promise<void>
+   * @returns Promise<void>
    */
     const handleMarkAllRead = async () => {
         if (!uid) return;
@@ -177,7 +177,7 @@ export const NotificationsScreen: React.FC = () => {
    *      - 'session_assigned': điến WorkoutDetail (dành cho bệnh nhân).
    *
    * @param notification - Đối tượng {@link Notification} người dùng vừa nhấn.
-   * @return Promise<void>
+   * @returns Promise<void>
    */
     const handleTap = async (notification: Notification) => {
     // Đánh dấu là đã đọc

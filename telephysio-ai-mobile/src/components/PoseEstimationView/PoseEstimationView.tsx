@@ -81,6 +81,7 @@ export const PoseEstimationView: React.FC<PoseEstimationViewProps> = ({
    * Hỗ trợ hai loại tin nhắn: POSE_LANDMARKS (kết quả tư thế) và CAMERA_ERROR (lỗi camera).
    *
    * @param {WebViewMessageEvent} event - Sự kiện chứa dữ liệu JSON từ WebView
+   * @returns Không có giá trị trả về
    */
     const handleMessage = useCallback(
         (event: WebViewMessageEvent) => {

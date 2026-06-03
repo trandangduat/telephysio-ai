@@ -1,4 +1,9 @@
 /**
+ * @file HomeScreen.tsx
+ * @description Màn hình chính hiển thị tổng quan tiến độ và bài tập của bệnh nhân.
+ */
+
+/**
  * HomeScreen - Màn hình chính được thiết kế lại (Clinical Vitality).
  * Màn hình này hiển thị tổng quan về kế hoạch điều trị, tiến độ và các bài tập hàng ngày của bệnh nhân.
  */
@@ -52,8 +57,8 @@ interface Props {
 /**
  * Thành phần (Component) đại diện cho màn hình chính của ứng dụng.
  * 
- * @param {Props} props Các thuộc tính của thành phần.
- * @returns {JSX.Element} Giao diện người dùng của màn hình chính.
+ * @param props Các thuộc tính của thành phần.
+ * @returns Giao diện người dùng của màn hình chính.
  */
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const { t } = useTranslation();
@@ -75,6 +80,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         return unsubscribe;
     }, [navigation, uid]);
 
+    /**
+     * Tải dữ liệu ban đầu cho màn hình, bao gồm kế hoạch điều trị, tiến độ và các bài tập được giao.
+     * @returns Promise hoàn thành khi tải dữ liệu xong.
+     */
     async function loadData() {
         if (!uid) {
             setLoading(false);

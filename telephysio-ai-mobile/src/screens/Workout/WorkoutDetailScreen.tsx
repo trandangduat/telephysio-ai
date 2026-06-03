@@ -1,4 +1,9 @@
 /**
+ * @file WorkoutDetailScreen.tsx
+ * @description Màn hình chi tiết kế hoạch tập luyện, liệt kê các bài tập và cho phép bắt đầu/tiếp tục.
+ */
+
+/**
  * WorkoutDetailScreen - Màn hình chi tiết kế hoạch tập luyện.
  * Liệt kê các bài tập trong một kế hoạch, trạng thái hoàn thành và cho phép bắt đầu/tiếp tục buổi tập.
  */
@@ -67,6 +72,10 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
+            /**
+             * Tải dữ liệu chi tiết của buổi tập từ Firebase
+             * @returns Không có giá trị trả về
+             */
             async function loadData() {
                 if (!uid || !assignmentId) {
                     setLoading(false);
@@ -150,6 +159,10 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     const completedExercises = exercises.slice(0, currentIndex);
     const remainingExercises = exercises.slice(currentIndex);
 
+    /**
+     * Xử lý sự kiện khi bắt đầu hoặc tiếp tục buổi tập
+     * @returns Không có giá trị trả về
+     */
     const handleStartWorkout = () => {
         if (incompleteSession) {
             Alert.alert(
@@ -200,6 +213,13 @@ export const WorkoutDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         }
     };
 
+    /**
+     * Hiển thị giao diện thẻ bài tập
+     * @param ex - Đối tượng chứa thông tin bài tập
+     * @param originalIndex - Chỉ số ban đầu của bài tập trong danh sách
+     * @param isCompleted - Cờ xác định bài tập đã hoàn thành hay chưa
+     * @returns Component giao diện thẻ bài tập
+     */
     const renderExerciseCard = (
         ex: Exercise,
         originalIndex: number,

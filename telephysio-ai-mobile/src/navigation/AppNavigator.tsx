@@ -1,12 +1,9 @@
 /**
- * AppNavigator — Bộ điều hướng gốc kết hợp xác thực (Auth) và phân quyền (Role-based).
- *
- * Luồng điều hướng (Flow):
- *   isLoading?        → Màn hình chờ (Splash - ActivityIndicator)
- *   !isAuthenticated? → Điều hướng Xác thực (AuthNavigator: Đăng nhập / Đăng ký)
- *   role=patient      → Điều hướng dành cho Bệnh nhân (PatientNavigator)
- *   role=doctor       → Điều hướng dành cho Bác sĩ (DoctorNavigator)
+ * @file AppNavigator.tsx
+ * @description Bộ điều hướng gốc kết hợp xác thực (Auth) và phân quyền (Role-based).
  */
+
+
 
 import React from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
@@ -47,6 +44,12 @@ import type {
 // ── Stack Xác thực (Auth) ──────────────────────────
 const Auth = createNativeStackNavigator<AuthStackParamList>();
 
+/**
+ * Điều hướng dành cho xác thực (chưa đăng nhập).
+ * Bao gồm màn hình đăng nhập và đăng ký.
+ * 
+ * @returns Component React Navigation cho luồng xác thực.
+ */
 const AuthNavigator: React.FC = () => (
     <Auth.Navigator screenOptions={{ headerShown: false }}>
         <Auth.Screen name="Login" component={LoginScreen} />

@@ -1,9 +1,8 @@
 /**
- * Màn hình AssignTemplateScreen
- * 
- * Mục đích: Cho phép bác sĩ chỉ định các mẫu bài tập (templates) cho bệnh nhân.
- * Cung cấp giao diện xem lịch dưới dạng tháng và ngày, cũng như tạo bài tập mới.
+ * @file AssignTemplateScreen.tsx
+ * @description Màn hình cho phép bác sĩ chỉ định các mẫu bài tập cho bệnh nhân thông qua giao diện lịch.
  */
+
 import React, { useState, useEffect, useMemo } from "react";
 import {
     View,
@@ -50,19 +49,40 @@ type AssignTemplateRouteProp = RouteProp<
     "AssignTemplate"
 >;
 
+/**
+ * Lấy mốc thời gian bắt đầu của một ngày (00:00:00).
+ * @param date - Đối tượng Date cần tính toán.
+ * @returns Đối tượng Date mới đại diện cho thời điểm bắt đầu ngày.
+ */
 const startOfDay = (date: Date) => {
     const copy = new Date(date);
     copy.setHours(0, 0, 0, 0);
     return copy;
 };
 
+/**
+ * Trích xuất ngày hẹn của bài tập được chỉ định.
+ * @param assignment - Dữ liệu bài tập được chỉ định.
+ * @returns Đối tượng Date nếu có, hoặc null.
+ */
 const getAssignmentDate = (assignment: Assignment) =>
     ((assignment.scheduledDate ?? assignment.assignedAt) as any)?.toDate?.() ??
     null;
 
+/**
+ * Trích xuất thời gian (milliseconds) từ dữ liệu phiên tập.
+ * @param session - Dữ liệu phiên tập.
+ * @returns Số milliseconds kể từ epoch, hoặc 0 nếu không có.
+ */
 const getSessionTime = (session: Session) =>
     (session.date as any)?.toMillis?.() ?? 0;
 
+/**
+ * Lấy phiên tập mới nhất liên kết với một bài tập được chỉ định.
+ * @param assignmentId - ID của bài tập được chỉ định.
+ * @param sessions - Danh sách tất cả phiên tập của bệnh nhân.
+ * @returns Phiên tập mới nhất hoặc null nếu chưa có.
+ */
 const getLatestSessionForAssignment = (
     assignmentId: string,
     sessions: Session[],
@@ -74,6 +94,11 @@ const getLatestSessionForAssignment = (
     );
 };
 
+/**
+ * Giao diện chính của màn hình Chỉ định Bài tập.
+ * Hiển thị lịch (tháng/ngày) và cho phép bác sĩ tạo lịch tập mới.
+ * @returns Giao diện React Native của màn hình.
+ */
 export const AssignTemplateScreen: React.FC = () => {
     const navigation = useNavigation<AssignTemplateNavProp>();
     const route = useRoute<AssignTemplateRouteProp>();
@@ -115,6 +140,10 @@ export const AssignTemplateScreen: React.FC = () => {
         loadData();
     }, [uid, patientId]);
 
+    /**
+     * Tải dữ liệu các mẫu bài tập, bài tập đã chỉ định, và phiên tập của bệnh nhân từ Firestore.
+     * @returns Một Promise hoàn thành khi dữ liệu được tải xong.
+     */
     const loadData = async () => {
         if (!uid || !patientId) return;
         setLoading(true);
@@ -143,12 +172,21 @@ export const AssignTemplateScreen: React.FC = () => {
         return allTemplates.filter((t) => t.name.toLowerCase().includes(q));
     }, [allTemplates, templateSearchQuery]);
 
+    /**
+     * Thêm hoặc xóa một mẫu bài tập khỏi danh sách đang chọn.
+     * @param id - ID của mẫu bài tập.
+     * @returns Không có giá trị trả về.
+     */
     const toggleTemplateSelection = (id: string) => {
         setSelectedTemplateIds((prev) =>
             prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
         );
     };
 
+    /**
+     * Lưu thông tin chỉ định bài tập mới vào hệ thống Firestore.
+     * @returns Một Promise hoàn thành khi quá trình lưu hoàn tất.
+     */
     const handleAssign = async () => {
         if (!uid || !patientId || selectedTemplateIds.length === 0) return;
 
@@ -197,6 +235,10 @@ export const AssignTemplateScreen: React.FC = () => {
         }
     };
 
+    /**
+     * Render giao diện lịch theo tháng.
+     * @returns Khối JSX chứa giao diện lịch tháng.
+     */
     const renderMonthView = () => {
         const daysInMonth = new Date(
             visibleMonth.getFullYear(),
@@ -396,6 +438,10 @@ export const AssignTemplateScreen: React.FC = () => {
         );
     };
 
+    /**
+     * Render giao diện lịch theo ngày (chi tiết theo giờ).
+     * @returns Khối JSX chứa giao diện lịch ngày.
+     */
     const renderDayView = () => {
         const hours = Array.from({ length: 24 }, (_, i) => i);
         const assignmentsToday = patientAssignments.filter((a) => {
