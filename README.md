@@ -138,7 +138,6 @@ telephysio-ai/
 │   ├── docker-compose.yml         # Docker Compose
 │   └── package.json
 ├── .github/workflows/ci.yml      # CI pipeline
-└── AGENTS.md                      # AI agent configuration
 ```
 
 ## Tài liệu
